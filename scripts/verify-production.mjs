@@ -1,0 +1,159 @@
+#!/usr/bin/env node
+/**
+ * Production verification for porscha.today.
+ *
+ * Usage:
+ *   node scripts/verify-production.mjs [origin]
+ *
+ * Defaults to https://porscha.today; pass http://localhost:3000 to
+ * verify a local production build. Exits non-zero on any failure.
+ */
+
+const origin = (process.argv[2] ?? "https://porscha.today").replace(/\/$/, "");
+
+let failures = 0;
+const ok = (label) => console.log(`  ✓ ${label}`);
+const fail = (label, detail) => {
+  failures += 1;
+  console.error(`  ✗ ${label}${detail ? ` — ${detail}` : ""}`);
+};
+
+async function get(path, init) {
+  try {
+    return await fetch(`${origin}${path}`, { redirect: "manual", ...init });
+  } catch {
+    return null;
+  }
+}
+
+async function expectStatus(path, expected, label) {
+  const res = await get(path);
+  if (!res) {
+    fail(label ?? path, "request failed");
+    return null;
+  }
+  if (res.status === expected) ok(label ?? `${path} → ${expected}`);
+  else fail(label ?? path, `expected ${expected}, got ${res.status}`);
+  return res;
+}
+
+console.log(`Verifying ${origin}\n`);
+
+console.log("Public routes:");
+for (const path of [
+  "/",
+  "/porscha",
+  "/workshop",
+  "/workshop/kubli",
+  "/workshop/prism",
+  "/workshop/habi",
+  "/apps",
+  "/lab",
+  "/lab/whispering-city",
+  "/gallery",
+  "/gallery/reservoir-walk",
+  "/notes",
+  "/notes/webhooks-not-polling",
+  "/login",
+  "/robots.txt",
+  "/sitemap.xml",
+]) {
+  await expectStatus(path, 200);
+}
+await expectStatus("/workshop/does-not-exist", 404, "unknown project → 404");
+
+console.log("\nHomepage content:");
+try {
+  const res = await get("/");
+  if (!res) throw new Error("request failed");
+  const html = await res.text();
+  const checks = [
+    ["Porscha is", "canonical headline present"],
+    ["the process.", "canonical headline complete"],
+    ["/portrait/porscha", "portrait asset referenced"],
+    ["On the workbench.", "workbench section present"],
+    ["The deeper layer.", "console teaser present"],
+    ["Enter the workshop", "primary CTA present"],
+  ];
+  for (const [needle, label] of checks) {
+    if (html.includes(needle)) ok(label);
+    else fail(label, `"${needle}" not found`);
+  }
+  // Portrait asset actually loads
+  const m = html.match(/src="([^"]*portrait[^"]*)"/);
+  const portraitPath = m
+    ? m[1].replace(/&amp;/g, "&")
+    : "/portrait/porscha.jpg";
+  const img = await get(portraitPath);
+  if (img?.status === 200) ok("portrait image loads");
+  else fail("portrait image loads", `status ${img?.status} for ${portraitPath}`);
+} catch (err) {
+  fail("homepage fetch", String(err));
+}
+
+console.log("\nConsole protection:");
+{
+  const page = await get("/console/overview");
+  if (page && [302, 303, 307, 308].includes(page.status)) {
+    ok("console page redirects unauthenticated visitors");
+  } else {
+    fail("console page redirect", `status ${page?.status}`);
+  }
+  await expectStatus("/api/console/overview", 401, "console API → 401");
+  await expectStatus("/api/console/stream", 401, "SSE stream → 401");
+  const sync = await get("/api/console/sync", { method: "POST" });
+  if (sync && sync.status === 401) ok("sync endpoint → 401");
+  else fail("sync endpoint", `status ${sync?.status}`);
+}
+
+console.log("\nWebhook endpoint:");
+{
+  const res = await get("/api/github/webhook", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: '{"probe":true}',
+  });
+  if (res && (res.status === 401 || res.status === 503)) {
+    ok(`unsigned delivery rejected (${res.status})`);
+  } else {
+    fail("unsigned delivery rejected", `status ${res?.status}`);
+  }
+}
+
+console.log("\nPublic privacy boundary:");
+try {
+  const res = await get("/api/public/projects");
+  if (!res) throw new Error("request failed");
+  const body = await res.text();
+  const forbidden = [
+    "privatePayload",
+    "openIssueCount",
+    "openPullRequestCount",
+    "ciStatus",
+    "defaultBranch",
+    "recentCommits",
+    "openPullRequests",
+    "activeBranches",
+    "lastWorkflow",
+    "github.com/chaosbrewing/kubli",
+    "github.com/chaosbrewing/PRISM",
+    "github.com/chaosbrewing/habi",
+  ];
+  let leaked = false;
+  for (const needle of forbidden) {
+    if (body.includes(needle)) {
+      leaked = true;
+      fail("public API leak", `contains "${needle}"`);
+    }
+  }
+  if (!leaked) ok("public API contains no private repository signals");
+} catch (err) {
+  fail("public API fetch", String(err));
+}
+
+console.log("");
+if (failures > 0) {
+  console.error(`${failures} check(s) failed.`);
+  process.exit(1);
+}
+console.log("All checks passed.");

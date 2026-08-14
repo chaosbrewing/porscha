@@ -1,0 +1,47 @@
+# Deploys the current branch to Railway.
+#
+# One-time setup (see docs/DEPLOY.md):
+#   1. Create the Railway project + service and link this repo, OR
+#      create a RAILWAY_TOKEN (project token) and add it as a GitHub
+#      Actions secret, plus RAILWAY_SERVICE_ID as a repo variable.
+#   2. Configure the production environment variables in Railway.
+#
+# Trigger manually from the Actions tab (workflow_dispatch) so deploys
+# are always an explicit human action.
+name: Deploy to Railway
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: railway-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The same gates that protect local releases protect deploys.
+      - run: npm ci
+      - run: npm run lint
+      - run: npx next typegen && npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::RAILWAY_TOKEN secret is not configured. See docs/DEPLOY.md."
+            exit 1
+          fi
+          npx -y @railway/cli@latest up --ci \
+            ${{ vars.RAILWAY_SERVICE_ID != '' && format('--service {0}', vars.RAILWAY_SERVICE_ID) || '' }}
