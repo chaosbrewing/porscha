@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" role="img" aria-label="Dark composition of scattered faint text-like marks drifting upward between building silhouettes">
+  <rect width="900" height="1100" fill="#211d19"/>
+  <g fill="#2e2924">
+    <rect x="60" y="620" width="150" height="480"/>
+    <rect x="260" y="500" width="120" height="600"/>
+    <rect x="430" y="680" width="180" height="420"/>
+    <rect x="660" y="560" width="140" height="540"/>
+  </g>
+  <g fill="#b5ac9d">
+    <rect x="110" y="700" width="34" height="3" opacity="0.5"/>
+    <rect x="110" y="740" width="24" height="3" opacity="0.35"/>
+    <rect x="300" y="580" width="40" height="3" opacity="0.45"/>
+    <rect x="300" y="620" width="28" height="3" opacity="0.3"/>
+    <rect x="480" y="760" width="46" height="3" opacity="0.5"/>
+    <rect x="700" y="640" width="36" height="3" opacity="0.4"/>
+  </g>
+  <g fill="#f3efe6">
+    <rect x="180" y="430" width="52" height="3" opacity="0.55"/>
+    <rect x="240" y="360" width="34" height="3" opacity="0.4"/>
+    <rect x="330" y="290" width="44" height="3" opacity="0.3"/>
+    <rect x="420" y="220" width="26" height="3" opacity="0.22"/>
+    <rect x="520" y="380" width="48" height="3" opacity="0.45"/>
+    <rect x="590" y="300" width="30" height="3" opacity="0.3"/>
+    <rect x="660" y="230" width="40" height="3" opacity="0.2"/>
+    <rect x="500" y="150" width="22" height="3" opacity="0.15"/>
+  </g>
+  <rect x="60" y="180" width="90" height="4" fill="#b0401c"/>
+</svg>

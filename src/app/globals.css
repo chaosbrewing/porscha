@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+/*
+ * porscha.today design tokens
+ *
+ * Visual thesis: editorial studio + inventor's workbench + calm
+ * operational headquarters. Warm paper surfaces, dark ink, a single
+ * oxide accent, hairline rules, generous whitespace.
+ */
+
+@theme {
+  /* Typography */
+  --font-display: "Fraunces Variable", "Fraunces", Georgia, "Times New Roman",
+    serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo,
+    monospace;
+
+  /* Surfaces — warm paper, mostly flat */
+  --color-paper: #f6f3ec;
+  --color-paper-raised: #fdfbf6;
+  --color-paper-sunken: #efeadf;
+  --color-ink-well: #211d19;
+  --color-ink-well-soft: #2e2924;
+
+  /* Text */
+  --color-ink: #232019;
+  --color-ink-soft: #5b544a;
+  --color-ink-faint: #8b8375;
+  --color-ink-inverse: #f3efe6;
+  --color-ink-inverse-soft: #b5ac9d;
+
+  /* Lines */
+  --color-line: #e2dccd;
+  --color-line-strong: #c5bca9;
+
+  /* Accent — one restrained oxide red */
+  --color-accent: #b0401c;
+  --color-accent-deep: #8a3013;
+  --color-accent-wash: #f3e4da;
+
+  /* Semantic states */
+  --color-ok: #3f7a4d;
+  --color-ok-wash: #e4ecdd;
+  --color-warn: #9c6414;
+  --color-warn-wash: #f2e8d2;
+  --color-alert: #a53131;
+  --color-alert-wash: #f1dfda;
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-micro: 140ms;
+  --duration-normal: 240ms;
+  --duration-reveal: 600ms;
+
+  /* Breakpoints (Tailwind defaults kept; documented for the team) */
+}
+
+/* Base */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" on, "cv05" on;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink-inverse);
+}
+
+/* Visible, consistent focus treatment */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Editorial display type */
+.type-display {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 72, "SOFT" 0, "WONK" 1;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.type-display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-variation-settings: "opsz" 40, "SOFT" 30, "WONK" 1;
+  font-weight: 480;
+  letter-spacing: -0.01em;
+}
+
+.type-heading {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 32, "SOFT" 0, "WONK" 0;
+  font-weight: 580;
+  letter-spacing: -0.012em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+/* Small mono meta labels — workshop labels, not fake terminals */
+.type-meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Long-form prose rendered from markdown */
+.prose-workshop {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--color-ink);
+  max-width: 42rem;
+}
+.prose-workshop p {
+  margin-block: 1.1em;
+}
+.prose-workshop h2 {
+  font-family: var(--font-display);
+  font-weight: 580;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  margin-block: 1.8em 0.6em;
+  letter-spacing: -0.01em;
+}
+.prose-workshop h3 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: 1.2rem;
+  margin-block: 1.6em 0.5em;
+}
+.prose-workshop a {
+  color: var(--color-accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--color-line-strong);
+  transition: text-decoration-color var(--duration-micro) var(--ease-out-soft);
+}
+.prose-workshop a:hover {
+  text-decoration-color: var(--color-accent);
+}
+.prose-workshop ul,
+.prose-workshop ol {
+  padding-inline-start: 1.4em;
+  margin-block: 1em;
+}
+.prose-workshop ul {
+  list-style: disc;
+}
+.prose-workshop ol {
+  list-style: decimal;
+}
+.prose-workshop li {
+  margin-block: 0.35em;
+}
+.prose-workshop blockquote {
+  border-inline-start: 2px solid var(--color-accent);
+  padding-inline-start: 1.1em;
+  margin-block: 1.4em;
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
+.prose-workshop code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--color-paper-sunken);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+.prose-workshop pre {
+  background: var(--color-ink-well);
+  color: var(--color-ink-inverse);
+  padding: 1.1em 1.3em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-block: 1.4em;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.prose-workshop pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.prose-workshop hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin-block: 2.2em;
+}
+.prose-workshop img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+/* Restrained motion. Entrances are subtle and run once. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: rise-in var(--duration-reveal) var(--ease-out-soft) both;
+}
+.reveal-late {
+  animation: rise-in var(--duration-reveal) var(--ease-out-soft) 120ms both;
+}
+
+/* Live activity pulse — one small dot, nothing else animates continuously */
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.pulse-live {
+  animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .reveal-late,
+  .pulse-live {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-ink-well);
+  color: var(--color-ink-inverse);
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 6px 0;
+}
+.skip-link:focus-visible {
+  left: 0;
+}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Grid of small ink squares of varying darkness, like a hand-made density chart">
+  <rect width="1200" height="800" fill="#fdfbf6"/>
+  <g>
+    <rect x="80" y="80" width="1040" height="1" fill="#c5bca9"/>
+    <rect x="80" y="720" width="1040" height="1" fill="#c5bca9"/>
+  </g>
+  <g fill="#232019">
+    <rect x="100" y="140" width="26" height="26" opacity="0.12"/><rect x="140" y="140" width="26" height="26" opacity="0.34"/><rect x="180" y="140" width="26" height="26" opacity="0.81"/><rect x="220" y="140" width="26" height="26" opacity="0.55"/><rect x="260" y="140" width="26" height="26" opacity="0.23"/><rect x="300" y="140" width="26" height="26" opacity="0.67"/><rect x="340" y="140" width="26" height="26" opacity="0.14"/><rect x="380" y="140" width="26" height="26" opacity="0.42"/>
+    <rect x="100" y="180" width="26" height="26" opacity="0.51"/><rect x="140" y="180" width="26" height="26" opacity="0.09"/><rect x="180" y="180" width="26" height="26" opacity="0.72"/><rect x="220" y="180" width="26" height="26" opacity="0.31"/><rect x="260" y="180" width="26" height="26" opacity="0.88"/><rect x="300" y="180" width="26" height="26" opacity="0.19"/><rect x="340" y="180" width="26" height="26" opacity="0.6"/><rect x="380" y="180" width="26" height="26" opacity="0.27"/>
+    <rect x="100" y="220" width="26" height="26" opacity="0.29"/><rect x="140" y="220" width="26" height="26" opacity="0.64"/><rect x="180" y="220" width="26" height="26" opacity="0.18"/><rect x="220" y="220" width="26" height="26" opacity="0.77"/><rect x="260" y="220" width="26" height="26" opacity="0.4"/><rect x="300" y="220" width="26" height="26" opacity="0.11"/><rect x="340" y="220" width="26" height="26" opacity="0.83"/><rect x="380" y="220" width="26" height="26" opacity="0.36"/>
+  </g>
+  <g fill="#b0401c">
+    <rect x="500" y="300" width="26" height="26" opacity="0.9"/>
+  </g>
+  <g fill="#232019">
+    <rect x="540" y="300" width="26" height="26" opacity="0.22"/><rect x="580" y="300" width="26" height="26" opacity="0.47"/><rect x="620" y="300" width="26" height="26" opacity="0.7"/><rect x="660" y="300" width="26" height="26" opacity="0.15"/>
+    <rect x="500" y="340" width="26" height="26" opacity="0.58"/><rect x="540" y="340" width="26" height="26" opacity="0.33"/><rect x="580" y="340" width="26" height="26" opacity="0.12"/><rect x="620" y="340" width="26" height="26" opacity="0.66"/><rect x="660" y="340" width="26" height="26" opacity="0.44"/>
+    <rect x="700" y="460" width="26" height="26" opacity="0.3"/><rect x="740" y="460" width="26" height="26" opacity="0.75"/><rect x="780" y="460" width="26" height="26" opacity="0.2"/><rect x="820" y="460" width="26" height="26" opacity="0.5"/><rect x="860" y="460" width="26" height="26" opacity="0.85"/>
+    <rect x="700" y="500" width="26" height="26" opacity="0.16"/><rect x="740" y="500" width="26" height="26" opacity="0.62"/><rect x="780" y="500" width="26" height="26" opacity="0.38"/><rect x="820" y="500" width="26" height="26" opacity="0.09"/><rect x="860" y="500" width="26" height="26" opacity="0.71"/>
+  </g>
+  <text x="100" y="700" font-family="monospace" font-size="18" fill="#8b8375" letter-spacing="2">DENSITY STUDY 03</text>
+</svg>

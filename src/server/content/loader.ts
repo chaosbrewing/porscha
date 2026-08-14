@@ -1,0 +1,178 @@
+import "server-only";
+import fs from "node:fs";
+import path from "node:path";
+import matter from "gray-matter";
+import { marked } from "marked";
+import { z } from "zod";
+
+/**
+ * File-backed content system.
+ *
+ * Notes, lab experiments, gallery items, project stories, and the
+ * biography live as Markdown files under `src/content/`. Frontmatter is
+ * validated with zod so a malformed file fails loudly at build/dev time
+ * instead of rendering garbage.
+ */
+
+const CONTENT_ROOT = path.join(process.cwd(), "src", "content");
+
+marked.setOptions({ gfm: true });
+
+export function renderMarkdown(md: string): string {
+  return marked.parse(md, { async: false });
+}
+
+function readCollection(dir: string): Array<{
+  slug: string;
+  data: Record<string, unknown>;
+  content: string;
+}> {
+  const full = path.join(CONTENT_ROOT, dir);
+  if (!fs.existsSync(full)) return [];
+  return fs
+    .readdirSync(full)
+    .filter((f) => f.endsWith(".md") || f.endsWith(".mdx"))
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(full, file), "utf8");
+      const { data, content } = matter(raw);
+      return { slug: file.replace(/\.mdx?$/, ""), data, content };
+    });
+}
+
+/* ----------------------------- Notes ----------------------------- */
+
+const noteFrontmatter = z.object({
+  title: z.string(),
+  date: z.coerce.date(),
+  kind: z
+    .enum(["observation", "devlog", "discovery", "design", "essay", "reflection"])
+    .default("observation"),
+  project: z.string().optional(),
+  draft: z.boolean().default(false),
+});
+
+export type Note = z.infer<typeof noteFrontmatter> & {
+  slug: string;
+  html: string;
+  excerpt: string;
+};
+
+export function getNotes(): Note[] {
+  return readCollection("notes")
+    .map(({ slug, data, content }) => {
+      const fm = noteFrontmatter.parse(data);
+      const text = content.trim();
+      return {
+        ...fm,
+        slug,
+        html: renderMarkdown(text),
+        excerpt: text.split(/\n\s*\n/)[0]?.replace(/[#*_`>]/g, "").trim() ?? "",
+      };
+    })
+    .filter((n) => !n.draft)
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
+}
+
+export function getNote(slug: string): Note | undefined {
+  return getNotes().find((n) => n.slug === slug);
+}
+
+/* ------------------------- Lab experiments ------------------------ */
+
+const labFrontmatter = z.object({
+  number: z.number().int(),
+  name: z.string(),
+  hypothesis: z.string(),
+  result: z.string().optional(),
+  status: z.enum(["running", "concluded", "abandoned", "resting"]).default("running"),
+  project: z.string().optional(),
+  link: z.string().url().optional(),
+  date: z.coerce.date(),
+});
+
+export type LabExperiment = z.infer<typeof labFrontmatter> & {
+  slug: string;
+  html: string;
+};
+
+export function getLabExperiments(): LabExperiment[] {
+  return readCollection("lab")
+    .map(({ slug, data, content }) => ({
+      ...labFrontmatter.parse(data),
+      slug,
+      html: renderMarkdown(content.trim()),
+    }))
+    .sort((a, b) => b.number - a.number);
+}
+
+export function getLabExperiment(slug: string): LabExperiment | undefined {
+  return getLabExperiments().find((e) => e.slug === slug);
+}
+
+/* --------------------------- Gallery ------------------------------ */
+
+const galleryFrontmatter = z.object({
+  title: z.string(),
+  category: z.enum(["photography", "digital", "ui", "experiments", "sketches"]),
+  year: z.coerce.string(),
+  media: z.string(),
+  alt: z.string(),
+  note: z.string().optional(),
+  project: z.string().optional(),
+  /** Aspect ratio hint for layout, e.g. "4/5", "3/2". */
+  aspect: z.string().default("4/5"),
+});
+
+export type GalleryPiece = z.infer<typeof galleryFrontmatter> & {
+  slug: string;
+  html: string;
+};
+
+export function getGalleryPieces(): GalleryPiece[] {
+  return readCollection("gallery")
+    .map(({ slug, data, content }) => ({
+      ...galleryFrontmatter.parse(data),
+      slug,
+      html: renderMarkdown(content.trim()),
+    }))
+    .sort((a, b) => b.year.localeCompare(a.year));
+}
+
+export function getGalleryPiece(slug: string): GalleryPiece | undefined {
+  return getGalleryPieces().find((p) => p.slug === slug);
+}
+
+/* ------------------------ Project stories ------------------------- */
+
+const projectStoryFrontmatter = z.object({
+  project: z.string(),
+  why: z.string().optional(),
+  lessons: z.array(z.string()).default([]),
+  screenshots: z
+    .array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() }))
+    .default([]),
+});
+
+export type ProjectStory = z.infer<typeof projectStoryFrontmatter> & {
+  slug: string;
+  html: string;
+};
+
+export function getProjectStory(slug: string): ProjectStory | undefined {
+  const entry = readCollection("projects").find((e) => e.slug === slug);
+  if (!entry) return undefined;
+  return {
+    ...projectStoryFrontmatter.parse(entry.data),
+    slug: entry.slug,
+    html: renderMarkdown(entry.content.trim()),
+  };
+}
+
+/* --------------------------- Biography ---------------------------- */
+
+export function getBiography(): { html: string } | undefined {
+  const file = path.join(CONTENT_ROOT, "porscha.md");
+  if (!fs.existsSync(file)) return undefined;
+  const { content } = matter(fs.readFileSync(file, "utf8"));
+  return { html: renderMarkdown(content.trim()) };
+}

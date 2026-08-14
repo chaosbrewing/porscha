@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Abstract composition of layered horizontal bands in warm paper tones with a single oxide line">
+  <rect width="800" height="1000" fill="#f1ece1"/>
+  <rect y="640" width="800" height="360" fill="#dfd6c3"/>
+  <rect y="700" width="800" height="8" fill="#c5bca9" opacity="0.5"/>
+  <rect y="560" width="800" height="80" fill="#e8e1d2"/>
+  <path d="M0 470 C 180 430, 320 500, 520 460 S 760 420, 800 445 L 800 560 L 0 560 Z" fill="#d8cfbc"/>
+  <path d="M0 500 C 200 470, 400 520, 800 490" stroke="#b0401c" stroke-width="5" fill="none"/>
+  <circle cx="610" cy="205" r="70" fill="#e4dbc8"/>
+  <circle cx="610" cy="205" r="70" fill="none" stroke="#c5bca9" stroke-width="2"/>
+  <rect x="70" y="820" width="120" height="4" fill="#8a3013"/>
+</svg>

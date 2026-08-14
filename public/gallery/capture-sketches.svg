@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" role="img" aria-label="Loose pencil-style sketches of phone screens with annotation arrows">
+  <rect width="1000" height="750" fill="#f6f3ec"/>
+  <g fill="none" stroke="#5b544a" stroke-width="3" stroke-linecap="round">
+    <rect x="90" y="110" width="220" height="440" rx="24" transform="rotate(-2 200 330)"/>
+    <line x1="120" y1="200" x2="280" y2="196"/>
+    <line x1="120" y1="240" x2="250" y2="237"/>
+    <circle cx="200" cy="460" r="42"/>
+    <rect x="420" y="140" width="220" height="440" rx="24" transform="rotate(1.5 530 360)"/>
+    <line x1="450" y1="230" x2="610" y2="233"/>
+    <line x1="450" y1="270" x2="560" y2="272"/>
+    <line x1="450" y1="310" x2="590" y2="312"/>
+    <rect x="740" y="120" width="220" height="440" rx="24" transform="rotate(-1 850 340)"/>
+    <circle cx="850" cy="250" r="60"/>
+    <line x1="790" y1="380" x2="910" y2="380"/>
+    <line x1="790" y1="420" x2="880" y2="420"/>
+  </g>
+  <g fill="none" stroke="#b0401c" stroke-width="3" stroke-linecap="round">
+    <path d="M320 430 C 360 400, 380 400, 415 420"/>
+    <path d="M405 415 l 12 8 l -15 4 z" fill="#b0401c"/>
+    <circle cx="200" cy="460" r="52" stroke-dasharray="4 7"/>
+  </g>
+  <text x="92" y="640" font-family="monospace" font-size="17" fill="#8b8375" letter-spacing="2">CAPTURE FLOW — ROUND 4</text>
+</svg>
