@@ -8,11 +8,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "https://porscha.today"),
   title: {
-    default: "Porscha makes things",
+    default: "Porscha is the process",
     template: "%s · porscha.today",
   },
   description:
-    "Porscha's workshop on the internet — software, experiments, art, and whatever currently has her attention.",
+    "Software. Experiments. Art. Porscha's headquarters on the internet — where she builds, breaks, and refines what matters, publicly.",
   openGraph: {
     siteName: "porscha.today",
     type: "website",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f3ec",
+  themeColor: "#f5f0e6",
   width: "device-width",
   initialScale: 1,
 };

@@ -17,9 +17,9 @@
     monospace;
 
   /* Surfaces — warm paper, mostly flat */
-  --color-paper: #f6f3ec;
-  --color-paper-raised: #fdfbf6;
-  --color-paper-sunken: #efeadf;
+  --color-paper: #f5f0e6;
+  --color-paper-raised: #fbf8f1;
+  --color-paper-sunken: #ede6d7;
   --color-ink-well: #211d19;
   --color-ink-well-soft: #2e2924;
 
@@ -34,9 +34,9 @@
   --color-line: #e2dccd;
   --color-line-strong: #c5bca9;
 
-  /* Accent — one restrained oxide red */
-  --color-accent: #b0401c;
-  --color-accent-deep: #8a3013;
+  /* Accent — one restrained oxide rust */
+  --color-accent: #bc5222;
+  --color-accent-deep: #96401a;
   --color-accent-wash: #f3e4da;
 
   /* Semantic states */

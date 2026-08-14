@@ -3,30 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { siteConfig, workshopStateCopy } from "@/config/site";
+import { siteConfig } from "@/config/site";
 
 /**
- * Public navigation. The console is deliberately absent — owner access
- * is the discreet "workshop door" link in the footer.
+ * Public navigation, kept visually light: serif wordmark, plain text
+ * links, thin rule beneath. The console stays out of the nav — owner
+ * access is the small, quiet mark on the far right.
  */
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const state = workshopStateCopy[siteConfig.workshopState];
 
   return (
     <header className="border-b border-line">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="flex items-center justify-between py-4">
+      <div className="mx-auto max-w-7xl px-5 sm:px-10">
+        <div className="flex items-center justify-between gap-6 py-5">
           <Link
             href="/"
-            className="type-heading text-lg tracking-tight hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
+            className="type-heading text-xl tracking-tight hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
           >
-            porscha<span className="text-accent">.</span>today
+            porscha.today
           </Link>
 
           <nav aria-label="Main" className="hidden md:block">
-            <ul className="flex items-center gap-7">
+            <ul className="flex items-center gap-9">
               {siteConfig.nav.map((item) => {
                 const current =
                   pathname === item.href ||
@@ -36,9 +36,9 @@ export function SiteHeader() {
                     <Link
                       href={item.href}
                       aria-current={current ? "page" : undefined}
-                      className={`text-sm transition-colors duration-[var(--duration-micro)] ${
+                      className={`text-[0.9375rem] transition-colors duration-[var(--duration-micro)] ${
                         current
-                          ? "text-ink underline underline-offset-8 decoration-accent decoration-2"
+                          ? "text-ink font-medium"
                           : "text-ink-soft hover:text-ink"
                       }`}
                     >
@@ -50,34 +50,56 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          <div className="hidden md:flex items-center" title={state.description}>
-            <span className="type-meta text-ink-faint">{state.label}</span>
-          </div>
-
-          <button
-            type="button"
-            className="md:hidden inline-flex h-11 w-11 items-center justify-center -mr-2 text-ink"
-            aria-expanded={open}
-            aria-controls="mobile-nav"
-            onClick={() => setOpen((v) => !v)}
-          >
-            <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
-            <svg
-              aria-hidden="true"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
+          <div className="flex items-center gap-1">
+            {/* The discreet owner door. */}
+            <Link
+              href="/login"
+              aria-label="Owner sign-in"
+              title="Owner sign-in"
+              className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-faint hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
             >
-              {open ? (
-                <path d="M4 4l12 12M16 4L4 16" />
-              ) : (
-                <path d="M3 6h14M3 10h14M3 14h14" />
-              )}
-            </svg>
-          </button>
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              >
+                <circle cx="9" cy="9" r="2.4" />
+                <path d="M9 1.5v2.2M9 14.3v2.2M1.5 9h2.2M14.3 9h2.2M3.7 3.7l1.6 1.6M12.7 12.7l1.6 1.6M14.3 3.7l-1.6 1.6M5.3 12.7l-1.6 1.6" />
+              </svg>
+            </Link>
+
+            <button
+              type="button"
+              className="md:hidden inline-flex h-11 w-11 items-center justify-center -mr-2 text-ink"
+              aria-expanded={open}
+              aria-controls="mobile-nav"
+              onClick={() => setOpen((v) => !v)}
+            >
+              <span className="sr-only">
+                {open ? "Close menu" : "Open menu"}
+              </span>
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+              >
+                {open ? (
+                  <path d="M4 4l12 12M16 4L4 16" />
+                ) : (
+                  <path d="M3 6h14M3 10h14M3 14h14" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {open ? (
@@ -103,7 +125,13 @@ export function SiteHeader() {
                 );
               })}
               <li className="pt-2 border-t border-line mt-2">
-                <span className="type-meta text-ink-faint">{state.label}</span>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="block py-2.5 text-sm text-ink-faint"
+                >
+                  Owner sign-in
+                </Link>
               </li>
             </ul>
           </nav>
