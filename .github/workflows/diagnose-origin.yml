@@ -1,0 +1,20 @@
+# One-off origin diagnostics from a GitHub runner (read-only).
+name: Diagnose origin
+
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: "Origin to diagnose"
+        required: false
+        default: "https://porscha.today"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/diagnose-origin.mjs "${{ inputs.origin || 'https://porscha.today' }}"
