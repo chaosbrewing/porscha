@@ -1,0 +1,75 @@
+# Builds the production Docker image and boots it against a real
+# Postgres, proving: Node 20.19.0 build, migrations-at-startup, PORT
+# handling (deliberately not 3000), 0.0.0.0 binding, and the full
+# route/auth/privacy verification against the running container.
+name: Docker verify
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: porscha
+          POSTGRES_PASSWORD: porscha_ci
+          POSTGRES_DB: porscha
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U porscha"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t porscha-today:ci .
+
+      - name: Run container (PORT=8734, not 3000)
+        run: |
+          docker run -d --name app --network host \
+            -e PORT=8734 \
+            -e DATABASE_URL=postgres://porscha:porscha_ci@localhost:5432/porscha \
+            -e SESSION_SECRET=ci-only-session-secret-0123456789abcdef0123456789abcdef \
+            -e TWO_FACTOR_ENCRYPTION_KEY=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc \
+            -e SITE_URL=http://localhost:8734 \
+            -e ALLOWED_GITHUB_LOGINS=chaosbrewing \
+            -e GITHUB_WEBHOOK_SECRET=ci-webhook-secret \
+            porscha-today:ci
+
+      - name: Wait for boot on 0.0.0.0:8734
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://localhost:8734/; then
+              echo "up after ${i} attempts"; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::container did not become ready on PORT=8734"
+          docker logs app
+          exit 1
+
+      - name: Assert migrations ran at startup (not build)
+        run: |
+          docker logs app 2>&1 | grep -q "applying database migrations"
+          docker logs app 2>&1 | grep -q "database is up to date"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+
+      - name: Full verification against the container
+        env:
+          SESSION_SECRET: ci-only-session-secret-0123456789abcdef0123456789abcdef
+        run: node scripts/verify-production.mjs http://localhost:8734
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs app
