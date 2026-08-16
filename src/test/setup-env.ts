@@ -4,3 +4,5 @@ process.env.SESSION_SECRET ??=
 process.env.DATABASE_URL ??=
   "postgres://porscha:porscha_dev@localhost:5432/porscha";
 process.env.SITE_URL ??= "http://localhost:3000";
+process.env.TWO_FACTOR_ENCRYPTION_KEY ??=
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

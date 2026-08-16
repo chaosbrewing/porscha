@@ -28,6 +28,9 @@ export default async function LoginPage({
 }) {
   const access = await checkConsoleAccess();
   if (access.state === "authorized") redirect("/console/overview");
+  if (access.state === "two_factor_pending") {
+    redirect(access.needsEnrollment ? "/login/setup-2fa" : "/login/verify");
+  }
 
   const { error } = await searchParams;
   const errorMessage = error ? ERROR_COPY[error] ?? "Sign-in failed." : null;

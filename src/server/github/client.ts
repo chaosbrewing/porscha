@@ -96,8 +96,20 @@ export type CommitInfo = {
 
 export type BranchInfo = { name: string };
 
+export type UserRepoInfo = {
+  full_name: string;
+  private: boolean;
+  archived: boolean;
+  pushed_at: string | null;
+};
+
 export const githubClient = {
   getRepo: (repo: string) => gh<RepoInfo>(`/repos/${repo}`),
+  /** Repositories visible to the sync token, for the console picker. */
+  listAccessibleRepos: () =>
+    gh<UserRepoInfo[]>(
+      `/user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,organization_member`,
+    ),
   listOpenPulls: (repo: string) =>
     gh<PullInfo[]>(`/repos/${repo}/pulls?state=open&per_page=20`),
   listOpenIssues: (repo: string) =>

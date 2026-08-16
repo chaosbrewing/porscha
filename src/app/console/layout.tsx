@@ -29,6 +29,10 @@ export default async function ConsoleLayout({
     redirect("/login");
   }
 
+  if (access.state === "two_factor_pending") {
+    redirect(access.needsEnrollment ? "/login/setup-2fa" : "/login/verify");
+  }
+
   if (access.state === "unauthorized") {
     return (
       <div className="flex-1 flex items-center justify-center px-5 py-24">

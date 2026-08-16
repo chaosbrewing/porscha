@@ -77,6 +77,7 @@ function makeRecord(overrides: Partial<ProjectRecord> = {}): ProjectRecord {
     status: "building",
     featured: true,
     isApp: true,
+    isPublic: true,
     visibility: {
       lastActivity: true,
       releases: true,

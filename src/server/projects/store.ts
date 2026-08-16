@@ -9,9 +9,27 @@ import type { SnapshotData } from "@/types/core";
  * All raw database access for the projects feature lives here.
  */
 
-/** Mirror the typed registry into the database (idempotent upserts). */
+/**
+ * Bootstrap the typed registry into the database.
+ *
+ * The registry is seed data, not the source of truth: any project that
+ * has been edited through the console (config_edited_at set) is left
+ * completely alone — its row, GitHub connection, and milestones are
+ * owned by the database from that point on.
+ */
 export async function syncRegistryToDb(): Promise<void> {
+  const editedRows = await db
+    .select({
+      slug: schema.projects.slug,
+      configEditedAt: schema.projects.configEditedAt,
+    })
+    .from(schema.projects);
+  const consoleOwned = new Set(
+    editedRows.filter((r) => r.configEditedAt !== null).map((r) => r.slug),
+  );
+
   for (const p of projectRegistry) {
+    if (consoleOwned.has(p.slug)) continue;
     await db
       .insert(schema.projects)
       .values({
@@ -25,6 +43,7 @@ export async function syncRegistryToDb(): Promise<void> {
         currentMilestone: p.currentMilestone ?? null,
         visibility: p.visibility,
         links: p.links ?? null,
+        isPublic: true,
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
@@ -294,4 +313,144 @@ export async function dbHealthy(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/* --------------------- Project administration --------------------- */
+
+export type ProjectWriteData = {
+  slug: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  featured: boolean;
+  isApp: boolean;
+  isPublic: boolean;
+  currentMilestone: string | null;
+  visibility: unknown;
+};
+
+export async function getProjectRow(slug: string) {
+  const rows = await db
+    .select({
+      project: schema.projects,
+      connection: schema.projectGithubConnections,
+    })
+    .from(schema.projects)
+    .leftJoin(
+      schema.projectGithubConnections,
+      eq(schema.projects.slug, schema.projectGithubConnections.projectSlug),
+    )
+    .where(eq(schema.projects.slug, slug));
+  return rows[0] ?? null;
+}
+
+/** Insert a console-created project. Returns false on duplicate slug. */
+export async function insertProject(data: ProjectWriteData): Promise<boolean> {
+  const result = await db
+    .insert(schema.projects)
+    .values({ ...data, configEditedAt: new Date(), updatedAt: new Date() })
+    .onConflictDoNothing({ target: schema.projects.slug });
+  return (result.rowCount ?? 0) > 0;
+}
+
+/** Update mutable project configuration; stamps console ownership. */
+export async function updateProjectConfig(
+  slug: string,
+  data: Omit<ProjectWriteData, "slug">,
+): Promise<boolean> {
+  const result = await db
+    .update(schema.projects)
+    .set({ ...data, configEditedAt: new Date(), updatedAt: new Date() })
+    .where(eq(schema.projects.slug, slug));
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function setProjectConnection(
+  slug: string,
+  repoFullName: string,
+  publicRepository: boolean,
+): Promise<void> {
+  await db
+    .insert(schema.projectGithubConnections)
+    .values({ projectSlug: slug, repoFullName, publicRepository })
+    .onConflictDoUpdate({
+      target: schema.projectGithubConnections.projectSlug,
+      set: { repoFullName, publicRepository },
+    });
+}
+
+export async function removeProjectConnection(slug: string): Promise<void> {
+  await db
+    .delete(schema.projectGithubConnections)
+    .where(eq(schema.projectGithubConnections.projectSlug, slug));
+  await db
+    .delete(schema.projectSnapshots)
+    .where(eq(schema.projectSnapshots.projectSlug, slug));
+}
+
+/** Replace a project's milestones and work items wholesale. */
+export async function replaceMilestones(
+  slug: string,
+  milestones: Array<{
+    slug: string;
+    title: string;
+    publicSummary?: string;
+    workItems: Array<{ title: string; done: boolean; githubIssue?: number }>;
+  }>,
+): Promise<void> {
+  await db
+    .delete(schema.projectMilestones)
+    .where(eq(schema.projectMilestones.projectSlug, slug));
+  for (const [mi, m] of milestones.entries()) {
+    const milestoneId = `${slug}/${m.slug}`;
+    await db.insert(schema.projectMilestones).values({
+      id: milestoneId,
+      projectSlug: slug,
+      slug: m.slug,
+      title: m.title,
+      publicSummary: m.publicSummary ?? null,
+      sortOrder: mi,
+      updatedAt: new Date(),
+    });
+    for (const [wi, w] of m.workItems.entries()) {
+      await db.insert(schema.projectWorkItems).values({
+        id: `${milestoneId}/${wi}`,
+        milestoneId,
+        title: w.title,
+        done: w.done,
+        githubIssueNumber: w.githubIssue ?? null,
+        sortOrder: wi,
+      });
+    }
+  }
+}
+
+export async function insertAdminEvent(event: {
+  projectSlug: string;
+  actorId: string;
+  action: string;
+  detail?: Record<string, unknown>;
+}): Promise<void> {
+  await db
+    .insert(schema.projectAdminEvents)
+    .values({
+      id: crypto.randomUUID(),
+      projectSlug: event.projectSlug,
+      actorId: event.actorId,
+      action: event.action,
+      detail: event.detail ?? null,
+    })
+    .catch((err) => {
+      console.error("[admin] failed to record audit event", err);
+    });
+}
+
+export async function listAdminEvents(projectSlug: string, limit = 20) {
+  return db
+    .select()
+    .from(schema.projectAdminEvents)
+    .where(eq(schema.projectAdminEvents.projectSlug, projectSlug))
+    .orderBy(desc(schema.projectAdminEvents.createdAt))
+    .limit(limit);
 }

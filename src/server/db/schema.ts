@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -41,6 +42,14 @@ export const projects = pgTable("projects", {
   currentMilestone: text("current_milestone"),
   visibility: jsonb("visibility").notNull(),
   links: jsonb("links"),
+  /** Whether the project appears on the public site at all. */
+  isPublic: boolean("is_public").notNull().default(true),
+  /**
+   * Set when the project is edited through the console. Once set, the
+   * registry bootstrap never overwrites this project's configuration —
+   * the database is authoritative for console-managed state.
+   */
+  configEditedAt: timestamp("config_edited_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -138,6 +147,84 @@ export const webhookDeliveries = pgTable(
       .defaultNow(),
   },
   (t) => [index("webhook_deliveries_time_idx").on(t.receivedAt)],
+);
+
+/* ------------------------- Two-factor auth ------------------------ */
+
+export const userTwoFactor = pgTable("user_two_factor", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** AES-256-GCM encrypted TOTP secret (never stored in plaintext). */
+  secretEnc: text("secret_enc").notNull(),
+  /** Encrypted replacement secret awaiting confirmation. */
+  pendingSecretEnc: text("pending_secret_enc"),
+  /** Null until the first code is verified — enrollment incomplete. */
+  enabledAt: timestamp("enabled_at", { withTimezone: true }),
+  /** Last accepted TOTP time-step, for replay prevention. */
+  lastUsedCounter: bigint("last_used_counter", { mode: "number" })
+    .notNull()
+    .default(0),
+  /** Sessions issued at or before this instant are invalid. */
+  sessionsInvalidatedAt: timestamp("sessions_invalidated_at", {
+    withTimezone: true,
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const recoveryCodes = pgTable(
+  "recovery_codes",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** SHA-256 of the code. Plaintext is shown exactly once. */
+    codeHash: text("code_hash").notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("recovery_codes_user_idx").on(t.userId)],
+);
+
+export const securityEvents = pgTable(
+  "security_events",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id"),
+    type: text("type").notNull(),
+    /** Safe structured detail only — never codes, secrets, or tokens. */
+    detail: jsonb("detail"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("security_events_user_time_idx").on(t.userId, t.createdAt)],
+);
+
+/* --------------------- Project administration --------------------- */
+
+/** Audit trail for project administration. Deliberately un-FK'd so the
+ *  record outlives whatever it describes. */
+export const projectAdminEvents = pgTable(
+  "project_admin_events",
+  {
+    id: text("id").primaryKey(),
+    projectSlug: text("project_slug").notNull(),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    detail: jsonb("detail"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("admin_events_project_time_idx").on(t.projectSlug, t.createdAt),
+  ],
 );
 
 export const siteSettings = pgTable("site_settings", {

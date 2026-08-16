@@ -14,7 +14,15 @@ export default async function ConsoleProjectsPage() {
 
   return (
     <div>
-      <h1 className="type-display text-4xl sm:text-5xl">Projects</h1>
+      <div className="flex flex-wrap items-baseline justify-between gap-4">
+        <h1 className="type-display text-4xl sm:text-5xl">Projects</h1>
+        <Link
+          href="/console/projects/new"
+          className="rounded-[4px] bg-accent px-4 py-2.5 text-sm font-medium text-ink-inverse hover:bg-accent-deep transition-colors duration-[var(--duration-micro)]"
+        >
+          + Add project
+        </Link>
+      </div>
       <p className="mt-3 text-ink-soft">
         Every registered project — connected or not.
       </p>

@@ -13,12 +13,18 @@ export async function POST() {
   if (!env.devLoginEnabled) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const token = await createSessionToken({
-    id: "dev:porscha",
-    githubLogin: "porscha-dev",
-    displayName: "Porscha (dev)",
-    avatarUrl: null,
-  });
+  // Dev sessions are two_factor_verified directly: they exist only in
+  // local development — env validation refuses AUTH_DEV_LOGIN in
+  // production, so this can never bypass production 2FA.
+  const token = await createSessionToken(
+    {
+      id: "dev:porscha",
+      githubLogin: "porscha-dev",
+      displayName: "Porscha (dev)",
+      avatarUrl: null,
+    },
+    "two_factor_verified",
+  );
   const res = NextResponse.redirect(new URL("/console/overview", env.SITE_URL), {
     status: 303,
   });

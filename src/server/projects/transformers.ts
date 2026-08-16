@@ -28,6 +28,8 @@ export type ProjectRecord = {
   status: ProjectStatus;
   featured: boolean;
   isApp: boolean;
+  /** Whether the project appears on the public site at all. */
+  isPublic: boolean;
   visibility: ProjectVisibility;
   links: Array<{ label: string; url: string }> | null;
   currentMilestone: string | null;

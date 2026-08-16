@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getActivityFeed, getPrivateProject } from "@/server/projects/service";
+import { listAdminEvents } from "@/server/projects/store";
 import { ActivityStream, filterActivity } from "@/components/console/ActivityStream";
 import { CiBadge } from "@/components/console/CiBadge";
 import { StatusMark } from "@/components/shared/StatusMark";
@@ -24,9 +25,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ConsoleProjectPage({ params, searchParams }: Props) {
   const { project: slug } = await params;
   const { type, timeframe } = await searchParams;
-  const [project, feed] = await Promise.all([
+  const [project, feed, adminEvents] = await Promise.all([
     getPrivateProject(slug),
     getActivityFeed({ projectSlug: slug, limit: 40 }),
+    listAdminEvents(slug, 8).catch(() => []),
   ]);
   if (!project) notFound();
 
@@ -55,6 +57,38 @@ export default async function ConsoleProjectPage({ params, searchParams }: Props
         <p className="mt-3 text-ink-soft max-w-2xl leading-relaxed">
           {project.description}
         </p>
+
+        {/* Actions */}
+        <div className="mt-5 flex flex-wrap items-center gap-2.5">
+          <Link
+            href={`/console/projects/${project.slug}/edit`}
+            className="rounded-[4px] bg-accent px-4 py-2.5 text-sm font-medium text-ink-inverse hover:bg-accent-deep transition-colors duration-[var(--duration-micro)]"
+          >
+            Edit project
+          </Link>
+          <SyncButton />
+          {project.repositoryUrl ? (
+            <a
+              href={project.repositoryUrl}
+              rel="noopener"
+              className="border border-line-strong px-3.5 py-2 text-xs rounded-[3px] text-ink-soft hover:text-ink hover:border-ink transition-colors duration-[var(--duration-micro)]"
+            >
+              View repository
+            </a>
+          ) : null}
+          <Link
+            href={`/console/projects/${project.slug}/edit#ms-h`}
+            className="border border-line-strong px-3.5 py-2 text-xs rounded-[3px] text-ink-soft hover:text-ink hover:border-ink transition-colors duration-[var(--duration-micro)]"
+          >
+            Manage milestones
+          </Link>
+          <Link
+            href={`/workshop/${project.slug}`}
+            className="border border-line-strong px-3.5 py-2 text-xs rounded-[3px] text-ink-soft hover:text-ink hover:border-ink transition-colors duration-[var(--duration-micro)]"
+          >
+            Preview public page
+          </Link>
+        </div>
 
         {project.repository ? (
           <p className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -302,6 +336,39 @@ export default async function ConsoleProjectPage({ params, searchParams }: Props
             ) : null}
           </section>
         </div>
+      ) : null}
+
+      {/* Administration audit trail */}
+      {adminEvents.length > 0 ? (
+        <section aria-labelledby="admin-events-heading">
+          <h2 id="admin-events-heading" className="type-heading text-lg mb-3">
+            Recent changes
+          </h2>
+          <ol className="divide-y divide-line border border-line rounded-md text-sm">
+            {adminEvents.map((e) => (
+              <li key={e.id} className="flex justify-between gap-6 px-5 py-3">
+                <span>
+                  {(
+                    {
+                      project_created: "Project created",
+                      project_edited: "Configuration edited",
+                      repository_connected: "Repository connected",
+                      repository_disconnected: "Repository disconnected",
+                      visibility_changed: "Public visibility changed",
+                      project_archived: "Project archived",
+                    } as Record<string, string>
+                  )[e.action] ?? e.action}
+                </span>
+                <time
+                  dateTime={e.createdAt.toISOString()}
+                  className="text-xs text-ink-faint shrink-0 self-center"
+                >
+                  {timeAgo(e.createdAt)}
+                </time>
+              </li>
+            ))}
+          </ol>
+        </section>
       ) : null}
 
       {/* Activity for this project */}

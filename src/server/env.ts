@@ -26,6 +26,18 @@ const envSchema = z.object({
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters"),
 
+  /**
+   * AES-256 key encrypting TOTP secrets at rest: exactly 64 hex chars
+   * (32 bytes). Independent of SESSION_SECRET. Generate with:
+   *   openssl rand -hex 32
+   */
+  TWO_FACTOR_ENCRYPTION_KEY: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]{64}$/,
+      "TWO_FACTOR_ENCRYPTION_KEY must be exactly 64 hex characters (openssl rand -hex 32)",
+    ),
+
   /** GitHub OAuth app for console sign-in. Optional until configured. */
   GITHUB_OAUTH_CLIENT_ID: z.string().optional(),
   GITHUB_OAUTH_CLIENT_SECRET: z.string().optional(),
@@ -58,6 +70,15 @@ function loadEnv() {
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
   const env = parsed.data;
+
+  if (
+    env.TWO_FACTOR_ENCRYPTION_KEY.toLowerCase() ===
+    env.SESSION_SECRET.toLowerCase()
+  ) {
+    throw new Error(
+      "TWO_FACTOR_ENCRYPTION_KEY must be independent of SESSION_SECRET.",
+    );
+  }
 
   if (env.AUTH_DEV_LOGIN === "true" && env.NODE_ENV === "production") {
     // Loud, unmissable, and refused unless explicitly forced for a

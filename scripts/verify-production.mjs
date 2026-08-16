@@ -91,7 +91,7 @@ try {
   fail("homepage fetch", String(err));
 }
 
-console.log("\nConsole protection:");
+console.log("\nConsole protection (anonymous):");
 {
   const page = await get("/console/overview");
   if (page && [302, 303, 307, 308].includes(page.status)) {
@@ -104,6 +104,84 @@ console.log("\nConsole protection:");
   const sync = await get("/api/console/sync", { method: "POST" });
   if (sync && sync.status === 401) ok("sync endpoint → 401");
   else fail("sync endpoint", `status ${sync?.status}`);
+  const admin = await get("/api/console/admin/projects", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  });
+  if (admin && admin.status === 401) ok("project-admin API → 401");
+  else fail("project-admin API", `status ${admin?.status}`);
+}
+
+/*
+ * Session-state checks: with SESSION_SECRET available (local prod
+ * builds, or explicitly provided for a production audit), mint
+ * synthetic OAuth-only and pending-2FA sessions and prove neither can
+ * enter the console or its APIs.
+ */
+if (process.env.SESSION_SECRET) {
+  console.log("\nConsole protection (OAuth-only and pending-2FA sessions):");
+  try {
+    const { SignJWT } = await import("jose");
+    const key = new TextEncoder().encode(process.env.SESSION_SECRET);
+    const mint = (state) =>
+      new SignJWT({
+        user: {
+          id: "github:verify-probe",
+          githubLogin: process.env.VERIFY_LOGIN ?? "chaosbrewing",
+          displayName: null,
+          avatarUrl: null,
+        },
+        state,
+        sid: `verify-${state}`,
+        iatMs: Date.now(),
+      })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("5m")
+        .setIssuer("porscha.today")
+        .sign(key);
+
+    for (const state of ["oauth_authenticated", "two_factor_pending"]) {
+      const cookie = `porscha_session=${await mint(state)}`;
+      const page = await get("/console/overview", {
+        headers: { cookie },
+      });
+      if (page && [302, 303, 307, 308].includes(page.status)) {
+        ok(`${state} session cannot open /console (redirected)`);
+      } else {
+        fail(`${state} console page`, `status ${page?.status}`);
+      }
+      const api = await get("/api/console/overview", { headers: { cookie } });
+      if (api && api.status === 401) {
+        ok(`${state} session rejected by private APIs`);
+      } else {
+        fail(`${state} private API`, `status ${api?.status}`);
+      }
+      const admin = await get("/api/console/admin/projects", {
+        method: "POST",
+        headers: { cookie, "Content-Type": "application/json" },
+        body: "{}",
+      });
+      if (admin && admin.status === 401) {
+        ok(`${state} session rejected by project-admin APIs`);
+      } else {
+        fail(`${state} admin API`, `status ${admin?.status}`);
+      }
+      const stream = await get("/api/console/stream", { headers: { cookie } });
+      if (stream && stream.status === 401) {
+        ok(`${state} session rejected by SSE stream`);
+      } else {
+        fail(`${state} SSE`, `status ${stream?.status}`);
+      }
+    }
+  } catch (err) {
+    fail("session-state checks", String(err));
+  }
+} else {
+  console.log(
+    "\nConsole protection (session states): skipped — set SESSION_SECRET to mint probe sessions.",
+  );
 }
 
 console.log("\nWebhook endpoint:");

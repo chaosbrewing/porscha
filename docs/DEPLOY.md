@@ -34,6 +34,7 @@ Host: Railway (Node server; SSE-compatible). Database: Supabase Postgres.
    | `SITE_URL` | `https://porscha.today` |
    | `DATABASE_URL` | Supabase **Session pooler** string — dashboard → project `porscha-today` → Connect → "Session pooler" (IPv4-compatible, port 5432). Looks like `postgresql://postgres.rdgsveeporyiplsnztzw:<DB_PASSWORD>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres`. Reset the DB password there if unknown. Use session mode, not the transaction pooler, for this long-lived server. |
    | `SESSION_SECRET` | `openssl rand -hex 32` |
+   | `TWO_FACTOR_ENCRYPTION_KEY` | `openssl rand -hex 32` — encrypts TOTP secrets at rest; must differ from `SESSION_SECRET`. Production refuses to boot without it. |
    | `ALLOWED_GITHUB_LOGINS` | `chaosbrewing` |
    | `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET` | from step 3 |
    | `GITHUB_TOKEN` | fine-grained PAT, read-only Contents/Issues/PRs/Actions on the registry repos (kubli, PRISM, habi, the-whispering-city, cloakli) |
@@ -94,14 +95,29 @@ the public API leaks no private repository signals.
 
 Then, by hand:
 
-1. `/console` redirects to sign-in; the allowlisted account gets in;
-   any other GitHub account is refused; sign-out works.
-2. Console → **Sync from GitHub** — populates every project snapshot
+1. **First sign-in enrolls 2FA (mandatory).** `/console` redirects to
+   sign-in → GitHub OAuth → allowlist check → you land on
+   `/login/setup-2fa`: scan the QR with any TOTP authenticator, confirm
+   a six-digit code, save the ten one-time recovery codes, acknowledge.
+   Only then does a full console session exist. Every later sign-in is
+   OAuth → `/login/verify` → authenticator code (recovery code as
+   fallback). GitHub OAuth alone never opens the console, and there is
+   no way to casually disable 2FA — the security page (`/console/security`)
+   offers recovery-code regeneration and authenticator replacement,
+   both behind a fresh TOTP challenge.
+2. Any non-allowlisted GitHub account is refused; sign-out works.
+3. Console → **Sync from GitHub** — populates every project snapshot
    (needs `GITHUB_TOKEN`).
-3. In a repo's webhook settings, use **Redeliver** on a delivery —
+4. In a repo's webhook settings, use **Redeliver** on a delivery —
    confirm 200 `processed`, redeliver again → `duplicate`, and watch
    the console update without a reload (indicator: Live).
-4. Check Railway logs: no secrets, no crash loops.
+5. Check Railway logs: no secrets, no crash loops.
+
+Session-state checks (`verify-production.mjs` covers the anonymous
+cases; run it with `SESSION_SECRET=<production value>` in the
+environment to additionally mint synthetic OAuth-only and pending-2FA
+sessions and prove both are rejected by `/console`, the private APIs,
+and the project-admin APIs).
 
 ## Rollback / notes
 

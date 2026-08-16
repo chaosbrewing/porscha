@@ -137,17 +137,45 @@ release blockers.
 
 ## Authentication & authorization
 
+- Sign-in is **GitHub OAuth → allowlist → mandatory TOTP 2FA**.
+  Sessions carry an explicit state (`oauth_authenticated`,
+  `two_factor_pending`, `two_factor_verified`); only
+  `two_factor_verified` reaches `/console`, the private APIs, SSE, or
+  any project-administration mutation. OAuth alone yields a
+  short-lived pending session that can do exactly one thing: finish
+  verification.
+- 2FA: RFC 6238 TOTP via the maintained `otpauth` library (±1 step
+  window, used-step replay prevention), secrets AES-256-GCM encrypted
+  at rest under `TWO_FACTOR_ENCRYPTION_KEY` (independent of
+  `SESSION_SECRET`), ten single-use recovery codes stored as SHA-256
+  hashes, DB-backed rate limiting with cooldown, and a security-event
+  log that never records codes or secrets. Replacing the authenticator
+  requires a fresh TOTP challenge and invalidates every session
+  (tokens issued at or before the invalidation instant are rejected).
 - Session: `jose`-signed JWT in an httpOnly, `SameSite=Lax`, `Secure`
-  cookie. No session state in the browser.
-- Sign-in: GitHub OAuth with an HMAC-signed `state` cookie (CSRF).
+  cookie, with a rotated session id on every issuance. No session
+  state in the browser.
 - Authorization: `ALLOWED_GITHUB_LOGINS` allowlist, re-checked
   server-side on every console page load **and** every console API
   call. Route hiding is not relied on; console routes are also
   `noindex` and disallowed in robots.txt.
-- Mutating endpoints (`logout`, `sync`) are POST-only with an origin
-  check.
+- Mutating endpoints are POST-only with an origin check.
 - Dev login exists only when `AUTH_DEV_LOGIN=true`; env validation
-  refuses that flag in production builds.
+  refuses that flag in production builds, so it cannot bypass 2FA.
+
+## Project administration
+
+Routine project management lives in the console (`/console/projects/new`,
+`/console/projects/[project]/edit`): create/edit projects, connect or
+disconnect a repository (picker backed by the server-side sync token),
+per-signal public visibility (all GitHub-derived signals default OFF),
+milestone/work-item management, archive. The registry
+(`src/config/registry.ts`) remains bootstrap seed data only — once a
+project is edited in the console (`config_edited_at` set), the
+database is authoritative and the registry never overwrites it. Every
+mutation requires `two_factor_verified`, is validated with zod, and is
+recorded in the `project_admin_events` audit trail. The "what visitors
+will see" preview runs drafts through the real public serializer.
 
 ## Realtime
 

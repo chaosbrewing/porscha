@@ -45,6 +45,7 @@ function rowToRecord(row: DbProjectRow): ProjectRecord {
     status: row.project.status as ProjectRecord["status"],
     featured: row.project.featured,
     isApp: row.project.isApp,
+    isPublic: row.project.isPublic,
     visibility: row.project.visibility as ProjectRecord["visibility"],
     links: (row.project.links ?? null) as ProjectRecord["links"],
     currentMilestone: row.project.currentMilestone,
@@ -65,6 +66,7 @@ function registryToRecord(slug: string): ProjectRecord | null {
     status: p.status,
     featured: p.featured ?? false,
     isApp: p.isApp ?? false,
+    isPublic: true,
     visibility: p.visibility,
     links: p.links ?? null,
     currentMilestone: p.currentMilestone ?? null,
@@ -172,6 +174,9 @@ export async function getPublicProjects(): Promise<{
   return {
     degraded,
     projects: records
+      // Projects hidden from the public site never reach the
+      // serializer at all.
+      .filter(({ record }) => record.isPublic)
       .map(({ record, snapshot }) =>
         toPublicProjectView(
           record,

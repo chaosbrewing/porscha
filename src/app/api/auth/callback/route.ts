@@ -10,6 +10,7 @@ import {
   createSessionToken,
   sessionCookieOptions,
 } from "@/server/auth/session";
+import { getTwoFactorRow, recordSecurityEvent } from "@/server/auth/twofactor";
 import { touchUser } from "@/server/projects/store";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,9 @@ export async function GET(req: NextRequest) {
 
   if (!isAuthorizedLogin(ghUser.login)) {
     // Authenticated but not authorized — no session is created.
+    await recordSecurityEvent(null, "login_denied_unauthorized", {
+      login: ghUser.login,
+    }).catch(() => {});
     return fail("unauthorized");
   }
 
@@ -45,12 +49,19 @@ export async function GET(req: NextRequest) {
     displayName: ghUser.name,
     avatarUrl: ghUser.avatarUrl,
   };
-  // Best-effort user record; sign-in works even if the DB is down.
+  // The user row must exist for 2FA state; other failures degrade.
   await touchUser(user).catch(() => {});
 
-  const token = await createSessionToken(user);
-  const res = NextResponse.redirect(new URL("/console/overview", env.SITE_URL));
-  res.cookies.set({ ...sessionCookieOptions(), value: token });
+  // OAuth alone never grants console access: issue a short-lived
+  // pending session and route through TOTP verification/enrollment.
+  const enrolled = await getTwoFactorRow(user.id)
+    .then((row) => Boolean(row?.enabledAt))
+    .catch(() => false);
+  const token = await createSessionToken(user, "two_factor_pending");
+  const destination = enrolled ? "/login/verify" : "/login/setup-2fa";
+
+  const res = NextResponse.redirect(new URL(destination, env.SITE_URL));
+  res.cookies.set({ ...sessionCookieOptions(), maxAge: 600, value: token });
   res.cookies.set({
     name: OAUTH_STATE_COOKIE,
     value: "",
