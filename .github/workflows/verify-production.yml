@@ -1,0 +1,25 @@
+# Runs the production verification script against the live site from a
+# GitHub runner. Read-only: public routes, auth protection, webhook
+# rejection, and the public privacy boundary.
+name: Verify production
+
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: "Origin to verify"
+        required: false
+        default: "https://porscha.today"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify
+        run: node scripts/verify-production.mjs "${{ inputs.origin || 'https://porscha.today' }}"
