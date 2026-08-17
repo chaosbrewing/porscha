@@ -1,0 +1,78 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "porscha-today",
+
+  // Custom entry wrapping the OpenNext-generated handler with the
+  // www → apex redirect and the RealtimeHub Durable Object (SSE).
+  "main": "workers/entry.js",
+
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "services": [
+    {
+      // Self-reference service binding required by OpenNext; the
+      // service name must match the worker name.
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "porscha-today"
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        // Console realtime fan-out (SSE). See workers/realtime-hub.js.
+        "name": "REALTIME_HUB",
+        "class_name": "RealtimeHub"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RealtimeHub"]
+    }
+  ],
+
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // Production: create the Hyperdrive config once with
+      //   npx wrangler hyperdrive create porscha-today-db \
+      //     --connection-string="<Supabase Postgres connection string>"
+      // and replace this placeholder with the returned id
+      // (docs/DEPLOY.md § Hyperdrive).
+      "id": "REPLACE_WITH_HYPERDRIVE_ID",
+      // Local preview (`wrangler dev`) talks straight to local Postgres.
+      "localConnectionString": "postgres://porscha:porscha_dev@localhost:5432/porscha"
+    }
+  ],
+
+  // porscha.today is served by this Worker directly — Cloudflare
+  // terminates TLS for both hostnames; no separate origin exists.
+  "routes": [
+    { "pattern": "porscha.today", "custom_domain": true },
+    { "pattern": "www.porscha.today", "custom_domain": true }
+  ],
+
+  // Non-secret configuration. Secrets (SESSION_SECRET,
+  // TWO_FACTOR_ENCRYPTION_KEY, GITHUB_OAUTH_CLIENT_SECRET,
+  // GITHUB_TOKEN, GITHUB_WEBHOOK_SECRET) are set with
+  // `wrangler secret put` and must never appear in this file.
+  "vars": {
+    "NODE_ENV": "production",
+    "NEXTJS_ENV": "production",
+    "SITE_URL": "https://porscha.today",
+    "ALLOWED_GITHUB_LOGINS": "chaosbrewing",
+    "SNAPSHOT_STALE_MINUTES": "30"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

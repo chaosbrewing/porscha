@@ -7,8 +7,13 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/generate-content-bundle.mjs",
     "build": "next build",
     "start": "next start",
+    "build:cloudflare": "opennextjs-cloudflare build",
+    "preview:cloudflare": "opennextjs-cloudflare build && wrangler dev",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "generate:content": "node scripts/generate-content-bundle.mjs",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -34,6 +39,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.21.0",
@@ -46,6 +52,7 @@
     "eslint-config-next": "^16.3.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.123.0"
   }
 }

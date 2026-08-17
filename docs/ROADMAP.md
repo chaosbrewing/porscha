@@ -9,9 +9,12 @@
   activity and freshness but does not recount open PRs/issues; the
   reconciliation sync owns full snapshot rebuilds. Between syncs, list
   detail can lag the activity stream.
-- **Single-process realtime.** The SSE bus is in-process. Multiple
-  instances still work — clients fall back to polling — but live pushes
-  only reflect events ingested by the instance a client is connected to.
+- **Realtime fan-out is runtime-specific.** On Cloudflare Workers the
+  SSE bus is a Durable Object, so live pushes reach every connected
+  client regardless of which isolate ingested the event. On a plain
+  Node server the bus is in-process: multiple instances still work —
+  clients fall back to polling — but live pushes only reflect events
+  ingested by the instance a client is connected to.
 - **Configuration-backed content editing.** Registry, milestones, work
   items, and site settings are edited in code. The database tables for
   gallery/lab/notes exist but are unused (extension point).
@@ -28,8 +31,10 @@
    existing `site_settings` and content tables.
 3. **Milestone weighting** and per-item GitHub issue linkage (the
    `github_issue_number` column already exists).
-4. **Durable realtime** — swap the in-process bus for Postgres
-   LISTEN/NOTIFY so SSE survives multi-instance deployments unchanged.
+4. **Durable realtime on Node hosts** — the Workers runtime already
+   fans out through a Durable Object; if the app ever returns to a
+   multi-instance Node host, swap the in-process bus for Postgres
+   LISTEN/NOTIFY so SSE survives that too.
 5. **Workshop state automation** — derive Open/Working/Quiet from
    recent activity rather than configuration, if it ever feels honest.
 6. **Gallery media pipeline** — original-quality uploads with generated

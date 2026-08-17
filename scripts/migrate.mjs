@@ -3,8 +3,9 @@
  * Production migration runner.
  *
  * Applies the SQL migrations in ./drizzle using drizzle-orm's built-in
- * migrator (a production dependency), so the runtime container does not
- * need drizzle-kit. Uses the same `drizzle.__drizzle_migrations`
+ * migrator. Run as an explicit deployment step (the Deploy to
+ * Cloudflare workflow calls it before `wrangler deploy`; the Worker
+ * itself never migrates). Uses the same `drizzle.__drizzle_migrations`
  * journal as `npm run db:migrate`, so the two are interchangeable and
  * already-applied migrations are skipped.
  */

@@ -4,6 +4,8 @@ import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
 import { z } from "zod";
+import { isCloudflareWorkers } from "@/server/runtime";
+import contentBundle from "./content-bundle.json";
 
 /**
  * File-backed content system.
@@ -12,9 +14,18 @@ import { z } from "zod";
  * biography live as Markdown files under `src/content/`. Frontmatter is
  * validated with zod so a malformed file fails loudly at build/dev time
  * instead of rendering garbage.
+ *
+ * In the Node runtime the files are read from disk. The Cloudflare
+ * Workers runtime has no filesystem, so it reads the identical raw file
+ * text from `content-bundle.json`, generated from `src/content` by
+ * `scripts/generate-content-bundle.mjs` on every build (npm `prebuild`
+ * hook). Parsing and validation are shared, so both runtimes see the
+ * same content pipeline.
  */
 
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content");
+
+const bundledFiles: Record<string, string> = contentBundle.files;
 
 marked.setOptions({ gfm: true });
 
@@ -22,18 +33,41 @@ export function renderMarkdown(md: string): string {
   return marked.parse(md, { async: false });
 }
 
+/** Raw `{relative path → file text}` for a content subdirectory. */
+function readRawDir(dir: string): Record<string, string> {
+  if (isCloudflareWorkers) {
+    const out: Record<string, string> = {};
+    const prefix = `${dir}/`;
+    for (const [rel, raw] of Object.entries(bundledFiles)) {
+      if (rel.startsWith(prefix)) out[rel.slice(prefix.length)] = raw;
+    }
+    return out;
+  }
+  const full = path.join(CONTENT_ROOT, dir);
+  if (!fs.existsSync(full)) return {};
+  const out: Record<string, string> = {};
+  for (const file of fs.readdirSync(full)) {
+    out[file] = fs.readFileSync(path.join(full, file), "utf8");
+  }
+  return out;
+}
+
+/** Raw file text for a single top-level content file, if present. */
+function readRawFile(rel: string): string | undefined {
+  if (isCloudflareWorkers) return bundledFiles[rel];
+  const file = path.join(CONTENT_ROOT, rel);
+  if (!fs.existsSync(file)) return undefined;
+  return fs.readFileSync(file, "utf8");
+}
+
 function readCollection(dir: string): Array<{
   slug: string;
   data: Record<string, unknown>;
   content: string;
 }> {
-  const full = path.join(CONTENT_ROOT, dir);
-  if (!fs.existsSync(full)) return [];
-  return fs
-    .readdirSync(full)
-    .filter((f) => f.endsWith(".md") || f.endsWith(".mdx"))
-    .map((file) => {
-      const raw = fs.readFileSync(path.join(full, file), "utf8");
+  return Object.entries(readRawDir(dir))
+    .filter(([file]) => file.endsWith(".md") || file.endsWith(".mdx"))
+    .map(([file, raw]) => {
       const { data, content } = matter(raw);
       return { slug: file.replace(/\.mdx?$/, ""), data, content };
     });
@@ -171,8 +205,8 @@ export function getProjectStory(slug: string): ProjectStory | undefined {
 /* --------------------------- Biography ---------------------------- */
 
 export function getBiography(): { html: string } | undefined {
-  const file = path.join(CONTENT_ROOT, "porscha.md");
-  if (!fs.existsSync(file)) return undefined;
-  const { content } = matter(fs.readFileSync(file, "utf8"));
+  const raw = readRawFile("porscha.md");
+  if (raw === undefined) return undefined;
+  const { content } = matter(raw);
   return { html: renderMarkdown(content.trim()) };
 }

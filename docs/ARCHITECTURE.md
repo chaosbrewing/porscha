@@ -59,7 +59,7 @@ Key modules (all under `src/`):
 | `server/github/` | verify, normalize, ingest, REST client, sync |
 | `server/projects/` | store (SQL), progress, attention, transformers, service |
 | `server/auth/` | session (jose), GitHub OAuth, guards |
-| `server/realtime/bus.ts` | in-process event bus feeding SSE |
+| `server/realtime/bus.ts` | runtime-aware event bus feeding SSE (EventEmitter on Node, Durable Object on Workers) |
 | `server/content/loader.ts` | Markdown collections (notes/lab/gallery/bio) |
 | `app/(public)/` | public routes |
 | `app/console/` | console routes (guarded in layout AND per-API) |
@@ -179,15 +179,19 @@ will see" preview runs drafts through the real public serializer.
 
 ## Realtime
 
-- Webhook/sync publish to an in-process `EventEmitter` bus.
-- `/api/console/stream` (SSE, authorized) forwards bus events with
-  heartbeats every 25s.
+- Webhook/sync publish through the runtime-aware bus
+  (`server/realtime/bus.ts`): an in-process `EventEmitter` on the Node
+  runtime; on Cloudflare Workers, where isolates share no memory, a
+  single `RealtimeHub` Durable Object (`workers/realtime-hub.js`) fans
+  events out to every connected stream.
+- `/api/console/stream` (SSE, authorized) serves the bus stream with
+  heartbeats every 25s. The wire format is identical in both runtimes.
 - The client (`ConsoleLive`) refreshes the server-rendered console on
   events (debounced), tracks Live / Updating / Delayed / Disconnected,
   and falls back to slow polling while not live. Snapshot staleness is
   additionally computed server-side (`SNAPSHOT_STALE_MINUTES`).
-- Single-process by design in v1; a multi-instance deployment degrades
-  to the polling fallback rather than breaking.
+- A lost realtime event degrades to a delayed polling refresh rather
+  than breaking the console.
 
 ## Design system
 

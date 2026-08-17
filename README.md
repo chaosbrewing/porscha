@@ -87,6 +87,7 @@ an intentional placeholder composition holds the slot. See
 - [`docs/SETUP.md`](docs/SETUP.md) — local setup, environment variables,
   database, webhook configuration, deployment, testing
 - [`docs/DEPLOY.md`](docs/DEPLOY.md) — production deployment runbook
-  (Railway + Supabase + Cloudflare) and verification
+  (Cloudflare Workers + OpenNext + Hyperdrive + Supabase) and
+  verification
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — known limitations, future
   roadmap, release notes

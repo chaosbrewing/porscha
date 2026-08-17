@@ -1,129 +1,177 @@
 # Production deployment — porscha.today
 
-Release: branch `claude/porscha-today-build-6ifsus`, commit `335c557`.
-Host: Railway (Node server; SSE-compatible). Database: Supabase Postgres.
+Host: **Cloudflare Workers** (Next.js via `@opennextjs/cloudflare`).
+Database: **Supabase Postgres** behind a **Cloudflare Hyperdrive**
+binding. Cloudflare terminates TLS for the custom domains and serves
+the application directly — there is no separate origin.
 
-## Already done (2026-08-14)
+```
+porscha.today
+    ↓
+Cloudflare Worker (custom domain, Cloudflare TLS)
+    ↓
+Next.js via @opennextjs/cloudflare  (+ RealtimeHub Durable Object for SSE)
+    ↓
+Hyperdrive binding (HYPERDRIVE)
+    ↓
+Supabase Postgres
+```
 
-- **Production database provisioned**: Supabase project `porscha-today`
-  (ref `rdgsveeporyiplsnztzw`, region `ap-southeast-2`, Postgres 17,
-  ~$10/month on the Chaos Prydre org).
-- **Migrations applied**: the full `drizzle/0000_init.sql` schema is
-  live (12 tables + indexes + FKs). Drizzle's migration journal is
-  seeded, so the app's `npm run db:migrate` recognizes the schema as
-  current and is a safe no-op on boot.
-- **Data-API hardening**: Row Level Security is enabled with no
-  policies on every table, so Supabase's auto-generated REST/GraphQL
-  API can never expose application data. The app itself connects
-  directly over Postgres as the table owner and is unaffected.
-- **Deploy config in repo**: `railway.json` (build + `db:migrate`-then-
-  `start` boot, health check on `/`), a manual `Deploy to Railway`
-  GitHub Action, and `scripts/verify-production.mjs`.
+Repo pieces that make this work:
 
-## 1. Railway service (~5 minutes, needs the Railway account)
+- `wrangler.jsonc` — Worker config: custom entry, `nodejs_compat`,
+  assets, custom domains, `HYPERDRIVE` + `REALTIME_HUB` bindings,
+  non-secret vars.
+- `open-next.config.ts` — OpenNext adapter config (no ISR cache backend
+  needed: dynamic routes are dynamic, static pages ship as assets).
+- `workers/entry.js` — wraps the generated handler; www→apex redirect;
+  exports the `RealtimeHub` Durable Object (console SSE fan-out).
+- `scripts/migrate.mjs` — explicit migration runner (the Worker never
+  migrates; see §5).
+- `.github/workflows/deploy-cloudflare.yml` — manual QA-gated deploy.
 
-1. railway.com → New Project → **Deploy from GitHub repo** →
-   `chaosbrewing/porscha`, branch `claude/porscha-today-build-6ifsus`
-   (or `main` once merged). Railway picks up `railway.json`
-   automatically: `npm ci && npm run build`, then
-   `npm run db:migrate && npm start`.
-2. Service → **Variables** — set:
+## 1. One-time Cloudflare setup
 
-   | Variable | Value |
-   | --- | --- |
-   | `SITE_URL` | `https://porscha.today` |
-   | `DATABASE_URL` | Supabase **Session pooler** string — dashboard → project `porscha-today` → Connect → "Session pooler" (IPv4-compatible, port 5432). Looks like `postgresql://postgres.rdgsveeporyiplsnztzw:<DB_PASSWORD>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres`. Reset the DB password there if unknown. Use session mode, not the transaction pooler, for this long-lived server. |
-   | `SESSION_SECRET` | `openssl rand -hex 32` |
-   | `TWO_FACTOR_ENCRYPTION_KEY` | `openssl rand -hex 32` — encrypts TOTP secrets at rest; must differ from `SESSION_SECRET`. Production refuses to boot without it. |
-   | `ALLOWED_GITHUB_LOGINS` | `chaosbrewing` |
-   | `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET` | from step 3 |
-   | `GITHUB_TOKEN` | fine-grained PAT, read-only Contents/Issues/PRs/Actions on the registry repos (kubli, PRISM, habi, the-whispering-city, cloakli) |
-   | `GITHUB_WEBHOOK_SECRET` | `openssl rand -hex 32` (same value used in step 4) |
+Prereqs: the Cloudflare account that owns the `porscha.today` zone,
+and `npx wrangler login` (or an API token in `CLOUDFLARE_API_TOKEN`).
 
-   Do **not** set `AUTH_DEV_LOGIN` — the app refuses to boot in
-   production with it enabled.
-3. Service → **Settings → Networking**: add custom domains
-   `porscha.today` and `www.porscha.today`. Railway shows a target
-   hostname per domain and provisions origin TLS once DNS resolves.
-4. Optional CI deploys afterwards: add a Railway project token as the
-   `RAILWAY_TOKEN` Actions secret (+ `RAILWAY_SERVICE_ID` repo
-   variable) and use the manual **Deploy to Railway** workflow.
+### 1a. Hyperdrive config
 
-## 2. Cloudflare DNS + TLS (needs the Cloudflare account)
+Create the Hyperdrive config from the Supabase Postgres connection
+string (dashboard → project `porscha-today` → Connect; prefer the
+**direct** connection string — Hyperdrive is the pooler here. If the
+direct/IPv6 host is unreachable from your network, the **session
+pooler** string also works):
 
-1. DNS: replace the current apex record with a **CNAME** for
-   `porscha.today` → the Railway target from step 1.3 (Cloudflare
-   flattens apex CNAMEs automatically). Add `www` → its Railway target
-   (or → `porscha.today`). Keep both **proxied (orange cloud)**.
-2. SSL/TLS → Overview: set **Full (strict)**. Never Flexible.
-3. Rules → Redirect Rules: `www.porscha.today/*` → 301 →
-   `https://porscha.today/$1` (canonical apex).
-4. The previous **525** came from having no origin; once Railway's
-   origin certificate is issued and DNS points at it, reload
-   https://porscha.today and confirm the 525 is gone.
+```sh
+npx wrangler hyperdrive create porscha-today-db \
+  --connection-string="postgresql://postgres:<DB_PASSWORD>@db.rdgsveeporyiplsnztzw.supabase.co:5432/postgres"
+```
 
-## 3. GitHub OAuth app (needs the GitHub account)
+Paste the returned `id` into the `hyperdrive` block of
+`wrangler.jsonc` (replacing `REPLACE_WITH_HYPERDRIVE_ID`) and commit.
+The connection string lives only inside Hyperdrive; the Worker sees a
+`HYPERDRIVE` binding, and the browser sees nothing.
 
-GitHub → Settings → Developer settings → OAuth Apps → New:
+### 1b. Worker secrets
+
+Set each of these once (`npx wrangler secret put <NAME>`, paste value
+when prompted). Values must never be committed or put in
+`wrangler.jsonc`:
+
+| Secret | Value |
+| --- | --- |
+| `SESSION_SECRET` | `openssl rand -hex 32` |
+| `TWO_FACTOR_ENCRYPTION_KEY` | `openssl rand -hex 32` — encrypts TOTP secrets at rest; **must differ** from `SESSION_SECRET`; production refuses to serve without it |
+| `GITHUB_OAUTH_CLIENT_ID` | from §2 |
+| `GITHUB_OAUTH_CLIENT_SECRET` | from §2 |
+| `GITHUB_TOKEN` | fine-grained PAT, read-only Contents/Issues/PRs/Actions on the connected repos |
+| `GITHUB_WEBHOOK_SECRET` | `openssl rand -hex 32` (same value as the GitHub webhook, §3) |
+
+Non-secret config (`SITE_URL`, `ALLOWED_GITHUB_LOGINS`,
+`SNAPSHOT_STALE_MINUTES`) is versioned in `wrangler.jsonc` `vars`.
+Do **not** set `AUTH_DEV_LOGIN` in production — the app refuses it.
+
+### 1c. Custom domains
+
+`wrangler.jsonc` declares `porscha.today` and `www.porscha.today` as
+Workers **custom domains**; the first `wrangler deploy` registers both
+on the zone and provisions Cloudflare-managed TLS. Remove any old DNS
+records pointing those hostnames at Railway (or other origins) first —
+custom domains replace them with Worker routes. `workers/entry.js`
+301-redirects www → apex.
+
+## 2. GitHub OAuth app
+
+<https://github.com/settings/developers> → OAuth Apps:
 
 - Homepage URL: `https://porscha.today`
 - Authorization callback URL: `https://porscha.today/api/auth/callback`
 
-Copy the client ID + a client secret into the Railway variables.
-(OAuth apps cannot be created via API — this is a dashboard step.)
+Put the client id/secret into Worker secrets (§1b). Console access is
+OAuth → `ALLOWED_GITHUB_LOGINS` allowlist → mandatory TOTP.
 
-## 4. GitHub webhooks (needs admin on the registry repos)
+## 3. GitHub webhooks
 
-On each of `chaosbrewing/kubli`, `chaosbrewing/PRISM`,
-`chaosbrewing/habi`, `chaosbrewing/the-whispering-city`
-(org-level webhook also works — unregistered repos are ignored):
+On each connected repository (or the org): webhook →
+`https://porscha.today/api/github/webhook`, content type
+`application/json`, secret = `GITHUB_WEBHOOK_SECRET`, events: pushes,
+issues, pull requests, releases, workflow runs. Deliveries are
+HMAC-verified (constant-time) and deduplicated by delivery id.
 
-- Payload URL: `https://porscha.today/api/github/webhook`
-- Content type: `application/json`
-- Secret: the `GITHUB_WEBHOOK_SECRET` value
-- Events: `push`, `pull_request`, `issues`, `workflow_run`, `release`
+## 4. GitHub Actions secrets (for CI deploys)
 
-## 5. Verify
+| Actions secret | Purpose |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Workers deploy (API token with Workers Scripts:Edit, Workers Custom Domains, Hyperdrive:Read) |
+| `CLOUDFLARE_ACCOUNT_ID` | account id (dashboard → Workers & Pages → right sidebar) |
+| `DATABASE_URL` | Supabase Postgres string, used **only** by the migration step |
 
-```bash
-node scripts/verify-production.mjs            # against https://porscha.today
+## 5. Migrations
+
+Migrations are an **explicit deployment step**, never implicit in the
+Worker (multiple isolates must not race schema changes):
+
+- CI path: the **Deploy to Cloudflare** workflow runs
+  `node scripts/migrate.mjs` (drizzle-orm migrator, same
+  `drizzle.__drizzle_migrations` journal as drizzle-kit) in its single
+  job before `wrangler deploy`, and refuses to deploy unmigrated.
+- Manual path: `DATABASE_URL="<supabase string>" npm run db:migrate`
+  from a trusted machine, then deploy.
+
+Migrations are additive; already-applied ones are skipped, so re-runs
+are safe no-ops.
+
+## 6. Deploying
+
+- **CI (preferred)**: Actions → **Deploy to Cloudflare** → run. Gates:
+  `npm ci`, lint, typegen+typecheck, tests, OpenNext build; then
+  migrations, `wrangler deploy`, and a live verification pass.
+- **Local**: `npm run deploy:cloudflare` (requires `wrangler login`;
+  run migrations first).
+- **Worker-runtime preview** (no deploy): `npm run preview:cloudflare`
+  — builds with OpenNext and serves the real Worker bundle in workerd
+  via `wrangler dev`, using the `localConnectionString` from
+  `wrangler.jsonc` instead of production Hyperdrive.
+
+## 7. Verification
+
+```sh
+node scripts/verify-production.mjs https://porscha.today   # read-only checks
+node scripts/diagnose-origin.mjs  https://porscha.today   # who is serving + www redirect
 ```
 
-checks every public route, 404s, the canonical headline + portrait,
-console/API/SSE auth protection, unsigned-webhook rejection, and that
-the public API leaks no private repository signals.
+or the **Verify production** / **Diagnose origin** workflows. Beyond
+that, verify by hand: sign in (OAuth → TOTP), console shows **Live**
+(SSE), a webhook test delivery updates the console, and the public
+site never exposes private repo data.
 
-Then, by hand:
+## 8. Rollback
 
-1. **First sign-in enrolls 2FA (mandatory).** `/console` redirects to
-   sign-in → GitHub OAuth → allowlist check → you land on
-   `/login/setup-2fa`: scan the QR with any TOTP authenticator, confirm
-   a six-digit code, save the ten one-time recovery codes, acknowledge.
-   Only then does a full console session exist. Every later sign-in is
-   OAuth → `/login/verify` → authenticator code (recovery code as
-   fallback). GitHub OAuth alone never opens the console, and there is
-   no way to casually disable 2FA — the security page (`/console/security`)
-   offers recovery-code regeneration and authenticator replacement,
-   both behind a fresh TOTP challenge.
-2. Any non-allowlisted GitHub account is refused; sign-out works.
-3. Console → **Sync from GitHub** — populates every project snapshot
-   (needs `GITHUB_TOKEN`).
-4. In a repo's webhook settings, use **Redeliver** on a delivery —
-   confirm 200 `processed`, redeliver again → `duplicate`, and watch
-   the console update without a reload (indicator: Live).
-5. Check Railway logs: no secrets, no crash loops.
+Application rollbacks never require touching the database — migrations
+are additive, and old application code runs fine against a newer
+schema.
 
-Session-state checks (`verify-production.mjs` covers the anonymous
-cases; run it with `SESSION_SECRET=<production value>` in the
-environment to additionally mint synthetic OAuth-only and pending-2FA
-sessions and prove both are rejected by `/console`, the private APIs,
-and the project-admin APIs).
+- `npx wrangler deployments list` — find the previous deployment.
+- `npx wrangler rollback` (optionally with the deployment id) —
+  restores the previous Worker version, including its assets.
+- Alternatively: check out the previous commit and run the deploy
+  workflow/`npm run deploy:cloudflare` again.
 
-## Rollback / notes
+Never roll the schema back as part of an app rollback; write a new
+forward migration instead if a schema change must be undone.
 
-- Roll back = redeploy the previous commit from Railway's deploy list;
-  the schema has no destructive migrations to unwind.
-- Prefer Railway's own Postgres instead? Provision it, point
-  `DATABASE_URL` at it, and let boot-time `db:migrate` build the
-  schema; then delete the Supabase project to stop its $10/month
-  charge. The Supabase project is otherwise ready and hardened.
+## 9. Historical notes (clearly marked, kept for context)
+
+- **2026-08-14 — Supabase provisioning**: project `porscha-today`
+  (ref `rdgsveeporyiplsnztzw`, region `ap-southeast-2`, Postgres 17).
+  Schema migrated; drizzle journal seeded; RLS enabled with no
+  policies so Supabase's auto-generated REST/GraphQL API can never
+  expose application data (the app connects directly over Postgres as
+  table owner and is unaffected). All still true and in use.
+- **Retired 2026-08-17 — Railway hosting**: the previous plan deployed
+  a Node/Docker server to Railway (`railway.json`, `Dockerfile`,
+  Docker-verify and Railway-deploy workflows). Railway never went
+  live (its edge answered `Application not found`); the migration to
+  Cloudflare Workers replaced all of it. No Railway configuration,
+  tokens, domains, or PORT semantics remain in the codebase.
