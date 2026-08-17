@@ -227,6 +227,24 @@ export const projectAdminEvents = pgTable(
   ],
 );
 
+/** Audit trail for gallery administration. Un-FK'd for the same reason
+ *  as `project_admin_events`: the record outlives the piece it
+ *  describes, which is exactly when it matters most. */
+export const galleryAdminEvents = pgTable(
+  "gallery_admin_events",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug"),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    detail: jsonb("detail"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("gallery_admin_events_time_idx").on(t.createdAt)],
+);
+
 export const siteSettings = pgTable("site_settings", {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),
@@ -235,7 +253,10 @@ export const siteSettings = pgTable("site_settings", {
     .defaultNow(),
 });
 
-/* File-backed in v1; extension points for the future editing interface. */
+/* Lab experiments and notes are file-backed; their tables remain
+   extension points for the future editing interface. The gallery has
+   graduated: `gallery_items` now carries both console-authored pieces
+   and the settings overlaid on the file-backed ones. */
 
 export const galleryItems = pgTable("gallery_items", {
   slug: text("slug").primaryKey(),
@@ -245,7 +266,33 @@ export const galleryItems = pgTable("gallery_items", {
   note: text("note"),
   mediaPath: text("media_path"),
   relatedProject: text("related_project"),
+
+  /** Accessible description; required for authored pieces. */
+  alt: text("alt"),
+  /** Layout hint, e.g. "4/5". Falls back to the file value or "4/5". */
+  aspect: text("aspect"),
+  /** Markdown body for authored pieces; null for file-backed overlays. */
+  body: text("body"),
+
+  /**
+   * "file"  — an overlay row; the Markdown file owns the content and
+   *           only the flags below apply.
+   * "console" — the row *is* the piece; no file backs it.
+   *
+   * A file-backed piece and its overlay share the file's slug, so an
+   * overlay can never shadow a different piece.
+   */
+  origin: text("origin").notNull().default("file"),
+
+  hidden: boolean("hidden").notNull().default(false),
+  featured: boolean("featured").notNull().default(false),
+  /** Manual sort seat; nulls sort last, behind every placed piece. */
+  position: integer("position"),
+
   createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });

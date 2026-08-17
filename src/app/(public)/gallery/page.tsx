@@ -2,38 +2,42 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { getGalleryPieces } from "@/server/content/loader";
+import { categoryLabel, getPublicGalleryView } from "@/server/gallery/service";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description:
-    "Pictures, sketches, and studies from around the workbench.",
+  description: "Pictures, sketches, and studies from around the workbench.",
   alternates: { canonical: "/gallery" },
 };
 
-const CATEGORY_LABEL: Record<string, string> = {
-  photography: "Photography",
-  digital: "Digital",
-  ui: "UI",
-  experiments: "Experiments",
-  sketches: "Sketches",
+/** Static column classes — Tailwind can't see interpolated names. */
+const COLUMNS: Record<number, string> = {
+  1: "columns-1",
+  2: "columns-1 sm:columns-2",
+  3: "columns-1 sm:columns-2 lg:columns-3",
+  4: "columns-1 sm:columns-2 lg:columns-4",
 };
 
-export default function GalleryPage() {
-  const pieces = getGalleryPieces();
+export default async function GalleryPage() {
+  const { settings, pieces } = await getPublicGalleryView();
 
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8">
       <header className="py-14 md:py-20 max-w-2xl">
-        <h1 className="type-display text-5xl sm:text-6xl">Gallery</h1>
-        <p className="mt-5 text-lg text-ink-soft leading-relaxed">
-          Not everything made here compiles. Studies, sketches, and pictures
-          — mostly siblings of the software.
-        </p>
+        <h1 className="type-display text-5xl sm:text-6xl">{settings.heading}</h1>
+        {settings.intro ? (
+          <p className="mt-5 text-lg text-ink-soft leading-relaxed">
+            {settings.intro}
+          </p>
+        ) : null}
       </header>
 
       {pieces.length > 0 ? (
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 [column-fill:balance]">
+        <div
+          className={`${COLUMNS[settings.columns] ?? COLUMNS[3]} gap-8 [column-fill:balance]`}
+        >
           {pieces.map((piece) => (
             <Link
               key={piece.slug}
@@ -58,7 +62,7 @@ export default function GalleryPage() {
                     {piece.title}
                   </span>
                   <span className="type-meta text-ink-faint shrink-0">
-                    {CATEGORY_LABEL[piece.category]} · {piece.year}
+                    {categoryLabel(settings, piece.category)} · {piece.year}
                   </span>
                 </figcaption>
               </figure>

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getGalleryPiece, getGalleryPieces } from "@/server/content/loader";
+import {
+  categoryLabel,
+  getPublicGalleryPiece,
+  getPublicGalleryView,
+} from "@/server/gallery/service";
 import { getPublicProject } from "@/server/projects/service";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +15,7 @@ type Props = { params: Promise<{ piece: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { piece: slug } = await params;
-  const piece = getGalleryPiece(slug);
+  const piece = await getPublicGalleryPiece(slug);
   if (!piece) return { title: "Not found" };
   return {
     title: piece.title,
@@ -20,13 +24,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export function generateStaticParams() {
-  return getGalleryPieces().map((p) => ({ piece: p.slug }));
-}
+/* No generateStaticParams: which pieces exist — and which are hidden —
+   is database state now, resolved per request. */
 
 export default async function GalleryPiecePage({ params }: Props) {
   const { piece: slug } = await params;
-  const piece = getGalleryPiece(slug);
+  // Goes through the public view, so a hidden piece 404s at its own
+  // URL rather than merely vanishing from the index.
+  const { settings, pieces } = await getPublicGalleryView();
+  const piece = pieces.find((p) => p.slug === slug);
   if (!piece) notFound();
 
   const related = piece.project ? await getPublicProject(piece.project) : null;
@@ -57,7 +63,7 @@ export default async function GalleryPiecePage({ params }: Props) {
         <figcaption className="mt-5 flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="type-heading text-2xl">{piece.title}</h1>
           <p className="type-meta text-ink-faint">
-            {piece.category} · {piece.year}
+            {categoryLabel(settings, piece.category)} · {piece.year}
           </p>
         </figcaption>
       </figure>

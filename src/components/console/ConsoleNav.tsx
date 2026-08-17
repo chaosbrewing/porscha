@@ -8,6 +8,7 @@ import { LiveStatusIndicator } from "./ConsoleLive";
 const NAV = [
   { label: "Overview", href: "/console/overview" },
   { label: "Projects", href: "/console/projects" },
+  { label: "Settings", href: "/console/settings" },
   { label: "Security", href: "/console/security" },
 ];
 

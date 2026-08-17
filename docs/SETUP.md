@@ -83,6 +83,49 @@ for the initial snapshot population and any reconciliation.
 Nothing becomes public without its visibility flag; new repositories
 are private-by-default.
 
+## Gallery
+
+The gallery has two sources, reconciled in `src/server/gallery/service.ts`:
+
+- **Markdown** under `src/content/gallery`, baked into the content
+  bundle at build time. The file owns the content.
+- **`gallery_items` rows** with `origin = "console"` — pieces authored
+  in **Console → Settings → Gallery**. The row *is* the piece.
+
+Rows with `origin = "file"` are overlays carrying only console-owned
+state (hidden / featured / manual position) for a file-backed piece.
+They key off the file's slug, so an overlay can never shadow a
+different piece, and a console piece may not claim a slug the bundle
+already owns.
+
+Page-level settings (heading, intro, columns, order, category labels
+and visibility) live as one JSON row under the `gallery.display` key in
+`site_settings`. A malformed or unreachable row falls back to the
+defaults in `src/server/gallery/validation.ts` — the public gallery
+keeps rendering its file-backed pieces even with the database down.
+
+**Media uploads** need an R2 bucket bound as `MEDIA`. It is optional:
+without it the upload endpoint returns 503 with an explanation, and
+pieces can still point at any path in `public/`. R2 is a Workers
+binding, so uploading never works under `next dev` — reference a file
+in `public/` locally. To enable it:
+
+```bash
+npx wrangler r2 bucket create porscha-media
+```
+
+Then add to `wrangler.jsonc` and redeploy:
+
+```jsonc
+"r2_buckets": [
+  { "binding": "MEDIA", "bucket_name": "porscha-media" }
+]
+```
+
+Uploaded objects are served publicly from `/media/<key>`. Hiding a
+piece hides its page, not the object — treat anything uploaded as
+published.
+
 ## Production deployment
 
 Any Node host works (the app is a standard Next.js server — it needs a

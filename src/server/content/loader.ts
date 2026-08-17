@@ -145,9 +145,19 @@ export function getLabExperiment(slug: string): LabExperiment | undefined {
 
 /* --------------------------- Gallery ------------------------------ */
 
+export const GALLERY_CATEGORIES = [
+  "photography",
+  "digital",
+  "ui",
+  "experiments",
+  "sketches",
+] as const;
+
+export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
+
 const galleryFrontmatter = z.object({
   title: z.string(),
-  category: z.enum(["photography", "digital", "ui", "experiments", "sketches"]),
+  category: z.enum(GALLERY_CATEGORIES),
   year: z.coerce.string(),
   media: z.string(),
   alt: z.string(),

@@ -22,10 +22,29 @@ interface RealtimeHubNamespace {
   get(id: unknown): RealtimeHubStub;
 }
 
+interface MediaObject {
+  body: ReadableStream | null;
+  httpEtag: string;
+  size: number;
+  httpMetadata?: { contentType?: string };
+}
+
+/** Minimal R2 surface: gallery media upload and read-back. */
+interface MediaBucket {
+  get(key: string): Promise<MediaObject | null>;
+  put(
+    key: string,
+    value: ArrayBuffer,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  delete(key: string): Promise<void>;
+}
+
 declare global {
   interface CloudflareEnv {
     HYPERDRIVE?: HyperdriveBinding;
     REALTIME_HUB?: RealtimeHubNamespace;
+    MEDIA?: MediaBucket;
   }
 }
 
