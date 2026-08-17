@@ -145,6 +145,36 @@ jobs:
           echo "::add-mask::$MIGRATE_URL"
           DATABASE_URL="$MIGRATE_URL" node scripts/migrate.mjs
 
+      # Workers custom domains refuse to attach while the hostname has
+      # externally managed DNS records (the retired Railway CNAMEs).
+      # Release exactly those record types on exactly our two hostnames
+      # so the deploy can claim them; the Worker becomes the origin.
+      - name: Release stale DNS records for custom domains
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || vars.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -eu
+          api() { curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$@"; }
+          ZONE_ID=$(api "https://api.cloudflare.com/client/v4/zones?name=porscha.today" \
+            | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).result[0]?.id ?? ""')
+          if [ -z "$ZONE_ID" ]; then
+            echo "::error::Zone porscha.today not visible to this token (add Zone:Read / DNS:Edit for porscha.today)."
+            exit 1
+          fi
+          for host in porscha.today www.porscha.today; do
+            api "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?name=$host&per_page=100" \
+              | node -e '
+                  const d = JSON.parse(require("fs").readFileSync(0, "utf8"));
+                  for (const r of d.result ?? []) {
+                    if (["A", "AAAA", "CNAME"].includes(r.type)) console.log(`${r.id} ${r.type} ${r.name}`);
+                  }
+                ' \
+              | while read -r id type name; do
+                  echo "deleting stale $type record on $name"
+                  api -X DELETE "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$id" > /dev/null
+                done
+          done
+
       - name: Deploy Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || vars.CLOUDFLARE_API_TOKEN }}
