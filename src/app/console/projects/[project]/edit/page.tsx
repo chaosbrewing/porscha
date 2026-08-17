@@ -33,6 +33,7 @@ export default async function EditProjectPage({ params }: Props) {
     featured: config.featured,
     isApp: config.isApp,
     isPublic: config.isPublic,
+    logoPath: config.logoPath,
     github: config.github,
     visibility: { ...visibility },
     currentMilestone: config.currentMilestone,

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { siteConfig } from "@/config/site";
+import { ThemeToggle } from "./ThemeToggle";
 
 /**
  * Public navigation, kept visually light: serif wordmark, plain text
- * links, thin rule beneath. The console stays out of the nav — owner
- * access is the small, quiet mark on the far right.
+ * links, thin rule beneath. No console entry point lives here — the
+ * only mark on the right is the light/dark switch.
  */
 export function SiteHeader() {
   const pathname = usePathname();
@@ -51,27 +52,10 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-1">
-            {/* The discreet owner door. */}
-            <Link
-              href="/login"
-              aria-label="Owner sign-in"
-              title="Owner sign-in"
-              className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-faint hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
-            >
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              >
-                <circle cx="9" cy="9" r="2.4" />
-                <path d="M9 1.5v2.2M9 14.3v2.2M1.5 9h2.2M14.3 9h2.2M3.7 3.7l1.6 1.6M12.7 12.7l1.6 1.6M14.3 3.7l-1.6 1.6M5.3 12.7l-1.6 1.6" />
-              </svg>
-            </Link>
+            {/* The sun mark is the light/dark switch. The owner door is
+                not in the header at all — it's the magnifying glass on
+                the home page. */}
+            <ThemeToggle />
 
             <button
               type="button"
@@ -124,15 +108,6 @@ export function SiteHeader() {
                   </li>
                 );
               })}
-              <li className="pt-2 border-t border-line mt-2">
-                <Link
-                  href="/login"
-                  onClick={() => setOpen(false)}
-                  className="block py-2.5 text-sm text-ink-faint"
-                >
-                  Owner sign-in
-                </Link>
-              </li>
             </ul>
           </nav>
         ) : null}

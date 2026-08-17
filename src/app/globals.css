@@ -56,9 +56,95 @@
   /* Breakpoints (Tailwind defaults kept; documented for the team) */
 }
 
+/*
+ * Dark mode — the same workbench after dark, not a different room.
+ * Warm browns rather than neutral greys; the oxide accent brightens
+ * just enough to hold contrast against a dark ground.
+ *
+ * Tailwind v4 compiles `bg-paper` to `var(--color-paper)`, so
+ * redefining the tokens in a more specific scope re-themes every
+ * utility without a single `dark:` variant.
+ *
+ * Three states, deliberately: an explicit choice stamps
+ * data-theme on <html> and always wins; with nothing stamped, the
+ * system preference decides.
+ */
+@layer theme {
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --color-paper: #191612;
+      --color-paper-raised: #211d18;
+      --color-paper-sunken: #121010;
+      --color-ink-well: #0d0b09;
+      --color-ink-well-soft: #191612;
+
+      --color-ink: #ece5d9;
+      --color-ink-soft: #aea593;
+      --color-ink-faint: #7c7465;
+      --color-ink-inverse: #f6f2e9;
+      --color-ink-inverse-soft: #b5ac9d;
+
+      --color-line: #322c25;
+      --color-line-strong: #4a4238;
+
+      --color-accent: #d2622c;
+      --color-accent-deep: #e58048;
+      --color-accent-wash: #34211a;
+
+      --color-ok: #6aa878;
+      --color-ok-wash: #1c2a20;
+      --color-warn: #c8913a;
+      --color-warn-wash: #2d2415;
+      --color-alert: #d16a6a;
+      --color-alert-wash: #33201f;
+    }
+  }
+
+  /* The explicit choice, unconditional on the system preference. */
+  :root[data-theme="dark"] {
+    --color-paper: #191612;
+    --color-paper-raised: #211d18;
+    --color-paper-sunken: #121010;
+    --color-ink-well: #0d0b09;
+    --color-ink-well-soft: #191612;
+
+    --color-ink: #ece5d9;
+    --color-ink-soft: #aea593;
+    --color-ink-faint: #7c7465;
+    --color-ink-inverse: #f6f2e9;
+    --color-ink-inverse-soft: #b5ac9d;
+
+    --color-line: #322c25;
+    --color-line-strong: #4a4238;
+
+    --color-accent: #d2622c;
+    --color-accent-deep: #e58048;
+    --color-accent-wash: #34211a;
+
+    --color-ok: #6aa878;
+    --color-ok-wash: #1c2a20;
+    --color-warn: #c8913a;
+    --color-warn-wash: #2d2415;
+    --color-alert: #d16a6a;
+    --color-alert-wash: #33201f;
+  }
+}
+
 /* Base */
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
 }
 
 body {

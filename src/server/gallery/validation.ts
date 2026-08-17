@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GALLERY_CATEGORIES } from "@/server/content/loader";
+import { GALLERY_CATEGORIES } from "@/config/gallery";
 
 /**
  * Validation for the gallery console. Shared by the API routes and the

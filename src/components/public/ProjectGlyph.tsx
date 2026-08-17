@@ -1,6 +1,11 @@
+import Image from "next/image";
+
 /**
- * Small identity tiles for workbench rows. Hand-drawn geometric glyphs
- * per project — quiet marks, not logos.
+ * Small identity tiles for workbench rows.
+ *
+ * The default is a hand-drawn geometric glyph — a quiet mark, not a
+ * logo. A project that has had a logo uploaded through the console
+ * shows that instead, on the same tile, at the same size.
  */
 
 const STROKE = {
@@ -53,7 +58,29 @@ const TILE_TONE: Record<string, string> = {
   habi: "bg-paper-sunken text-ink-soft border border-line-strong",
 };
 
-export function ProjectGlyph({ slug }: { slug: string }) {
+export function ProjectGlyph({
+  slug,
+  logo,
+}: {
+  slug: string;
+  logo?: string | null;
+}) {
+  if (logo) {
+    return (
+      <span className="inline-flex size-12 shrink-0 overflow-hidden rounded-[6px] border border-line bg-paper-raised">
+        <Image
+          src={logo}
+          // The project name sits beside the tile, so the mark adds
+          // nothing for a screen reader.
+          alt=""
+          width={48}
+          height={48}
+          className="h-full w-full object-cover"
+        />
+      </span>
+    );
+  }
+
   const tone = TILE_TONE[slug] ?? "bg-paper-sunken text-ink-soft border border-line-strong";
   return (
     <span

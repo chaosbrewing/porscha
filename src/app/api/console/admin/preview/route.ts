@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
       type: input.type,
       status: input.status,
       featured: input.featured,
+      logoPath: input.logoPath,
       isApp: input.isApp,
       isPublic: input.isPublic,
       visibility: input.visibility,

@@ -12,15 +12,23 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type Ctx = { params: Promise<{ slug: string }> };
+
 /**
- * Upload a gallery image. Returns the public path to store on the
- * piece. Console-authorized and same-origin, like every mutation.
+ * Upload a project logo. Returns the public path; the form stores it
+ * with the rest of the project configuration, so an upload alone
+ * changes nothing until the project is saved.
  */
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest, { params }: Ctx) {
   const origin = badOrigin(req);
   if (origin) return origin;
   const { errorResponse } = await requireConsoleAccess();
   if (errorResponse) return errorResponse;
+
+  const { slug } = await params;
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    return NextResponse.json({ error: "Invalid project slug" }, { status: 400 });
+  }
 
   const bucket = mediaStorage();
   if (!bucket) {
@@ -28,7 +36,7 @@ export async function POST(req: NextRequest) {
       {
         error:
           "Media storage isn't configured. Bind an R2 bucket as MEDIA in " +
-          "wrangler.jsonc, or point the piece at an image already in public/.",
+          "wrangler.jsonc, or point the logo at an image already in public/.",
       },
       { status: 503 },
     );
@@ -42,15 +50,8 @@ export async function POST(req: NextRequest) {
   }
 
   const file = form.get("file");
-  const slug = String(form.get("slug") ?? "").trim();
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file was attached" }, { status: 400 });
-  }
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    return NextResponse.json(
-      { error: "A valid piece slug is required before uploading" },
-      { status: 400 },
-    );
   }
 
   const ext = extensionFor(file.type);
@@ -68,13 +69,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const key = mediaKey("gallery", slug, ext);
+    const key = mediaKey("logos", slug, ext);
     await bucket.put(key, await file.arrayBuffer(), {
       httpMetadata: { contentType: file.type },
     });
-    return NextResponse.json({ ok: true, media: publicPathFor(key) });
+    return NextResponse.json({ ok: true, logo: publicPathFor(key) });
   } catch (err) {
-    console.error("[gallery] media upload failed:", err);
+    console.error("[projects] logo upload failed:", err);
     return NextResponse.json({ error: "The upload didn't complete." }, { status: 500 });
   }
 }

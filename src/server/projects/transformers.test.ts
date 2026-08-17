@@ -78,6 +78,7 @@ function makeRecord(overrides: Partial<ProjectRecord> = {}): ProjectRecord {
     featured: true,
     isApp: true,
     isPublic: true,
+    logoPath: null,
     visibility: {
       lastActivity: true,
       releases: true,
@@ -176,6 +177,20 @@ describe("toPublicProjectView", () => {
     expect(json).not.toContain("openPullRequestCount");
     expect(json).not.toContain("ciStatus");
     expect(json).not.toContain("defaultBranch");
+  });
+
+  it("carries the uploaded logo — branding is public with the project", () => {
+    const view = toPublicProjectView(
+      makeRecord({ logoPath: "/media/logos/test-ab12cd34.png" }),
+      snapshot,
+      milestones,
+    );
+    expect(view.logoPath).toBe("/media/logos/test-ab12cd34.png");
+  });
+
+  it("passes a null logo through so the drawn glyph takes over", () => {
+    const view = toPublicProjectView(makeRecord(), snapshot, milestones);
+    expect(view.logoPath).toBeNull();
   });
 });
 

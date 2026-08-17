@@ -31,6 +31,7 @@ function projectWriteData(input: ProjectAdminInput) {
     featured: input.featured,
     isApp: input.isApp,
     isPublic: input.isPublic,
+    logoPath: input.logoPath,
     currentMilestone: input.currentMilestone,
     visibility: input.visibility satisfies ProjectVisibility,
   };
@@ -157,6 +158,7 @@ export async function archiveProject(
     featured: false,
     isApp: existing.project.isApp,
     isPublic: false,
+    logoPath: existing.project.logoPath,
     currentMilestone: existing.project.currentMilestone,
     visibility: existing.project.visibility,
   });
@@ -190,6 +192,7 @@ export async function disconnectRepository(
     featured: existing.project.featured,
     isApp: existing.project.isApp,
     isPublic: existing.project.isPublic,
+    logoPath: existing.project.logoPath,
     currentMilestone: existing.project.currentMilestone,
     visibility: existing.project.visibility,
   });
@@ -227,6 +230,7 @@ export async function getProjectAdminConfig(slug: string) {
     featured: row.project.featured,
     isApp: row.project.isApp,
     isPublic: row.project.isPublic,
+    logoPath: row.project.logoPath,
     github: row.connection
       ? {
           repository: row.connection.repoFullName,

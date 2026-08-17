@@ -20,14 +20,29 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5f0e6",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f0e6" },
+    { media: "(prefers-color-scheme: dark)", color: "#191612" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
+/**
+ * Applies the stored theme before first paint. Without this the page
+ * renders light and then corrects — a visible flash on every load for
+ * anyone who chose dark. Deliberately tiny and dependency-free because
+ * it blocks rendering; a stored value other than "light"/"dark" is
+ * ignored, leaving the system preference to decide.
+ */
+const NO_FLASH_THEME = `(function(){try{var t=localStorage.getItem("porscha-theme");if(t==="dark"||t==="light"){document.documentElement.dataset.theme=t}}catch(e){}})()`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

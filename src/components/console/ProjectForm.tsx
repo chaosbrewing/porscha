@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { PublicProjectView } from "@/types/core";
 import { ProjectEntry } from "@/components/public/ProjectEntry";
@@ -29,6 +30,7 @@ export type ProjectFormValue = {
   featured: boolean;
   isApp: boolean;
   isPublic: boolean;
+  logoPath: string | null;
   github: { repository: string; publicRepository: boolean } | null;
   visibility: Record<string, boolean>;
   currentMilestone: string | null;
@@ -65,6 +67,7 @@ export const emptyProjectDraft: ProjectFormValue = {
   featured: false,
   isApp: false,
   isPublic: false,
+  logoPath: null,
   github: null,
   // New projects expose nothing until each signal is switched on.
   visibility: {
@@ -114,12 +117,49 @@ export function ProjectForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [slugTouched, setSlugTouched] = useState(mode === "edit");
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const logoInput = useRef<HTMLInputElement>(null);
 
   const set = useCallback(
     (patch: Partial<ProjectFormValue>) =>
       setValue((v) => ({ ...v, ...patch })),
     [],
   );
+
+  /* ----------------------------- Logo ---------------------------- */
+
+  /**
+   * Uploads immediately but only sets the draft's path — the logo is
+   * persisted when the project is saved, like every other field.
+   */
+  async function uploadLogo(file: File) {
+    if (!value.slug) {
+      setLogoError("Give the project a slug first.");
+      return;
+    }
+    setLogoBusy(true);
+    setLogoError(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch(
+        `/api/console/admin/projects/${value.slug}/logo`,
+        { method: "POST", body },
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        setLogoError(json.error ?? "The upload failed.");
+        return;
+      }
+      set({ logoPath: json.logo });
+    } catch {
+      setLogoError("Couldn't reach the server.");
+    } finally {
+      setLogoBusy(false);
+      if (logoInput.current) logoInput.current.value = "";
+    }
+  }
 
   /* ------------------------- Repository picker ------------------- */
   const [repoQuery, setRepoQuery] = useState("");
@@ -303,6 +343,64 @@ export function ProjectForm({
               onChange={(e) => set({ description: e.target.value })}
               className={inputClass}
             />
+          </div>
+
+          <div className="mt-4">
+            <span className={labelClass}>Logo</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-4">
+              <span className="inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-line bg-paper-raised">
+                {value.logoPath ? (
+                  <Image
+                    src={value.logoPath}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="type-meta text-ink-faint text-[0.5rem]">
+                    glyph
+                  </span>
+                )}
+              </span>
+
+              <input
+                ref={logoInput}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
+                id="p-logo-file"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadLogo(f);
+                }}
+              />
+              <label
+                htmlFor="p-logo-file"
+                className="cursor-pointer rounded-[3px] border border-line-strong px-4 py-2 text-sm hover:border-ink transition-colors duration-[var(--duration-micro)]"
+              >
+                {logoBusy ? "Uploading…" : "Upload logo"}
+              </label>
+
+              {value.logoPath ? (
+                <button
+                  type="button"
+                  onClick={() => set({ logoPath: null })}
+                  className="text-sm text-ink-soft hover:text-ink"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+            {logoError ? (
+              <p role="alert" className="mt-2 text-sm text-alert">
+                {logoError}
+              </p>
+            ) : null}
+            <p className="mt-2 text-xs text-ink-faint">
+              Replaces the drawn glyph on the workbench. Saved with the rest
+              of the project — uploading alone changes nothing.
+            </p>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>

@@ -4,6 +4,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
 import { z } from "zod";
+import { GALLERY_CATEGORIES } from "@/config/gallery";
 import { isCloudflareWorkers } from "@/server/runtime";
 import contentBundle from "./content-bundle.json";
 
@@ -144,16 +145,6 @@ export function getLabExperiment(slug: string): LabExperiment | undefined {
 }
 
 /* --------------------------- Gallery ------------------------------ */
-
-export const GALLERY_CATEGORIES = [
-  "photography",
-  "digital",
-  "ui",
-  "experiments",
-  "sketches",
-] as const;
-
-export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 
 const galleryFrontmatter = z.object({
   title: z.string(),

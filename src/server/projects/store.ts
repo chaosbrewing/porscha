@@ -326,6 +326,7 @@ export type ProjectWriteData = {
   featured: boolean;
   isApp: boolean;
   isPublic: boolean;
+  logoPath: string | null;
   currentMilestone: string | null;
   visibility: unknown;
 };

@@ -95,6 +95,17 @@ export const projectAdminInputSchema = z
     featured: z.boolean(),
     isApp: z.boolean(),
     isPublic: z.boolean(),
+    /**
+     * Uploaded mark, or null to fall back to the drawn glyph. Optional
+     * on the wire: a payload that predates logos, or never touched one,
+     * simply doesn't carry it.
+     */
+    logoPath: z
+      .string()
+      .trim()
+      .refine((v) => v.startsWith("/"), "Logo must be a path on this site")
+      .nullable()
+      .default(null),
     github: z
       .object({
         repository: repoSchema,

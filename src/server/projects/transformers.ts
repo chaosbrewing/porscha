@@ -30,6 +30,8 @@ export type ProjectRecord = {
   isApp: boolean;
   /** Whether the project appears on the public site at all. */
   isPublic: boolean;
+  /** Branding, not GitHub-derived state — public with the project. */
+  logoPath: string | null;
   visibility: ProjectVisibility;
   links: Array<{ label: string; url: string }> | null;
   currentMilestone: string | null;
@@ -53,6 +55,7 @@ export function toPublicProjectView(
     status: project.status,
     featured: project.featured,
     isApp: project.isApp,
+    logoPath: project.logoPath,
     links: project.links ?? undefined,
   };
 

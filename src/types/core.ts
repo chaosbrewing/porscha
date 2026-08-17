@@ -175,6 +175,8 @@ export type PublicProjectView = {
   links?: Array<{ label: string; url: string }>;
   featured: boolean;
   isApp: boolean;
+  /** Uploaded project mark; null falls back to the drawn glyph. */
+  logoPath?: string | null;
 };
 
 /* ------------------------------------------------------------------ */

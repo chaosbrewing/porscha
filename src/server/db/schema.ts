@@ -42,6 +42,12 @@ export const projects = pgTable("projects", {
   currentMilestone: text("current_milestone"),
   visibility: jsonb("visibility").notNull(),
   links: jsonb("links"),
+  /**
+   * Uploaded project mark, as a path this site serves. Null falls back
+   * to the hand-drawn glyph in `ProjectGlyph`. Public whenever the
+   * project is — it is branding, never GitHub-derived state.
+   */
+  logoPath: text("logo_path"),
   /** Whether the project appears on the public site at all. */
   isPublic: boolean("is_public").notNull().default(true),
   /**

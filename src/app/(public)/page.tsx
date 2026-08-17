@@ -96,7 +96,7 @@ function WorkbenchRow({ project }: { project: PublicProjectView }) {
     <article className="group grid gap-x-6 gap-y-5 px-5 py-6 sm:px-7 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,0.8fr)_minmax(0,1.25fr)_minmax(0,1.25fr)_minmax(0,0.9fr)] lg:items-center transition-colors duration-[var(--duration-micro)] hover:bg-paper/60">
     {/* Identity */}
       <div className="flex items-start gap-4 lg:items-center">
-        <ProjectGlyph slug={project.slug} />
+        <ProjectGlyph slug={project.slug} logo={project.logoPath} />
         <div className="min-w-0">
           <h3 className="type-heading text-xl leading-snug">
             <Link
@@ -284,9 +284,22 @@ export default async function HomePage() {
             <ul className="mt-5 flex gap-9">
               {TOOLS.map((tool) => (
                 <li key={tool.label} className="flex flex-col items-center gap-2">
-                  <span className="text-ink">
-                    <ToolIcon>{tool.icon}</ToolIcon>
-                  </span>
+                  {tool.label === "Curiosity" ? (
+                    // The workshop door. Unlabelled on purpose: it reads
+                    // as one of the tools, and curiosity is what opens it.
+                    <Link
+                      href="/login"
+                      aria-label="Owner sign-in"
+                      title="Owner sign-in"
+                      className="text-ink hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
+                    >
+                      <ToolIcon>{tool.icon}</ToolIcon>
+                    </Link>
+                  ) : (
+                    <span className="text-ink">
+                      <ToolIcon>{tool.icon}</ToolIcon>
+                    </span>
+                  )}
                   <span className="text-xs text-ink-soft">{tool.label}</span>
                 </li>
               ))}

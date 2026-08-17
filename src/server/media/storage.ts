@@ -47,14 +47,21 @@ export function extensionFor(contentType: string): string | undefined {
   return ALLOWED[contentType];
 }
 
+/** Folders inside the bucket, one per kind of upload. */
+export type MediaFolder = "gallery" | "logos";
+
 /**
- * Object key for an upload. Prefixed by slug so the bucket stays
- * legible, suffixed with a random token so replacing a piece's image
- * never collides with a cached copy of the old one.
+ * Object key for an upload. Grouped by folder and named after the
+ * slug so the bucket stays legible, suffixed with a random token so
+ * replacing an image never collides with a cached copy of the old one.
  */
-export function mediaKey(slug: string, ext: string): string {
+export function mediaKey(
+  folder: MediaFolder,
+  slug: string,
+  ext: string,
+): string {
   const token = crypto.randomUUID().slice(0, 8);
-  return `gallery/${slug}-${token}.${ext}`;
+  return `${folder}/${slug}-${token}.${ext}`;
 }
 
 /** Storage key → the public path stored on the piece. */

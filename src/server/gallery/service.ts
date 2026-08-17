@@ -1,8 +1,8 @@
 import "server-only";
+import type { GalleryCategory } from "@/config/gallery";
 import {
   getGalleryPieces,
   renderMarkdown,
-  type GalleryCategory,
   type GalleryPiece,
 } from "@/server/content/loader";
 import { readDisplaySettings, readItems, type GalleryItemRow } from "./store";

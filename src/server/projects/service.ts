@@ -46,6 +46,7 @@ function rowToRecord(row: DbProjectRow): ProjectRecord {
     featured: row.project.featured,
     isApp: row.project.isApp,
     isPublic: row.project.isPublic,
+    logoPath: row.project.logoPath,
     visibility: row.project.visibility as ProjectRecord["visibility"],
     links: (row.project.links ?? null) as ProjectRecord["links"],
     currentMilestone: row.project.currentMilestone,
@@ -67,6 +68,8 @@ function registryToRecord(slug: string): ProjectRecord | null {
     featured: p.featured ?? false,
     isApp: p.isApp ?? false,
     isPublic: true,
+    // The registry has no logo field; uploads are console-only.
+    logoPath: null,
     visibility: p.visibility,
     links: p.links ?? null,
     currentMilestone: p.currentMilestone ?? null,
