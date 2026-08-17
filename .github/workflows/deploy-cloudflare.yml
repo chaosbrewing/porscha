@@ -114,10 +114,36 @@ jobs:
       # Explicit, race-free migration step: one job, one runner, using
       # drizzle-orm's migrator against the same journal as db:migrate.
       # The Worker itself never runs migrations.
+      #
+      # Supabase direct hosts (db.<ref>.supabase.co) are IPv6-only and
+      # GitHub runners have no IPv6 — Hyperdrive reaches them fine, the
+      # runner cannot. When that's the case, rewrite the URL to the
+      # IPv4 session pooler (region per docs/DEPLOY.md) for this step.
       - name: Apply database migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
-        run: node scripts/migrate.mjs
+          SUPABASE_POOLER_HOST: aws-0-ap-southeast-2.pooler.supabase.com
+        run: |
+          set -eu
+          node -e '
+            const dns = require("dns").promises;
+            (async () => {
+              const u = new URL(process.env.DATABASE_URL);
+              const m = u.hostname.match(/^db\.([a-z0-9]+)\.supabase\.co$/);
+              if (m) {
+                const v4 = await dns.resolve4(u.hostname).catch(() => []);
+                if (v4.length === 0) {
+                  console.log("direct host is IPv6-only; using session pooler for this runner");
+                  u.hostname = process.env.SUPABASE_POOLER_HOST;
+                  u.username = `postgres.${m[1]}`;
+                }
+              }
+              require("fs").writeFileSync("/tmp/migrate-url", u.toString());
+            })();
+          '
+          MIGRATE_URL="$(cat /tmp/migrate-url)"; rm -f /tmp/migrate-url
+          echo "::add-mask::$MIGRATE_URL"
+          DATABASE_URL="$MIGRATE_URL" node scripts/migrate.mjs
 
       - name: Deploy Worker
         env:
