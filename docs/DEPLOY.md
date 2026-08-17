@@ -37,36 +37,33 @@ and `npx wrangler login` (or an API token in `CLOUDFLARE_API_TOKEN`).
 
 ### 1a. Hyperdrive config
 
-Create the Hyperdrive config from the Supabase Postgres connection
-string (dashboard → project `porscha-today` → Connect; prefer the
-**direct** connection string — Hyperdrive is the pooler here. If the
-direct/IPv6 host is unreachable from your network, the **session
-pooler** string also works):
+The config **`porscha-today-db`** already exists
+(`73fb9a6fd1564df891d60c5067e38067`, committed in `wrangler.jsonc`).
+The deploy workflow keeps its **origin in sync with the `DATABASE_URL`
+Actions secret** on every deploy, so the binding always points at the
+same database the migrations run against — no manual origin edits.
+The connection string lives only inside Hyperdrive and the Actions
+secret; the Worker sees a `HYPERDRIVE` binding, and the browser sees
+nothing.
 
-```sh
-npx wrangler hyperdrive create porscha-today-db \
-  --connection-string="postgresql://postgres:<DB_PASSWORD>@db.rdgsveeporyiplsnztzw.supabase.co:5432/postgres"
-```
-
-Paste the returned `id` into the `hyperdrive` block of
-`wrangler.jsonc` (replacing `REPLACE_WITH_HYPERDRIVE_ID`) and commit.
-The connection string lives only inside Hyperdrive; the Worker sees a
-`HYPERDRIVE` binding, and the browser sees nothing.
+To manage it by hand instead:
+`npx wrangler hyperdrive update 73fb9a6fd1564df891d60c5067e38067 --origin-host … --origin-user … --origin-password …`.
 
 ### 1b. Worker secrets
 
-Set each of these once (`npx wrangler secret put <NAME>`, paste value
-when prompted). Values must never be committed or put in
-`wrangler.jsonc`:
+The deploy workflow bootstraps these automatically:
 
-| Secret | Value |
+| Worker secret | How it gets set |
 | --- | --- |
-| `SESSION_SECRET` | `openssl rand -hex 32` |
-| `TWO_FACTOR_ENCRYPTION_KEY` | `openssl rand -hex 32` — encrypts TOTP secrets at rest; **must differ** from `SESSION_SECRET`; production refuses to serve without it |
-| `GITHUB_OAUTH_CLIENT_ID` | from §2 |
-| `GITHUB_OAUTH_CLIENT_SECRET` | from §2 |
-| `GITHUB_TOKEN` | fine-grained PAT, read-only Contents/Issues/PRs/Actions on the connected repos |
-| `GITHUB_WEBHOOK_SECRET` | `openssl rand -hex 32` (same value as the GitHub webhook, §3) |
+| `SESSION_SECRET` | generated on first deploy (never leaves Cloudflare) |
+| `TWO_FACTOR_ENCRYPTION_KEY` | generated on first deploy, independently (never leaves Cloudflare); encrypts TOTP secrets at rest; production refuses to serve without it |
+| `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET` | synced from the `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` Actions secrets (from §2) when present |
+| `GITHUB_TOKEN` | synced from the `GH_INGEST_TOKEN` Actions secret (fine-grained PAT, read-only Contents/Issues/PRs/Actions on the connected repos) when present |
+| `GITHUB_WEBHOOK_SECRET` | synced from the `GH_WEBHOOK_SECRET` Actions secret (`openssl rand -hex 32`; same value as the GitHub webhook, §3) when present |
+
+(Actions secret names cannot start with `GITHUB_`, hence the `GH_*`
+Actions-side names.) Manual alternative: `npx wrangler secret put
+<NAME>`. Values must never be committed or put in `wrangler.jsonc`.
 
 Non-secret config (`SITE_URL`, `ALLOWED_GITHUB_LOGINS`,
 `SNAPSHOT_STALE_MINUTES`) is versioned in `wrangler.jsonc` `vars`.
@@ -103,9 +100,12 @@ HMAC-verified (constant-time) and deduplicated by delivery id.
 
 | Actions secret | Purpose |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Workers deploy (API token with Workers Scripts:Edit, Workers Custom Domains, Hyperdrive:Read) |
-| `CLOUDFLARE_ACCOUNT_ID` | account id (dashboard → Workers & Pages → right sidebar) |
-| `DATABASE_URL` | Supabase Postgres string, used **only** by the migration step |
+| `CLOUDFLARE_API_TOKEN` | **required** — Workers deploy (API token with Workers Scripts:Edit, Workers Custom Domains, Hyperdrive:Edit) |
+| `CLOUDFLARE_ACCOUNT_ID` | **required** — account id (dashboard → Workers & Pages → right sidebar) |
+| `DATABASE_URL` | **required** — Supabase Postgres string; used by the migration step and to keep the Hyperdrive origin in sync |
+| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | optional — synced to the Worker's `GITHUB_OAUTH_*` secrets (console sign-in) |
+| `GH_INGEST_TOKEN` | optional — synced to the Worker's `GITHUB_TOKEN` (reconciliation sync) |
+| `GH_WEBHOOK_SECRET` | optional — synced to the Worker's `GITHUB_WEBHOOK_SECRET` (webhook ingestion) |
 
 ## 5. Migrations
 

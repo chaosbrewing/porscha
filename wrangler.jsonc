@@ -42,12 +42,10 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      // Production: create the Hyperdrive config once with
-      //   npx wrangler hyperdrive create porscha-today-db \
-      //     --connection-string="<Supabase Postgres connection string>"
-      // and replace this placeholder with the returned id
-      // (docs/DEPLOY.md § Hyperdrive).
-      "id": "REPLACE_WITH_HYPERDRIVE_ID",
+      // "porscha-today-db" on the production Cloudflare account. The
+      // deploy workflow keeps its origin in sync with the DATABASE_URL
+      // Actions secret (Supabase porscha-today, ref rdgsveeporyiplsnztzw).
+      "id": "73fb9a6fd1564df891d60c5067e38067",
       // Local preview (`wrangler dev`) talks straight to local Postgres.
       "localConnectionString": "postgres://porscha:porscha_dev@localhost:5432/porscha"
     }

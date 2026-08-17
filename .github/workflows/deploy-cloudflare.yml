@@ -1,15 +1,19 @@
 # Deploys the current branch to Cloudflare Workers via OpenNext.
 #
-# One-time setup (see docs/DEPLOY.md):
-#   1. Create a Cloudflare API token (Workers Scripts:Edit + the
-#      account permissions listed in the runbook) and add it as the
-#      CLOUDFLARE_API_TOKEN GitHub Actions secret, with the account id
-#      as CLOUDFLARE_ACCOUNT_ID.
-#   2. Create the Hyperdrive config and put its id in wrangler.jsonc.
-#   3. Set the Worker secrets once with `wrangler secret put`.
-#   4. Add the DATABASE_URL Actions secret (Supabase Postgres) so this
-#      workflow can run migrations before deploying. Migrations run in
-#      this single job, never inside the Worker, so they cannot race.
+# Required GitHub Actions secrets (see docs/DEPLOY.md):
+#   CLOUDFLARE_API_TOKEN   Workers Scripts:Edit + Custom Domains + Hyperdrive
+#   CLOUDFLARE_ACCOUNT_ID  the Cloudflare account id
+#   DATABASE_URL           Supabase Postgres connection string
+#
+# From those three, this workflow bootstraps the rest:
+#   - keeps the Hyperdrive config's origin in sync with DATABASE_URL
+#   - runs migrations exactly once per deploy (never inside the Worker,
+#     single job — cannot race)
+#   - generates SESSION_SECRET / TWO_FACTOR_ENCRYPTION_KEY as Worker
+#     secrets on first deploy if absent (values never leave Cloudflare)
+#   - syncs optional GH_OAUTH_CLIENT_ID / GH_OAUTH_CLIENT_SECRET /
+#     GH_INGEST_TOKEN / GH_WEBHOOK_SECRET Actions secrets into the
+#     corresponding GITHUB_* Worker secrets when configured
 #
 # Trigger manually from the Actions tab (workflow_dispatch) so deploys
 # are always an explicit human action.
@@ -57,11 +61,50 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID secrets are not configured. See docs/DEPLOY.md."
+          missing=""
+          [ -z "$CLOUDFLARE_API_TOKEN" ] && missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -z "$CLOUDFLARE_ACCOUNT_ID" ] && missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          [ -z "$DATABASE_URL" ] && missing="$missing DATABASE_URL"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub Actions secret(s):$missing — see docs/DEPLOY.md §4."
             exit 1
           fi
+
+      # The HYPERDRIVE binding must point at the same database the
+      # migrations run against. Parse DATABASE_URL and update the
+      # Hyperdrive origin (id from wrangler.jsonc) to match.
+      - name: Sync Hyperdrive origin with DATABASE_URL
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -eu
+          HYPERDRIVE_ID=$(node -e "const fs=require('fs');const j=fs.readFileSync('wrangler.jsonc','utf8').replace(/\/\/.*$/gm,'');console.log(JSON.parse(j).hyperdrive[0].id)")
+          node -e '
+            const u = new URL(process.env.DATABASE_URL);
+            require("fs").writeFileSync("/tmp/dbparts.json", JSON.stringify({
+              host: u.hostname,
+              port: u.port || "5432",
+              user: decodeURIComponent(u.username),
+              pass: decodeURIComponent(u.password),
+              db: u.pathname.replace(/^\//, "") || "postgres",
+            }));
+          '
+          part() { node -pe "require('/tmp/dbparts.json').$1"; }
+          DB_HOST=$(part host); DB_PORT=$(part port); DB_USER=$(part user)
+          DB_PASS=$(part pass); DB_NAME=$(part db)
+          rm -f /tmp/dbparts.json
+          echo "::add-mask::$DB_PASS"
+          echo "Updating Hyperdrive $HYPERDRIVE_ID origin to $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
+          npx wrangler hyperdrive update "$HYPERDRIVE_ID" \
+            --origin-host "$DB_HOST" \
+            --origin-port "$DB_PORT" \
+            --database "$DB_NAME" \
+            --origin-user "$DB_USER" \
+            --origin-password "$DB_PASS"
 
       # Explicit, race-free migration step: one job, one runner, using
       # drizzle-orm's migrator against the same journal as db:migrate.
@@ -69,18 +112,56 @@ jobs:
       - name: Apply database migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "::error::DATABASE_URL secret is not configured; refusing to deploy unmigrated. See docs/DEPLOY.md."
-            exit 1
-          fi
-          node scripts/migrate.mjs
+        run: node scripts/migrate.mjs
 
       - name: Deploy Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler deploy
+
+      # Worker secrets. Session/2FA keys are generated on first deploy
+      # and never leave Cloudflare; GitHub-integration secrets are
+      # synced from Actions secrets when configured. Each `secret put`
+      # rolls a new Worker version automatically.
+      - name: Bootstrap Worker secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Actions secret names cannot start with GITHUB_, so the
+          # Actions-side names are GH_*; they map onto the GITHUB_*
+          # Worker secrets the app reads.
+          GH_OAUTH_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+          GH_OAUTH_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+          GH_PAT: ${{ secrets.GH_INGEST_TOKEN }}
+          GH_WEBHOOK: ${{ secrets.GH_WEBHOOK_SECRET }}
+        run: |
+          set -eu
+          existing=$(npx wrangler secret list --format json | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).map(s=>s.name).join(' ')))")
+          has() { case " $existing " in *" $1 "*) return 0;; *) return 1;; esac; }
+          ensure_generated() {
+            if has "$1"; then echo "$1: already set"; else
+              echo "$1: generating"
+              openssl rand -hex 32 | npx wrangler secret put "$1"
+            fi
+          }
+          sync_from_actions() {
+            name="$1"; value="$2"
+            if [ -n "$value" ]; then
+              echo "$name: syncing from Actions secret"
+              printf %s "$value" | npx wrangler secret put "$name"
+            elif has "$name"; then
+              echo "$name: keeping existing Worker secret"
+            else
+              echo "::warning::$name is not set (no Worker secret, no Actions secret) — the matching feature stays disabled."
+            fi
+          }
+          ensure_generated SESSION_SECRET
+          ensure_generated TWO_FACTOR_ENCRYPTION_KEY
+          sync_from_actions GITHUB_OAUTH_CLIENT_ID "$GH_OAUTH_ID"
+          sync_from_actions GITHUB_OAUTH_CLIENT_SECRET "$GH_OAUTH_SECRET"
+          sync_from_actions GITHUB_TOKEN "$GH_PAT"
+          sync_from_actions GITHUB_WEBHOOK_SECRET "$GH_WEBHOOK"
 
       - name: Verify live site
         run: node scripts/verify-production.mjs https://porscha.today
