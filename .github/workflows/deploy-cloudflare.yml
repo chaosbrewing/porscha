@@ -87,7 +87,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL || vars.DATABASE_URL }}
         run: |
           set -eu
-          HYPERDRIVE_ID=$(node -e "const fs=require('fs');const j=fs.readFileSync('wrangler.jsonc','utf8').replace(/\/\/.*$/gm,'');console.log(JSON.parse(j).hyperdrive[0].id)")
+          HYPERDRIVE_ID=$(node -e "const m=require('fs').readFileSync('wrangler.jsonc','utf8').match(/\"hyperdrive\"[\s\S]*?\"id\":\s*\"([0-9a-f]{32})\"/); if(!m){console.error('hyperdrive id not found in wrangler.jsonc');process.exit(1)}; console.log(m[1])")
           node -e '
             const u = new URL(process.env.DATABASE_URL);
             require("fs").writeFileSync("/tmp/dbparts.json", JSON.stringify({
