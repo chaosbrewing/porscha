@@ -173,7 +173,9 @@ jobs:
           # Worker secrets the app reads.
           GH_OAUTH_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
           GH_OAUTH_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
-          GH_PAT: ${{ secrets.GH_INGEST_TOKEN }}
+          # GH_TOKEN accepted as an alias: it is the name the GitHub CLI
+          # already uses, so it is the one that gets reached for first.
+          GH_PAT: ${{ secrets.GH_INGEST_TOKEN || secrets.GH_TOKEN }}
           GH_WEBHOOK: ${{ secrets.GH_WEBHOOK_SECRET }}
         run: |
           set -eu

@@ -104,7 +104,7 @@ HMAC-verified (constant-time) and deduplicated by delivery id.
 | `CLOUDFLARE_ACCOUNT_ID` | **required** — account id (dashboard → Workers & Pages → right sidebar) |
 | `DATABASE_URL` | **required** — Supabase Postgres string; used by the migration step and to keep the Hyperdrive origin in sync |
 | `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | optional — synced to the Worker's `GITHUB_OAUTH_*` secrets (console sign-in) |
-| `GH_INGEST_TOKEN` | optional — synced to the Worker's `GITHUB_TOKEN` (reconciliation sync) |
+| `GH_INGEST_TOKEN` (or `GH_TOKEN`) | optional — synced to the Worker's `GITHUB_TOKEN` (reconciliation sync) |
 | `GH_WEBHOOK_SECRET` | optional — synced to the Worker's `GITHUB_WEBHOOK_SECRET` (webhook ingestion) |
 
 ## 5. Migrations
