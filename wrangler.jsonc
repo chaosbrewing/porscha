@@ -51,6 +51,17 @@
     }
   ],
 
+  // Gallery images and project logos uploaded from the console.
+  // Objects are served publicly through /media/<key>; the app treats a
+  // missing binding as "uploads disabled" rather than failing, so this
+  // block can be removed without breaking anything but uploading.
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "porscha-media"
+    }
+  ],
+
   // porscha.today is served by this Worker directly — Cloudflare
   // terminates TLS for both hostnames; no separate origin exists.
   "routes": [
