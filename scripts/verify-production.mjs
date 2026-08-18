@@ -43,14 +43,10 @@ console.log("Public routes:");
 for (const path of [
   "/",
   "/art",
-  "/art/reservoir-walk",
   "/apps",
   "/headquarters",
   "/porscha",
   "/workshop",
-  "/workshop/kubli",
-  "/workshop/prism",
-  "/workshop/habi",
   "/lab",
   "/lab/whispering-city",
   "/notes",
@@ -62,6 +58,33 @@ for (const path of [
   await expectStatus(path, 200);
 }
 await expectStatus("/workshop/does-not-exist", 404, "unknown project → 404");
+
+/*
+ * Project pages, taken from what the site actually publishes.
+ *
+ * Naming projects here would assert the registry, not the site: a
+ * project the console has archived is *meant* to be gone, and the check
+ * would fail for a decision rather than a defect. The invariant worth
+ * holding is narrower and stronger — everything the public API lists
+ * has a page that opens.
+ */
+console.log("\nProject pages (from the public API):");
+{
+  const res = await get("/api/public/projects");
+  let projects = [];
+  try {
+    projects = (await res.json()).projects ?? [];
+  } catch {
+    fail("public projects API", "could not be read");
+  }
+  if (projects.length === 0) {
+    fail("public projects API", "published nothing — the site has no projects");
+  }
+  console.log(`  published: ${projects.map((p) => p.slug).join(", ") || "none"}`);
+  for (const project of projects) {
+    await expectStatus(`/workshop/${project.slug}`, 200);
+  }
+}
 
 /*
  * Gallery compatibility.
