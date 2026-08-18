@@ -5,10 +5,10 @@ import { useSyncExternalStore } from "react";
 /**
  * Light/dark toggle — the sun mark in the header.
  *
- * Three states exist in CSS (light, dark, and "follow the system"),
- * but the control is a two-way switch: pressing it commits to the
- * opposite of whatever is currently showing. Until then the site
- * follows the system preference.
+ * Two states: the night edition the site is printed in, and the day
+ * edition a reader can ask for. Pressing the switch commits to the
+ * opposite of whatever is currently showing. The system preference no
+ * longer decides — dark is the brand, not a fallback.
  *
  * The theme is browser state, not React state, so it's read through
  * `useSyncExternalStore` — the server can't know which theme is
@@ -24,24 +24,16 @@ type Theme = "light" | "dark";
 
 function readTheme(): Theme {
   const stamped = document.documentElement.dataset.theme;
-  if (stamped === "dark" || stamped === "light") return stamped;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return stamped === "light" ? "light" : "dark";
 }
 
 function subscribe(onChange: () => void): () => void {
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
-  media.addEventListener("change", onChange);
   window.addEventListener(THEME_EVENT, onChange);
-  return () => {
-    media.removeEventListener("change", onChange);
-    window.removeEventListener(THEME_EVENT, onChange);
-  };
+  return () => window.removeEventListener(THEME_EVENT, onChange);
 }
 
-/** Undetermined on the server — rendering a guess flashes the wrong icon. */
-const serverSnapshot = (): Theme | null => null;
+/** The server renders the default edition; the client corrects a choice. */
+const serverSnapshot = (): Theme => "dark";
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, readTheme, serverSnapshot);
@@ -64,12 +56,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     <button
       type="button"
       onClick={toggle}
-      aria-label={
-        theme === null
-          ? "Switch between light and dark"
-          : `Switch to ${isDark ? "light" : "dark"} mode`
-      }
-      title={isDark ? "Switch to light" : "Switch to dark"}
+      aria-label={`Switch to the ${isDark ? "day" : "night"} edition`}
+      title={isDark ? "Day edition" : "Night edition"}
       className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-faint hover:text-accent-deep transition-colors duration-[var(--duration-micro)] ${className}`}
     >
       <svg

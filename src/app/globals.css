@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
 /*
- * porscha.today design tokens
+ * POR$CHA design tokens
  *
- * Visual thesis: editorial studio + inventor's workbench + calm
- * operational headquarters. Warm paper surfaces, dark ink, a single
- * oxide accent, hairline rules, generous whitespace.
+ * Visual thesis: an editorial magazine printed on black. Near-black
+ * ground, ivory type, one copper-auburn accent used like metallic ink,
+ * hairline rules, generous negative space, photography carrying the
+ * page. The console inherits the same tokens so the operating layer
+ * stays legible rather than decorative.
  */
 
 @theme {
@@ -16,135 +18,99 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo,
     monospace;
 
-  /* Surfaces — warm paper, mostly flat */
-  --color-paper: #f5f0e6;
-  --color-paper-raised: #fbf8f1;
-  --color-paper-sunken: #ede6d7;
-  --color-ink-well: #211d19;
-  --color-ink-well-soft: #2e2924;
+  /* Surfaces — near-black ground, mostly flat */
+  --color-paper: #0b0a09;
+  --color-paper-raised: #131110;
+  --color-paper-sunken: #070606;
+  --color-ink-well: #050404;
+  --color-ink-well-soft: #131110;
 
-  /* Text */
-  --color-ink: #232019;
-  --color-ink-soft: #5b544a;
-  --color-ink-faint: #8b8375;
-  --color-ink-inverse: #f3efe6;
+  /* Text — ivory on the ground */
+  --color-ink: #f2ece1;
+  --color-ink-soft: #a99f90;
+  --color-ink-faint: #918779;
+  --color-ink-inverse: #f6f2e9;
   --color-ink-inverse-soft: #b5ac9d;
 
-  /* Lines */
-  --color-line: #e2dccd;
-  --color-line-strong: #c5bca9;
+  /* Lines — hairlines, never borders that shout */
+  --color-line: #262220;
+  --color-line-strong: #3d3733;
 
-  /* Accent — one restrained oxide rust */
-  --color-accent: #bc5222;
-  --color-accent-deep: #96401a;
-  --color-accent-wash: #f3e4da;
+  /* Accent — copper leaf, the only colour on the page */
+  --color-accent: #c1743c;
+  --color-accent-deep: #e0955b;
+  --color-accent-wash: #2a1a12;
+  /* Text that sits *on* a filled accent surface. */
+  --color-accent-on: #0b0a09;
 
   /* Semantic states */
-  --color-ok: #3f7a4d;
-  --color-ok-wash: #e4ecdd;
-  --color-warn: #9c6414;
-  --color-warn-wash: #f2e8d2;
-  --color-alert: #a53131;
-  --color-alert-wash: #f1dfda;
+  --color-ok: #6aa878;
+  --color-ok-wash: #182317;
+  --color-warn: #c8913a;
+  --color-warn-wash: #2a2113;
+  --color-alert: #d16a6a;
+  --color-alert-wash: #2e1c1b;
 
   /* Motion */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-micro: 140ms;
   --duration-normal: 240ms;
   --duration-reveal: 600ms;
-
-  /* Breakpoints (Tailwind defaults kept; documented for the team) */
 }
 
 /*
- * Dark mode — the same workbench after dark, not a different room.
- * Warm browns rather than neutral greys; the oxide accent brightens
- * just enough to hold contrast against a dark ground.
+ * The day edition.
+ *
+ * The magazine is printed on black by default — that is the brand, not
+ * a system preference, so `prefers-color-scheme` no longer decides it.
+ * A reader who asks for light gets a warm ivory paper stock with the
+ * same copper ink; the choice is stamped on <html> by the header
+ * switch and re-applied before paint by the root layout script.
  *
  * Tailwind v4 compiles `bg-paper` to `var(--color-paper)`, so
  * redefining the tokens in a more specific scope re-themes every
  * utility without a single `dark:` variant.
- *
- * Three states, deliberately: an explicit choice stamps
- * data-theme on <html> and always wins; with nothing stamped, the
- * system preference decides.
  */
 @layer theme {
-  :root[data-theme="dark"],
-  :root:not([data-theme="light"]) {
-    @media (prefers-color-scheme: dark) {
-      --color-paper: #191612;
-      --color-paper-raised: #211d18;
-      --color-paper-sunken: #121010;
-      --color-ink-well: #0d0b09;
-      --color-ink-well-soft: #191612;
+  :root[data-theme="light"] {
+    --color-paper: #f4efe6;
+    --color-paper-raised: #fbf8f2;
+    --color-paper-sunken: #e9e2d5;
+    --color-ink-well: #17140f;
+    --color-ink-well-soft: #262119;
 
-      --color-ink: #ece5d9;
-      --color-ink-soft: #aea593;
-      --color-ink-faint: #7c7465;
-      --color-ink-inverse: #f6f2e9;
-      --color-ink-inverse-soft: #b5ac9d;
-
-      --color-line: #322c25;
-      --color-line-strong: #4a4238;
-
-      --color-accent: #d2622c;
-      --color-accent-deep: #e58048;
-      --color-accent-wash: #34211a;
-
-      --color-ok: #6aa878;
-      --color-ok-wash: #1c2a20;
-      --color-warn: #c8913a;
-      --color-warn-wash: #2d2415;
-      --color-alert: #d16a6a;
-      --color-alert-wash: #33201f;
-    }
-  }
-
-  /* The explicit choice, unconditional on the system preference. */
-  :root[data-theme="dark"] {
-    --color-paper: #191612;
-    --color-paper-raised: #211d18;
-    --color-paper-sunken: #121010;
-    --color-ink-well: #0d0b09;
-    --color-ink-well-soft: #191612;
-
-    --color-ink: #ece5d9;
-    --color-ink-soft: #aea593;
-    --color-ink-faint: #7c7465;
+    --color-ink: #17140f;
+    --color-ink-soft: #57503f;
+    --color-ink-faint: #6a6252;
     --color-ink-inverse: #f6f2e9;
     --color-ink-inverse-soft: #b5ac9d;
 
-    --color-line: #322c25;
-    --color-line-strong: #4a4238;
+    --color-line: #ddd5c5;
+    --color-line-strong: #c2b8a4;
 
-    --color-accent: #d2622c;
-    --color-accent-deep: #e58048;
-    --color-accent-wash: #34211a;
+    --color-accent: #9c4f22;
+    --color-accent-deep: #7e3d19;
+    --color-accent-wash: #f1e2d7;
+    --color-accent-on: #f6f2e9;
 
-    --color-ok: #6aa878;
-    --color-ok-wash: #1c2a20;
-    --color-warn: #c8913a;
-    --color-warn-wash: #2d2415;
-    --color-alert: #d16a6a;
-    --color-alert-wash: #33201f;
+    --color-ok: #3f7a4d;
+    --color-ok-wash: #e4ecdd;
+    --color-warn: #8a5711;
+    --color-warn-wash: #f2e8d2;
+    --color-alert: #a53131;
+    --color-alert-wash: #f1dfda;
   }
 }
 
 /* Base */
 html {
   scroll-behavior: smooth;
-  color-scheme: light;
-}
-
-:root[data-theme="dark"] {
+  /* Dark is the edition, not the fallback. */
   color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -339,6 +305,144 @@ body {
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Editorial system
+   The magazine layer: masthead type, section numbering, hairlines,
+   captions, and the photography treatment. Shared by home, ART, APPS
+   and HEADQUARTERS so the four screens read as one publication.
+   ------------------------------------------------------------------ */
+
+/* The masthead — the largest type on the site, set tight and optical. */
+.type-masthead {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 1;
+  font-weight: 620;
+  letter-spacing: -0.035em;
+  line-height: 0.86;
+  text-wrap: balance;
+}
+
+/* Section and feature headlines inside a spread. */
+.type-feature {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 96, "SOFT" 0, "WONK" 1;
+  font-weight: 560;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
+/* Standfirst — the paragraph that sits under a headline. */
+.type-standfirst {
+  font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+  text-wrap: pretty;
+}
+
+/* Running head / kicker — smaller and wider than .type-meta. */
+.type-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Photo credits, plate numbers, marginalia. */
+.type-caption {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-faint);
+  text-wrap: pretty;
+}
+
+/* Issue / section numerals set in the display face. */
+.type-numeral {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 60, "SOFT" 0, "WONK" 0;
+  font-weight: 380;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Hairlines. Rules are drawn, not bordered, so they can be copper. */
+.rule {
+  height: 1px;
+  background: var(--color-line);
+}
+.rule-strong {
+  height: 1px;
+  background: var(--color-line-strong);
+}
+.rule-copper {
+  height: 1px;
+  background: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+/*
+ * Photography treatment.
+ *
+ * Editorial images sit slightly desaturated in the copper/black
+ * environment and come back to full colour on hover — a print-to-life
+ * gesture, not a filter stack. Reduced motion keeps them still but the
+ * colour shift is a transition, not an animation, so it is disabled
+ * with the rest of the motion below.
+ */
+.photo {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-paper-sunken);
+}
+.photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.04);
+  transition:
+    filter var(--duration-normal) var(--ease-out-soft),
+    transform var(--duration-normal) var(--ease-out-soft);
+}
+.photo-mono img {
+  filter: grayscale(1) contrast(1.06);
+}
+.group:hover .photo img,
+.photo:hover img {
+  filter: saturate(1) contrast(1);
+  transform: scale(1.012);
+}
+
+/*
+ * A held photography slot.
+ *
+ * Every editorial image is swappable from `src/config/photography.ts`.
+ * Until a real photograph is dropped in, this plate holds the exact
+ * aspect ratio the layout expects — typographic, obviously a reserved
+ * slot, never a stock photo or a generated person.
+ */
+.photo-plate {
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 13px,
+      color-mix(in srgb, var(--color-line-strong) 85%, transparent) 13px 14px
+    ),
+    var(--color-paper-raised);
+  border: 1px solid var(--color-line-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo img,
+  .group:hover .photo img,
+  .photo:hover img {
+    transform: none;
   }
 }
 

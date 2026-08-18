@@ -1,39 +1,79 @@
-import { siteConfig } from "@/config/site";
+import Link from "next/link";
+import Image from "next/image";
+import { roleLine, siteConfig } from "@/config/site";
+import { SocialLinks } from "./editorial/SocialLinks";
+import { Wordmark } from "./editorial/Wordmark";
 
+/**
+ * The colophon.
+ *
+ * Identity, the three worlds, the rooms inside Headquarters, and the
+ * copper mark. The mark is the P symbol alone, cropped from the brand
+ * lockup: the full lockup carries the retired "Art. Apps. Stories.
+ * Origins." line and is never shown on the site. It is copper leaf
+ * photographed on white, so it carries its own ground and sits on a
+ * deliberate ivory plate — knocking it out would need an alpha channel
+ * the file does not have.
+ */
 export function SiteFooter() {
   return (
     <footer className="border-t border-line mt-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-ink-soft">
-          © {new Date().getFullYear()} Porscha
-        </p>
-        <p className="text-sm text-ink-faint text-center">
-          Built with intention. Fueled by curiosity.
-        </p>
-        <ul className="flex items-center gap-5">
-          {siteConfig.elsewhere.map((item) => (
-            <li key={item.url}>
-              <a
-                href={item.url}
-                rel="me noopener"
-                aria-label={item.label}
-                title={item.label}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-soft hover:text-ink transition-colors duration-[var(--duration-micro)]"
-              >
-                {/* GitHub mark */}
-                <svg
-                  aria-hidden="true"
-                  width="19"
-                  height="19"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                >
-                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
-                </svg>
-              </a>
-            </li>
-          ))}
-        </ul>
+      <div className="mx-auto max-w-[88rem] px-5 sm:px-10 py-14">
+        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-16">
+          <div>
+            <Wordmark className="text-3xl" />
+            <p className="type-kicker mt-4 text-ink-faint">{roleLine()}</p>
+            <SocialLinks className="mt-6" />
+          </div>
+
+          <nav aria-label="Sections">
+            <p className="type-kicker text-ink-faint">Sections</p>
+            <ul className="mt-4 space-y-2">
+              {siteConfig.nav.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="type-heading text-lg text-ink-soft hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <nav aria-label="Inside Headquarters">
+            <p className="type-kicker text-ink-faint">Inside Headquarters</p>
+            <ul className="mt-4 space-y-2">
+              {siteConfig.secondaryNav.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-ink-soft hover:text-ink transition-colors duration-[var(--duration-micro)]"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+
+        <div className="mt-14 flex flex-col-reverse items-start gap-6 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="type-caption">
+            © {new Date().getFullYear()} Porscha · {siteConfig.domain}
+          </p>
+          <span className="inline-flex items-center justify-center bg-[#fbfaf7] p-1">
+            <Image
+              src="/brand/porscha-mark.png"
+              alt="The Porscha copper mark"
+              width={640}
+              height={640}
+              sizes="72px"
+              className="h-auto w-[72px]"
+            />
+          </span>
+        </div>
       </div>
     </footer>
   );

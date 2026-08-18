@@ -46,7 +46,7 @@ export default async function ConsoleLayout({
           <div className="mt-8 flex justify-center gap-4">
             <Link
               href="/"
-              className="bg-ink-well text-ink-inverse px-5 py-3 text-sm rounded-[3px] hover:bg-ink-well-soft transition-colors duration-[var(--duration-micro)]"
+              className="bg-accent text-accent-on px-5 py-3 text-sm rounded-[3px] hover:bg-accent-deep transition-colors duration-[var(--duration-micro)]"
             >
               Back to the workshop
             </Link>

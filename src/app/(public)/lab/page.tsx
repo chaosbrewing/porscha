@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SectionLabel } from "@/components/public/editorial/SectionLabel";
 import { getLabExperiments } from "@/server/content/loader";
 import { formatDate } from "@/lib/dates";
 
@@ -22,10 +23,11 @@ export default function LabPage() {
   const experiments = getLabExperiments();
 
   return (
-    <div className="mx-auto max-w-6xl px-5 sm:px-8">
-      <header className="py-14 md:py-20 max-w-2xl">
-        <h1 className="type-display text-5xl sm:text-6xl">Lab</h1>
-        <p className="mt-5 text-lg text-ink-soft leading-relaxed">
+    <div className="mx-auto max-w-[88rem] px-5 sm:px-10">
+      <header className="pt-12 pb-14 lg:pt-20">
+        <SectionLabel label="Headquarters · Lab" />
+        <h1 className="type-feature mt-8 text-[clamp(2.75rem,8vw,5rem)]">Lab</h1>
+        <p className="type-standfirst mt-6 max-w-xl">
           Numbered experiments. Some conclude, some get abandoned, some
           quietly become projects. Unfinished is the point.
         </p>
@@ -50,7 +52,7 @@ export default function LabPage() {
                     {exp.hypothesis}
                   </span>
                 </span>
-                <span className="type-meta text-ink-faint">
+                <span className="type-kicker text-ink-faint">
                   {STATUS_LABEL[exp.status]} · {formatDate(exp.date)}
                 </span>
               </Link>

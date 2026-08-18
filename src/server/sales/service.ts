@@ -4,7 +4,7 @@ import { and, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { db, schema } from "@/server/db/client";
 import { env } from "@/server/env";
 import { getGalleryAdminView, type ResolvedPiece } from "@/server/gallery/service";
-import { readItem } from "@/server/gallery/store";
+import { readItem, readItems } from "@/server/gallery/store";
 import { createCheckoutSession } from "./stripe";
 
 /**
@@ -65,6 +65,18 @@ export async function saleStateFor(slug: string): Promise<SaleState> {
   const row = await readItem(slug);
   if (!row) return { status: "not_for_sale" };
   return saleStateOf(row);
+}
+
+/**
+ * Sale state for every piece at once, keyed by slug.
+ *
+ * The ART index prints a sold mark beside each piece; asking per piece
+ * would be one query per frame on the wall. Slugs with no row are
+ * simply absent — the caller reads that as not for sale.
+ */
+export async function saleStatesBySlug(): Promise<Map<string, SaleState>> {
+  const rows = await readItems();
+  return new Map(rows.map((row) => [row.slug, saleStateOf(row)]));
 }
 
 export type CheckoutResult =
@@ -142,8 +154,8 @@ export async function startCheckout(
       priceCents: row.priceCents!,
       currency: row.currency ?? env.SALES_CURRENCY,
       imageUrl: piece.media.startsWith("/") ? `${origin}${piece.media}` : undefined,
-      successUrl: `${origin}/gallery/${piece.slug}?purchase=complete`,
-      cancelUrl: `${origin}/gallery/${piece.slug}?purchase=cancelled`,
+      successUrl: `${origin}/art/${piece.slug}?purchase=complete`,
+      cancelUrl: `${origin}/art/${piece.slug}?purchase=cancelled`,
       // Scoped to this reservation, so a retry inside one hold reuses
       // the same session instead of opening a second one.
       idempotencyKey: `${piece.slug}:${until.getTime()}`,

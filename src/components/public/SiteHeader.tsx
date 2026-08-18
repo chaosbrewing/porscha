@@ -1,65 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { siteConfig } from "@/config/site";
+import { Wordmark } from "./editorial/Wordmark";
 import { ThemeToggle } from "./ThemeToggle";
 
 /**
- * Public navigation, kept visually light: the PORSCHA mark, plain text
- * links, thin rule beneath. No console entry point lives here — the
- * only mark on the right is the light/dark switch.
+ * The masthead bar.
  *
- * The logo is copper leaf photographed on white, so it is shown on its
- * own light plate: knocking it out would need an alpha channel the
- * file does not have, and letting it sit directly on the page would
- * put a white rectangle in the dark theme. The plate is deliberate,
- * not a workaround left showing.
+ * POR$CHA on the left, three words on the right — ART, APPS,
+ * HEADQUARTERS — and a hairline beneath. Everything deeper (workshop,
+ * notes, lab, the bio) is reached from Headquarters or the footer, so
+ * the top of every page stays a magazine masthead rather than a menu.
+ *
+ * No console entry point lives here; the only other mark is the
+ * light/dark switch.
  */
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  const isCurrent = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     <header className="border-b border-line">
-      <div className="mx-auto max-w-7xl px-5 sm:px-10">
-        <div className="flex items-center justify-between gap-6 py-5">
+      <div className="mx-auto max-w-[88rem] px-5 sm:px-10">
+        <div className="flex items-center justify-between gap-6 py-5 sm:py-6">
           <Link
             href="/"
             aria-label={`${siteConfig.name} — home`}
-            className="inline-flex shrink-0 items-center rounded-[4px] bg-[#fbfaf7] px-3 py-1.5 transition-opacity duration-[var(--duration-micro)] hover:opacity-85"
+            className="shrink-0 transition-opacity duration-[var(--duration-micro)] hover:opacity-80"
           >
-            <Image
-              src="/brand/porscha-logo.png"
-              alt="Porscha"
-              width={1536}
-              height={1024}
-              priority
-              sizes="(max-width: 640px) 132px, 168px"
-              className="h-auto w-[132px] sm:w-[168px]"
-            />
+            <Wordmark className="text-[1.4rem] sm:text-[1.7rem]" />
           </Link>
 
           <nav aria-label="Main" className="hidden md:block">
-            <ul className="flex items-center gap-9">
+            <ul className="flex items-center gap-10">
               {siteConfig.nav.map((item) => {
-                const current =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
+                const current = isCurrent(item.href);
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       aria-current={current ? "page" : undefined}
-                      className={`text-[0.9375rem] transition-colors duration-[var(--duration-micro)] ${
+                      className={`type-kicker py-1 transition-colors duration-[var(--duration-micro)] ${
                         current
-                          ? "text-ink font-medium"
+                          ? "text-ink"
                           : "text-ink-soft hover:text-ink"
                       }`}
                     >
-                      {item.label}
+                      {item.label.toUpperCase()}
+                      <span
+                        aria-hidden="true"
+                        className={`mt-1.5 block h-px ${
+                          current ? "bg-accent" : "bg-transparent"
+                        }`}
+                      />
                     </Link>
                   </li>
                 );
@@ -90,12 +89,12 @@ export function SiteHeader() {
                 viewBox="0 0 20 20"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.75"
+                strokeWidth="1.5"
               >
                 {open ? (
                   <path d="M4 4l12 12M16 4L4 16" />
                 ) : (
-                  <path d="M3 6h14M3 10h14M3 14h14" />
+                  <path d="M3 6.5h14M3 13.5h14" />
                 )}
               </svg>
             </button>
@@ -103,27 +102,35 @@ export function SiteHeader() {
         </div>
 
         {open ? (
-          <nav aria-label="Main" id="mobile-nav" className="md:hidden pb-4">
-            <ul className="flex flex-col gap-1">
-              {siteConfig.nav.map((item) => {
-                const current =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={current ? "page" : undefined}
-                      onClick={() => setOpen(false)}
-                      className={`block py-2.5 text-base ${
-                        current ? "text-accent-deep" : "text-ink"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
+          <nav aria-label="Main" id="mobile-nav" className="md:hidden pb-6">
+            <ul className="border-t border-line">
+              {siteConfig.nav.map((item) => (
+                <li key={item.href} className="border-b border-line">
+                  <Link
+                    href={item.href}
+                    aria-current={isCurrent(item.href) ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={`type-feature block py-4 text-3xl ${
+                      isCurrent(item.href) ? "text-accent" : "text-ink"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+              {siteConfig.secondaryNav.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className="type-kicker text-ink-soft hover:text-ink transition-colors duration-[var(--duration-micro)]"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         ) : null}

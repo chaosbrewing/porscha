@@ -39,8 +39,8 @@ export default async function LoginPage({
     <div className="mx-auto max-w-md px-5 sm:px-8 py-24">
       <h1 className="type-display text-4xl">The workshop door</h1>
       <p className="mt-4 text-ink-soft leading-relaxed">
-        This entrance is for Porscha. Visitors are warmly invited to everything
-        else — the workshop, lab, gallery, and notes are all open.
+        This entrance is for Porscha. Visitors are warmly invited to
+        everything else — Art, Apps and Headquarters are all open.
       </p>
 
       {errorMessage ? (
@@ -55,7 +55,7 @@ export default async function LoginPage({
       <div className="mt-8 flex flex-col gap-3">
         <a
           href="/api/auth/login"
-          className="inline-flex items-center justify-center gap-2 bg-ink-well text-ink-inverse px-5 py-3 text-sm rounded-[3px] hover:bg-ink-well-soft transition-colors duration-[var(--duration-micro)]"
+          className="inline-flex items-center justify-center gap-2 bg-accent text-accent-on px-5 py-3 text-sm rounded-[3px] hover:bg-accent-deep transition-colors duration-[var(--duration-micro)]"
         >
           Sign in with GitHub
         </a>

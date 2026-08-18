@@ -54,7 +54,7 @@ export function ConsoleNav({
       {/* Desktop rail */}
       <nav
         aria-label="Console"
-        className="hidden md:flex fixed inset-y-0 left-0 w-56 flex-col justify-between bg-ink-well px-4 py-6"
+        className="hidden md:flex fixed inset-y-0 left-0 w-56 flex-col justify-between border-r border-line bg-ink-well px-4 py-6"
       >
         <div>
           <Link href="/console/overview" className="block px-3">
@@ -89,7 +89,7 @@ export function ConsoleNav({
       </nav>
 
       {/* Mobile top bar */}
-      <div className="md:hidden sticky top-0 z-20 bg-ink-well text-ink-inverse">
+      <div className="md:hidden sticky top-0 z-20 border-b border-line bg-ink-well text-ink-inverse">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/console/overview" className="type-heading text-base">
             Console

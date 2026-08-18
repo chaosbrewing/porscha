@@ -28,8 +28,11 @@ export function BuyOriginal({
 
   if (sale.status === "sold") {
     return (
-      <p className="mt-8 border-t border-line pt-6">
-        <span className="type-meta text-ink-faint">Original · Sold</span>
+      <p className="flex flex-col gap-1">
+        <span className="type-kicker text-accent">Sold</span>
+        <span className="type-caption">
+          Original · one of one{sale.price ? ` · ${sale.price}` : ""}
+        </span>
       </p>
     );
   }
@@ -52,10 +55,10 @@ export function BuyOriginal({
   }
 
   return (
-    <div className="mt-8 border-t border-line pt-6">
-      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="type-heading text-xl">{sale.price}</span>
-        <span className="type-meta text-ink-faint">
+    <div>
+      <p className="flex flex-col gap-1">
+        <span className="type-heading text-2xl">{sale.price}</span>
+        <span className="type-kicker text-ink-faint">
           Original · one of one
         </span>
       </p>
@@ -64,19 +67,19 @@ export function BuyOriginal({
         type="button"
         onClick={buy}
         disabled={busy}
-        className="mt-4 inline-flex items-center rounded-[4px] bg-accent px-5 py-3 text-sm font-medium text-ink-inverse hover:bg-accent-deep disabled:opacity-60 transition-colors duration-[var(--duration-micro)]"
+        className="mt-5 inline-flex items-center bg-accent px-6 py-3.5 type-kicker text-accent-on hover:bg-accent-deep disabled:opacity-60 transition-colors duration-[var(--duration-micro)]"
       >
         {busy ? "Opening checkout…" : "Buy this original"}
       </button>
 
-      <p className="mt-3 text-xs text-ink-faint">
+      <p className="type-caption mt-3">
         Secure checkout by Stripe. Shipping collected at checkout.
       </p>
 
       {error ? (
         <p
           role="alert"
-          className="mt-4 rounded border border-alert/40 bg-alert-wash px-4 py-3 text-sm"
+          className="mt-4 border border-alert/40 bg-alert-wash px-4 py-3 text-sm"
         >
           {error}
         </p>

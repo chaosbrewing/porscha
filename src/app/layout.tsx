@@ -8,32 +8,32 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "https://porscha.today"),
   title: {
-    default: "Porscha is the process",
-    template: "%s · porscha.today",
+    default: "POR$CHA — Founder, Artist, Builder",
+    template: "%s · POR$CHA",
   },
   description:
-    "Software. Experiments. Art. Porscha's headquarters on the internet — where she builds, breaks, and refines what matters, publicly.",
+    "POR$CHA — Founder, Artist, Builder. Art from the OBRA studio, apps by Chaos Origins, and the headquarters where both get built.",
   openGraph: {
-    siteName: "porscha.today",
+    siteName: "POR$CHA",
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f0e6" },
-    { media: "(prefers-color-scheme: dark)", color: "#191612" },
-  ],
+  // The night edition is the default, so the browser chrome matches the
+  // ground rather than the reader's system preference.
+  themeColor: "#0b0a09",
   width: "device-width",
   initialScale: 1,
 };
 
 /**
- * Applies the stored theme before first paint. Without this the page
- * renders light and then corrects — a visible flash on every load for
- * anyone who chose dark. Deliberately tiny and dependency-free because
- * it blocks rendering; a stored value other than "light"/"dark" is
- * ignored, leaving the system preference to decide.
+ * Applies the stored theme before first paint. The magazine is printed
+ * on black by default, so an unstamped document is already the night
+ * edition — this only re-applies a reader's explicit choice, which
+ * would otherwise flash the wrong stock on every load. Deliberately
+ * tiny and dependency-free because it blocks rendering; a stored value
+ * other than "light"/"dark" is ignored.
  */
 const NO_FLASH_THEME = `(function(){try{var t=localStorage.getItem("porscha-theme");if(t==="dark"||t==="light"){document.documentElement.dataset.theme=t}}catch(e){}})()`;
 

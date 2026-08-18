@@ -79,7 +79,7 @@ function FilterLink({
       href={href}
       className={`text-xs px-2.5 py-1.5 rounded-[3px] border transition-colors duration-[var(--duration-micro)] ${
         active
-          ? "border-ink bg-ink-well text-ink-inverse"
+          ? "border-accent bg-accent text-accent-on"
           : "border-line text-ink-soft hover:text-ink hover:border-line-strong"
       }`}
     >
