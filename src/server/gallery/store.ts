@@ -190,3 +190,38 @@ export async function writeOrder(order: string[]): Promise<void> {
       )})`}`,
     );
 }
+
+/* ------------------------------ Removal --------------------------- */
+
+/**
+ * Tombstone a file-backed piece. The Markdown file still exists and
+ * every build still ships it, so a row is the only way to keep the
+ * piece off the site. Reversible via `restoreItem`.
+ */
+export async function tombstoneItem(
+  slug: string,
+  fallback: { title: string; category: string },
+): Promise<void> {
+  await db
+    .insert(schema.galleryItems)
+    .values({
+      slug,
+      title: fallback.title,
+      category: fallback.category,
+      origin: "file",
+      hidden: true,
+      deletedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: schema.galleryItems.slug,
+      set: { hidden: true, deletedAt: new Date(), updatedAt: new Date() },
+    });
+}
+
+/** Clear a tombstone, returning the file-backed piece to the wall. */
+export async function restoreItem(slug: string): Promise<void> {
+  await db
+    .update(schema.galleryItems)
+    .set({ deletedAt: null, hidden: false, updatedAt: new Date() })
+    .where(eq(schema.galleryItems.slug, slug));
+}

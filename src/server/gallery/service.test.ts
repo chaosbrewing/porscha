@@ -76,6 +76,13 @@ function row(over: Record<string, unknown>) {
     hidden: false,
     featured: false,
     position: null,
+    deletedAt: null,
+    forSale: false,
+    priceCents: null,
+    currency: null,
+    editionSize: null,
+    soldAt: null,
+    stripePriceId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...over,
@@ -190,5 +197,32 @@ describe("gallery read model", () => {
   it("falls back to the raw key for an unknown category label", async () => {
     expect(categoryLabel(GALLERY_DISPLAY_DEFAULTS, "digital")).toBe("Digital");
     expect(categoryLabel(GALLERY_DISPLAY_DEFAULTS, "nope")).toBe("nope");
+  });
+  it("moves a tombstoned file-backed piece out of the wall and into removed", async () => {
+    state.rows = [row({ slug: "reservoir-walk", deletedAt: new Date() })];
+    const { pieces, removed } = await getGalleryAdminView();
+    expect(pieces.map((p) => p.slug)).not.toContain("reservoir-walk");
+    expect(removed.map((p) => p.slug)).toEqual(["reservoir-walk"]);
+  });
+
+  it("keeps removed pieces off the public view entirely", async () => {
+    state.rows = [row({ slug: "reservoir-walk", deletedAt: new Date() })];
+    const { pieces, removed } = await getPublicGalleryView();
+    expect(pieces.map((p) => p.slug)).toEqual(["density-study-03"]);
+    // The public view never carries the removed pile at all.
+    expect(removed).toEqual([]);
+  });
+
+  it("404s a removed piece at its own URL", async () => {
+    state.rows = [row({ slug: "reservoir-walk", deletedAt: new Date() })];
+    const { getPublicGalleryPiece } = await import("./service");
+    await expect(getPublicGalleryPiece("reservoir-walk")).resolves.toBeUndefined();
+  });
+
+  it("restores a piece when the tombstone is cleared", async () => {
+    state.rows = [row({ slug: "reservoir-walk", deletedAt: null, hidden: false })];
+    const { pieces, removed } = await getGalleryAdminView();
+    expect(pieces.map((p) => p.slug)).toContain("reservoir-walk");
+    expect(removed).toEqual([]);
   });
 });

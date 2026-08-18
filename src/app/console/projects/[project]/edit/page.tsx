@@ -6,7 +6,11 @@ import {
   type ProjectFormValue,
 } from "@/components/console/ProjectForm";
 import { getProjectAdminConfig } from "@/server/projects/admin";
-import { ArchiveProjectButton } from "@/components/console/ProjectActions";
+import {
+  ArchiveProjectButton,
+  DeleteProjectButton,
+} from "@/components/console/ProjectActions";
+import { projectRegistry } from "@/config/registry";
 import type { ProjectVisibility } from "@/types/core";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +49,8 @@ export default async function EditProjectPage({ params }: Props) {
     })),
   };
 
+  const registryDefined = projectRegistry.some((p) => p.slug === slug);
+
   return (
     <div>
       <p className="mb-3">
@@ -59,11 +65,19 @@ export default async function EditProjectPage({ params }: Props) {
         <h1 className="type-display text-4xl sm:text-5xl">
           Edit {config.name}
         </h1>
-        {config.status !== "archived" ? (
-          <ArchiveProjectButton slug={slug} name={config.name} />
-        ) : (
-          <span className="type-meta text-ink-faint">Archived</span>
-        )}
+        <span className="flex flex-wrap items-center gap-3">
+          {config.status !== "archived" ? (
+            <ArchiveProjectButton slug={slug} name={config.name} />
+          ) : (
+            <span className="type-meta text-ink-faint">Archived</span>
+          )}
+          {/* Registry-defined projects would be re-created by the
+              bootstrap, so deletion is offered only for the ones the
+              console owns outright. */}
+          {registryDefined ? null : (
+            <DeleteProjectButton slug={slug} name={config.name} />
+          )}
+        </span>
       </div>
       <div className="mt-10">
         <ProjectForm mode="edit" initial={initial} />

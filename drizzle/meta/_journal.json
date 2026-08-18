@@ -29,6 +29,13 @@
       "when": 1786991038196,
       "tag": "0003_project_logo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787024569791,
+      "tag": "0004_gallery_delete_and_sale",
+      "breakpoints": true
     }
   ]
 }

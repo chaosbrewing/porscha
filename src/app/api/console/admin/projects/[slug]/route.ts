@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireConsoleAccess } from "@/server/auth/guard";
 import { badOrigin, readJson } from "@/server/auth/http";
-import { updateProject } from "@/server/projects/admin";
+import { deleteProject, updateProject } from "@/server/projects/admin";
 import {
   firstValidationMessage,
   projectAdminInputSchema,
@@ -42,6 +42,35 @@ export async function POST(
     console.error("[admin] update project failed:", err);
     return NextResponse.json(
       { error: "Saving didn't stick — the database may be unavailable." },
+      { status: 500 },
+    );
+  }
+}
+
+/** Delete a console-created project. Registry projects are refused. */
+export async function DELETE(
+  req: NextRequest,
+  { params }: RouteContext<"/api/console/admin/projects/[slug]">,
+) {
+  const origin = badOrigin(req);
+  if (origin) return origin;
+  const { errorResponse, user } = await requireConsoleAccess();
+  if (errorResponse) return errorResponse;
+
+  const { slug } = await params;
+  try {
+    const result = await deleteProject(user!.id, slug);
+    if (!result.ok) {
+      return NextResponse.json(
+        { error: result.error },
+        { status: result.status ?? 400 },
+      );
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[admin] delete project failed:", err);
+    return NextResponse.json(
+      { error: "Deleting didn't stick — the database may be unavailable." },
       { status: 500 },
     );
   }

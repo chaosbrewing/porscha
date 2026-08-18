@@ -7,6 +7,8 @@ import {
   deleteItem,
   insertPiece,
   readItem,
+  restoreItem,
+  tombstoneItem,
   updatePiece,
   upsertOverlay,
   writeDisplaySettings,
@@ -182,19 +184,47 @@ export async function removePiece(
   slug: string,
 ): Promise<AdminResult> {
   const existing = await readItem(slug);
-  if (!existing) {
+  const filePiece = getGalleryPieces().find((p) => p.slug === slug);
+
+  if (!existing && !filePiece) {
     return { ok: false, status: 404, error: `No piece named “${slug}”.` };
   }
-  if (existing.origin !== "console") {
-    return {
-      ok: false,
-      status: 409,
-      error:
-        "File-backed pieces can't be deleted here — remove the Markdown file. " +
-        "Hide it instead if you want it off the wall now.",
-    };
+
+  // A console-authored piece has no source behind it, so the row can
+  // simply go. Its uploaded image stays in R2 — objects are immutable
+  // and may be referenced elsewhere; reclaiming them is a bucket
+  // lifecycle concern, not a delete-button one.
+  if (existing && existing.origin === "console") {
+    await deleteItem(slug);
+    await record(actorId, "piece_deleted", slug, { title: existing.title });
+    return { ok: true };
   }
-  await deleteItem(slug);
-  await record(actorId, "piece_deleted", slug, { title: existing.title });
+
+  // A file-backed piece cannot truly be deleted from here: the Worker
+  // has no filesystem, and the next build would ship the Markdown
+  // again regardless. Tombstone it so it leaves the site now, and say
+  // so plainly in the console rather than pretending the file is gone.
+  await tombstoneItem(slug, {
+    title: filePiece?.title ?? existing?.title ?? slug,
+    category: filePiece?.category ?? existing?.category ?? "digital",
+  });
+  await record(actorId, "piece_removed", slug, {
+    title: filePiece?.title ?? slug,
+    fileBacked: true,
+  });
+  return { ok: true };
+}
+
+/** Return a tombstoned file-backed piece to the wall. */
+export async function restorePiece(
+  actorId: string,
+  slug: string,
+): Promise<AdminResult> {
+  const existing = await readItem(slug);
+  if (!existing || existing.deletedAt === null) {
+    return { ok: false, status: 404, error: `“${slug}” isn’t a removed piece.` };
+  }
+  await restoreItem(slug);
+  await record(actorId, "piece_restored", slug, { title: existing.title });
   return { ok: true };
 }

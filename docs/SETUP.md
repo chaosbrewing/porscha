@@ -104,6 +104,37 @@ and visibility) live as one JSON row under the `gallery.display` key in
 defaults in `src/server/gallery/validation.ts` — the public gallery
 keeps rendering its file-backed pieces even with the database down.
 
+### Deleting
+
+What delete means depends on where the thing came from:
+
+| | Delete does |
+| --- | --- |
+| Console-authored piece (`origin = "console"`) | Removes the row. Gone. |
+| File-backed piece | Writes a tombstone (`deleted_at`). The piece leaves the site and moves to **Removed**, where **Put back** clears it. |
+| Console-created project | Deletes the row; milestones, work items, activity, snapshot, and the GitHub connection cascade. |
+| Registry project (`src/config/registry.ts`) | Refused. `syncRegistryToDb` re-creates registry rows, so a delete would resurrect on the next page load. Archive it, or remove the registry entry. |
+
+The asymmetry is the same in both halves: anything with a source in
+the repo cannot be deleted by the running app, because the next build
+puts it back. A tombstone is the honest version of "remove this now";
+deleting the Markdown file or the registry entry is the permanent one.
+
+Deleting a piece does not delete its uploaded R2 object. Keys are
+immutable and may be referenced elsewhere, so reclaiming storage is a
+bucket lifecycle concern rather than a delete-button one.
+
+### Selling (not implemented)
+
+`gallery_items` carries `for_sale`, `price_cents`, `currency`,
+`edition_size`, `sold_at`, and `stripe_price_id` as a reserved
+extension point for a future Stripe integration. Nothing reads or
+writes them: there is no Stripe dependency, no UI, and none of these
+columns reach the public view. They exist so adding checkout later is
+an additive change rather than a reshape of the gallery — and so that
+the delete semantics above stay compatible with a piece that has a
+sales history worth keeping.
+
 **Media uploads** need an R2 bucket bound as `MEDIA`. It is optional:
 without it the upload endpoint returns 503 with an explanation, and
 pieces can still point at any path in `public/`. R2 is a Workers

@@ -104,13 +104,15 @@ export function GalleryPieceList({
   }
 
   async function remove(piece: AdminPiece) {
-    if (
-      !confirm(
-        `Delete “${piece.title}”? This removes the piece and its settings for good.`,
-      )
-    ) {
-      return;
-    }
+    // The two cases really are different, so the wording is too:
+    // a console piece is gone; a file-backed one leaves the site but
+    // its Markdown stays in the repo and can be put back.
+    const message =
+      piece.origin === "console"
+        ? `Delete “${piece.title}”? The piece and its settings go for good.`
+        : `Remove “${piece.title}” from the site? Its Markdown file stays in ` +
+          `the repo, and it will show up under Removed where you can put it back.`;
+    if (!confirm(message)) return;
     setBusy(piece.slug);
     setError(null);
     try {
@@ -248,22 +250,12 @@ export function GalleryPieceList({
               </label>
 
               {piece.origin === "console" ? (
-                <>
-                  <Link
-                    href={`/console/settings/gallery/${piece.slug}`}
-                    className="text-accent-deep hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => remove(piece)}
-                    disabled={busy === piece.slug}
-                    className="text-alert hover:underline disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
-                </>
+                <Link
+                  href={`/console/settings/gallery/${piece.slug}`}
+                  className="text-accent-deep hover:underline"
+                >
+                  Edit
+                </Link>
               ) : (
                 <span
                   className="text-xs text-ink-faint"
@@ -272,6 +264,14 @@ export function GalleryPieceList({
                   File-backed
                 </span>
               )}
+              <button
+                type="button"
+                onClick={() => remove(piece)}
+                disabled={busy === piece.slug}
+                className="text-alert hover:underline disabled:opacity-50"
+              >
+                {piece.origin === "console" ? "Delete" : "Remove"}
+              </button>
             </span>
           </li>
         ))}

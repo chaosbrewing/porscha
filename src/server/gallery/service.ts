@@ -19,12 +19,12 @@ import type { GalleryDisplaySettings } from "./validation";
  *     piece.
  *
  * Rows with `origin = "file"` are overlays: they carry only the
- * console-owned flags (hidden / featured / position) for a piece whose
- * content still lives in its file. Keyed by the file's slug, so an
- * overlay can never shadow a different piece.
+ * console-owned flags (hidden / featured / position / deletedAt) for a
+ * piece whose content still lives in its file. Keyed by the file's
+ * slug, so an overlay can never shadow a different piece.
  *
  * Every consumer goes through here — the public page must never see a
- * hidden piece, and the console must see everything.
+ * hidden or removed piece, and the console must see everything.
  */
 
 export type PieceOrigin = "file" | "console";
@@ -34,11 +34,18 @@ export type ResolvedPiece = GalleryPiece & {
   hidden: boolean;
   featured: boolean;
   position: number | null;
+  removedAt: Date | null;
 };
 
 export type GalleryView = {
   settings: GalleryDisplaySettings;
   pieces: ResolvedPiece[];
+  /**
+   * File-backed pieces the console has removed. Their Markdown still
+   * ships in every build, so they are listed separately rather than
+   * vanishing — otherwise the only way back would be hand-written SQL.
+   */
+  removed: ResolvedPiece[];
 };
 
 function pieceFromRow(row: GalleryItemRow): ResolvedPiece {
@@ -57,6 +64,7 @@ function pieceFromRow(row: GalleryItemRow): ResolvedPiece {
     hidden: row.hidden,
     featured: row.featured,
     position: row.position,
+    removedAt: row.deletedAt,
   };
 }
 
@@ -67,6 +75,7 @@ function applyOverlay(piece: GalleryPiece, row?: GalleryItemRow): ResolvedPiece 
     hidden: row?.hidden ?? false,
     featured: row?.featured ?? false,
     position: row?.position ?? null,
+    removedAt: row?.deletedAt ?? null,
   };
 }
 
@@ -98,7 +107,7 @@ function sortPieces(
   return [...ordered.filter((p) => p.featured), ...ordered.filter((p) => !p.featured)];
 }
 
-/** Everything, hidden included, in console order. For the console only. */
+/** Everything live, hidden included, plus the removed pile. Console only. */
 export async function getGalleryAdminView(): Promise<GalleryView> {
   const [settings, rows] = await Promise.all([readDisplaySettings(), readItems()]);
   const byslug = new Map(rows.map((r) => [r.slug, r]));
@@ -110,7 +119,17 @@ export async function getGalleryAdminView(): Promise<GalleryView> {
     .filter((r) => r.origin === "console" && !fileSlugs.has(r.slug))
     .map(pieceFromRow);
 
-  return { settings, pieces: sortPieces([...filePieces, ...authored], settings) };
+  const all = [...filePieces, ...authored];
+  return {
+    settings,
+    pieces: sortPieces(
+      all.filter((p) => p.removedAt === null),
+      settings,
+    ),
+    removed: all
+      .filter((p) => p.removedAt !== null)
+      .sort((a, b) => a.title.localeCompare(b.title)),
+  };
 }
 
 /** Visible pieces in visible categories. For the public gallery. */
@@ -122,6 +141,7 @@ export async function getPublicGalleryView(): Promise<GalleryView> {
   return {
     settings,
     pieces: pieces.filter((p) => !p.hidden && !hiddenCategories.has(p.category)),
+    removed: [],
   };
 }
 

@@ -1,6 +1,8 @@
 import "server-only";
+import { projectRegistry } from "@/config/registry";
 import type { ProjectVisibility } from "@/types/core";
 import {
+  deleteProjectRow,
   getProjectRow,
   insertAdminEvent,
   insertProject,
@@ -241,4 +243,44 @@ export async function getProjectAdminConfig(slug: string) {
     currentMilestone: row.project.currentMilestone,
     milestones,
   };
+}
+
+/**
+ * Delete a console-created project outright.
+ *
+ * Refused for anything still listed in `src/config/registry.ts`:
+ * `syncRegistryToDb` re-inserts registry projects whose row carries no
+ * `configEditedAt`, so a delete would either resurrect on the next page
+ * load or leave a half-erased project behind. Those get archived
+ * instead, and are removed for real by editing the registry.
+ */
+export async function deleteProject(
+  actorId: string,
+  slug: string,
+): Promise<AdminResult> {
+  const existing = await getProjectRow(slug);
+  if (!existing) {
+    return { ok: false, status: 404, error: "That project doesn't exist." };
+  }
+  if (projectRegistry.some((p) => p.slug === slug)) {
+    return {
+      ok: false,
+      status: 409,
+      error:
+        `“${existing.project.name}” is defined in src/config/registry.ts, so ` +
+        "deleting it here wouldn't stick — the registry would re-create it. " +
+        "Archive it to take it off the public site, or remove its registry " +
+        "entry to delete it for good.",
+    };
+  }
+  // Audit first: the cascade takes the project with it, and a record
+  // written afterwards could be lost to a failure mid-delete.
+  await insertAdminEvent({
+    projectSlug: slug,
+    actorId,
+    action: "project_deleted",
+    detail: { name: existing.project.name },
+  });
+  await deleteProjectRow(slug);
+  return { ok: true };
 }

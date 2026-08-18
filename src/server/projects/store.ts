@@ -455,3 +455,13 @@ export async function listAdminEvents(projectSlug: string, limit = 20) {
     .orderBy(desc(schema.projectAdminEvents.createdAt))
     .limit(limit);
 }
+
+/**
+ * Hard-delete a project row. Milestones, work items, activity,
+ * snapshots, and the GitHub connection cascade via their foreign keys.
+ * Only safe for projects absent from the registry — `syncRegistryToDb`
+ * re-inserts anything it still lists.
+ */
+export async function deleteProjectRow(slug: string): Promise<void> {
+  await db.delete(schema.projects).where(eq(schema.projects.slug, slug));
+}

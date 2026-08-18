@@ -295,6 +295,25 @@ export const galleryItems = pgTable("gallery_items", {
   /** Manual sort seat; nulls sort last, behind every placed piece. */
   position: integer("position"),
 
+  /**
+   * Tombstone for a file-backed piece the console has removed. The
+   * Markdown file still exists and the bundle still ships it, so this
+   * row is the only way to keep the piece off the site; clearing it
+   * restores the piece. Console-authored pieces are deleted outright.
+   */
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+
+  /* --- Selling: extension point, nothing reads these yet ---
+     Reserved so a future Stripe integration is an additive change
+     rather than a reshape of the gallery. No UI, no Stripe dependency,
+     and nothing here reaches the public view. */
+  forSale: boolean("for_sale").notNull().default(false),
+  priceCents: integer("price_cents"),
+  currency: text("currency"),
+  editionSize: integer("edition_size"),
+  soldAt: timestamp("sold_at", { withTimezone: true }),
+  stripePriceId: text("stripe_price_id"),
+
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
