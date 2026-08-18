@@ -45,7 +45,7 @@ To work on the console without a GitHub OAuth app, create
 | `GITHUB_WEBHOOK_SECRET` | for webhooks | Shared secret for signature verification |
 | `SNAPSHOT_STALE_MINUTES` | no | Staleness threshold (default 30) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | for selling | Both required; absent disables purchasing entirely |
-| `SALES_CURRENCY` | no | ISO 4217 default for prices (default AUD) |
+| `SALES_CURRENCY` | no | Shop's selling currency, 3 uppercase ISO 4217 letters (default `AUD`) |
 | `AUTH_DEV_LOGIN` | never in prod | Local dev sign-in |
 
 Validation happens once at boot in `src/server/env.ts`; a misconfigured
@@ -135,8 +135,17 @@ Selling**; the public piece page then offers **Buy this original**.
 Enabled only when both `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
 are set. Without them no purchase is offered anywhere and the checkout
 endpoint returns 503 — the same shape as the other optional
-integrations. Prices default to `SALES_CURRENCY` (AUD) unless a piece
-names its own.
+integrations.
+
+**Currency.** Prices default to `SALES_CURRENCY` unless a piece names
+its own. The default is **AUD** because that is the shop's chosen
+selling currency — a deliberate product decision, not something derived
+from where the database or the Worker happens to run. Infrastructure
+geography has no bearing on what a buyer is charged; to price in
+another currency, change `SALES_CURRENCY`. Both the environment
+variable and the per-piece field are validated as three uppercase
+letters (ISO 4217 alphabetic), and the lowercase form Stripe expects is
+produced at call time rather than stored.
 
 Two rules keep a unique object from being sold twice:
 

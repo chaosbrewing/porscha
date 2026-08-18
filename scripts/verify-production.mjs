@@ -229,6 +229,70 @@ try {
   fail("public API fetch", String(err));
 }
 
+/* --------------------------- Stripe webhook ----------------------- */
+
+/**
+ * The webhook is the only writer of `sold_at`, so the one thing worth
+ * proving from outside is that it refuses anything unsigned.
+ *
+ * This runner holds no signing secret and must not obtain one — a
+ * verifier that could forge a valid signature would be a second way to
+ * mark pieces sold. So it asserts the negative: an unsigned POST is
+ * rejected. No Checkout Session is ever created; nothing here is
+ * capable of reserving a piece or charging anyone.
+ *
+ * Pass --expect-sales (or EXPECT_SALES=true) once selling is live. The
+ * distinction matters: 503 means the endpoint is unconfigured, which is
+ * a perfectly good answer before launch and a failure after it. Without
+ * the flag both 401 and 503 pass; with it, only 401 does.
+ */
+const expectSales =
+  process.argv.includes("--expect-sales") ||
+  /^(1|true|yes)$/i.test(process.env.EXPECT_SALES ?? "");
+
+console.log("\nStripe webhook:");
+try {
+  const res = await fetch(`${origin}/api/stripe/webhook`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    // Deliberately unsigned, and referencing nothing real.
+    body: JSON.stringify({
+      id: "evt_verify_unsigned",
+      type: "checkout.session.completed",
+      data: { object: { id: "cs_verify_unsigned", payment_status: "paid" } },
+    }),
+    redirect: "manual",
+  });
+
+  if (res.status === 401) {
+    ok("unsigned webhook rejected (401)");
+  } else if (res.status === 503) {
+    if (expectSales) {
+      fail(
+        "unsigned webhook",
+        "got 503 (sales not configured) but --expect-sales was set — " +
+          "STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET are missing from the Worker",
+      );
+    } else {
+      ok("webhook reports sales not configured (503)");
+    }
+  } else if (res.status === 404) {
+    fail(
+      "unsigned webhook",
+      "404 — the endpoint is not deployed yet; this passes once the " +
+        "Stripe build ships",
+    );
+  } else {
+    fail(
+      "unsigned webhook",
+      `expected 401${expectSales ? "" : " or 503"}, got ${res.status} — ` +
+        "an unsigned delivery must never be accepted",
+    );
+  }
+} catch (err) {
+  fail("stripe webhook probe", String(err));
+}
+
 console.log("");
 if (failures > 0) {
   console.error(`${failures} check(s) failed.`);

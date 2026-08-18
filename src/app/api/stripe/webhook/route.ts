@@ -43,6 +43,10 @@ export async function POST(req: NextRequest) {
   // dropped, so an account-wide endpoint stays safe.
   if (!slug) return NextResponse.json({ ok: true, ignored: true });
 
+  // Every mutation below is gated on session ownership, so an event
+  // carrying no session id can never be attributed to a reservation.
+  if (!sessionId) return NextResponse.json({ ok: true, ignored: true });
+
   try {
     switch (event.type) {
       case "checkout.session.completed":
@@ -54,14 +58,20 @@ export async function POST(req: NextRequest) {
         }
         const paymentIntent =
           typeof object.payment_intent === "string" ? object.payment_intent : null;
-        const sold = await markSold(slug, paymentIntent);
+        // `sold: false` means the session no longer owned the piece —
+        // a late delivery from an abandoned checkout, or a retry of one
+        // already applied. Either way a safe no-op, and a 200 so Stripe
+        // stops redelivering something that will never apply.
+        const sold = await markSold(slug, sessionId, paymentIntent);
         return NextResponse.json({ ok: true, sold });
       }
 
       case "checkout.session.expired":
       case "checkout.session.async_payment_failed": {
-        if (sessionId) await releaseIfSession(slug, sessionId);
-        return NextResponse.json({ ok: true, released: true });
+        // Only clears the hold if this session still owns it, so a
+        // stale expiry cannot free a newer buyer's reservation.
+        const released = await releaseIfSession(slug, sessionId);
+        return NextResponse.json({ ok: true, released });
       }
 
       default:

@@ -56,8 +56,23 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
-  /** ISO 4217 default when a piece does not name its own. */
-  SALES_CURRENCY: z.string().length(3).default("AUD"),
+  /**
+   * Default currency for pieces that do not name their own.
+   *
+   * AUD is a deliberate porscha.today product decision — the shop
+   * prices in the seller's own currency. It is not derived from where
+   * any infrastructure happens to run; hosting region has no bearing on
+   * what a buyer is charged. Change it here to change the shop.
+   *
+   * ISO 4217 alphabetic codes are three uppercase letters.
+   */
+  SALES_CURRENCY: z
+    .string()
+    .regex(
+      /^[A-Z]{3}$/,
+      "SALES_CURRENCY must be a 3-letter uppercase ISO 4217 code, e.g. AUD",
+    )
+    .default("AUD"),
 
   /** Shared secret for webhook signature verification. */
   GITHUB_WEBHOOK_SECRET: z.string().optional(),

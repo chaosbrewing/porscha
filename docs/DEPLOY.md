@@ -106,6 +106,30 @@ HMAC-verified (constant-time) and deduplicated by delivery id.
 | `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | optional — synced to the Worker's `GITHUB_OAUTH_*` secrets (console sign-in) |
 | `GH_INGEST_TOKEN` (or `GH_TOKEN`) | optional — synced to the Worker's `GITHUB_TOKEN` (reconciliation sync) |
 | `GH_WEBHOOK_SECRET` | optional — synced to the Worker's `GITHUB_WEBHOOK_SECRET` (webhook ingestion) |
+| `STRIPE_SECRET` | optional — synced to the Worker's `STRIPE_SECRET_KEY` (gallery sales) |
+| `STRIPE_SIGNING_SECRET` | optional — synced to the Worker's `STRIPE_WEBHOOK_SECRET` (gallery sales) |
+
+The Actions-side names are aliases on purpose. `GH_*` exists because
+GitHub reserves the `GITHUB_` prefix for Actions secrets; `STRIPE_*`
+follows the same convention so that the names the application reads are
+decided by the application, never by a CI platform's naming rules.
+
+| Actions secret | → Worker secret |
+| --- | --- |
+| `GH_OAUTH_CLIENT_ID` | `GITHUB_OAUTH_CLIENT_ID` |
+| `GH_OAUTH_CLIENT_SECRET` | `GITHUB_OAUTH_CLIENT_SECRET` |
+| `GH_INGEST_TOKEN` / `GH_TOKEN` | `GITHUB_TOKEN` |
+| `GH_WEBHOOK_SECRET` | `GITHUB_WEBHOOK_SECRET` |
+| `STRIPE_SECRET` | `STRIPE_SECRET_KEY` |
+| `STRIPE_SIGNING_SECRET` | `STRIPE_WEBHOOK_SECRET` |
+
+**Stripe is all-or-nothing.** The deploy fails loudly if exactly one of
+the two is present — counting secrets already on the Worker, not just
+the ones arriving from Actions. A half-configured shop would either
+show Buy buttons it cannot honour or run a webhook that cannot verify
+signatures, and the app treats the half-state as sales-disabled, so the
+failure would otherwise be silent. Neither value is ever printed; the
+workflow logs only whether each is present.
 
 ## 5. Migrations
 
@@ -121,6 +145,46 @@ Worker (multiple isolates must not race schema changes):
 
 Migrations are additive; already-applied ones are skipped, so re-runs
 are safe no-ops.
+
+### Destructive migrations
+
+`0006_drop_edition_fields` is the one exception: it DROPs
+`gallery_items.edition_size` and `gallery_items.stripe_price_id`. A
+dropped column cannot be recovered without a restore, so the deploy
+runs a read-only preflight immediately before the migrator and refuses
+to continue unless the columns are provably empty:
+
+```bash
+DATABASE_URL="<supabase string>" node scripts/preflight-drop-check.mjs
+```
+
+Exit `0` safe, `1` data found (deploy blocked), `2` could not verify
+(also blocked — a destructive migration must never run unverified).
+
+The exact check, if you would rather run it by hand:
+
+```sql
+-- Do the columns even exist here?
+select column_name
+  from information_schema.columns
+ where table_schema = current_schema()
+   and table_name   = 'gallery_items'
+   and column_name in ('edition_size', 'stripe_price_id');
+
+-- If they do, are they holding anything?
+select count(*) filter (where edition_size    is not null) as edition_size_values,
+       count(*) filter (where stripe_price_id is not null) as stripe_price_id_values,
+       count(*)                                            as total_rows
+  from gallery_items;
+```
+
+Both columns must report `0`. They were introduced by
+`0004_gallery_delete_and_sale` as an unused extension point and no
+application code ever wrote to either — `edition_size` was dropped
+because one-off originals have no edition, and `stripe_price_id`
+because inline `price_data` means no Price objects to reference. On any
+database that has not yet applied `0004`, the columns do not exist at
+all and the first query returns no rows.
 
 ## 6. Deploying
 

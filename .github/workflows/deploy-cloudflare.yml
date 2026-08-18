@@ -143,6 +143,15 @@ jobs:
           '
           MIGRATE_URL="$(cat /tmp/migrate-url)"; rm -f /tmp/migrate-url
           echo "::add-mask::$MIGRATE_URL"
+
+          # Migration 0006 DROPs gallery_items.edition_size and
+          # .stripe_price_id. A drop is irreversible without a restore,
+          # so prove they hold nothing before the migrator runs. The
+          # check is read-only (SELECT only) and blocks the deploy on
+          # exit 1 (data found) or exit 2 (could not verify) — a
+          # destructive migration must never run unverified.
+          DATABASE_URL="$MIGRATE_URL" node scripts/preflight-drop-check.mjs
+
           DATABASE_URL="$MIGRATE_URL" node scripts/migrate.mjs
 
       # NOTE: a "Release stale DNS records" step used to sit here. It
@@ -177,6 +186,12 @@ jobs:
           # already uses, so it is the one that gets reached for first.
           GH_PAT: ${{ secrets.GH_INGEST_TOKEN || secrets.GH_TOKEN }}
           GH_WEBHOOK: ${{ secrets.GH_WEBHOOK_SECRET }}
+          # Stripe uses the same alias convention, so Actions-side naming
+          # never dictates what the app reads:
+          #   Actions STRIPE_SECRET         → Worker STRIPE_SECRET_KEY
+          #   Actions STRIPE_SIGNING_SECRET → Worker STRIPE_WEBHOOK_SECRET
+          STRIPE_KEY: ${{ secrets.STRIPE_SECRET }}
+          STRIPE_WH: ${{ secrets.STRIPE_SIGNING_SECRET }}
         run: |
           set -eu
           existing=$(npx wrangler secret list --format json | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).map(s=>s.name).join(' ')))")
@@ -204,6 +219,32 @@ jobs:
           sync_from_actions GITHUB_OAUTH_CLIENT_SECRET "$GH_OAUTH_SECRET"
           sync_from_actions GITHUB_TOKEN "$GH_PAT"
           sync_from_actions GITHUB_WEBHOOK_SECRET "$GH_WEBHOOK"
+
+          # Stripe is all-or-nothing. The app treats "one of the two
+          # present" as sales-disabled, which would silently leave a
+          # gallery that offers Buy buttons it cannot honour, or a
+          # webhook that cannot verify signatures. Fail the deploy
+          # instead of shipping that half-state. Values are never
+          # echoed — only whether each is present.
+          stripe_key_present=false
+          stripe_wh_present=false
+          if [ -n "$STRIPE_KEY" ]; then stripe_key_present=true; fi
+          if [ -n "$STRIPE_WH" ]; then stripe_wh_present=true; fi
+          if has STRIPE_SECRET_KEY; then stripe_key_present=true; fi
+          if has STRIPE_WEBHOOK_SECRET; then stripe_wh_present=true; fi
+
+          if [ "$stripe_key_present" != "$stripe_wh_present" ]; then
+            echo "::error::Stripe is half-configured (secret key present: $stripe_key_present, webhook secret present: $stripe_wh_present). Set both Actions secrets STRIPE_SECRET and STRIPE_SIGNING_SECRET, or neither. Refusing to deploy a gallery that could offer purchases it cannot complete."
+            exit 1
+          fi
+
+          if [ "$stripe_key_present" = true ]; then
+            sync_from_actions STRIPE_SECRET_KEY "$STRIPE_KEY"
+            sync_from_actions STRIPE_WEBHOOK_SECRET "$STRIPE_WH"
+            echo "Stripe: configured — gallery sales are live."
+          else
+            echo "::warning::Stripe is not configured — gallery sales stay disabled and the checkout endpoint returns 503."
+          fi
 
       - name: Verify live site
         run: node scripts/verify-production.mjs https://porscha.today

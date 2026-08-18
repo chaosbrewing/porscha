@@ -125,10 +125,15 @@ const galleryPieceBase = z.object({
     .regex(/^\d{1,7}(\.\d{1,2})?$/, "Use a price like 850 or 850.00")
     .optional()
     .or(z.literal("")),
+  /**
+   * ISO 4217 alphabetic code. Uppercase is enforced rather than
+   * coerced, so a stored value always matches what was reviewed —
+   * Stripe is sent the lowercase form it expects at call time.
+   */
   currency: z
     .string()
     .trim()
-    .length(3, "Use a 3-letter currency code")
+    .regex(/^[A-Z]{3}$/, "Use a 3-letter uppercase currency code, e.g. AUD")
     .optional()
     .or(z.literal("")),
 });

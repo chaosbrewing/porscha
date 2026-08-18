@@ -11,15 +11,21 @@ import { createCheckoutSession } from "./stripe";
  * Selling one-off originals.
  *
  * Each piece is unique, so the entire risk is two people paying for the
- * same painting. Two rules contain it:
+ * same painting. The governing rule is **session ownership**:
  *
- *  1. A checkout may only start by winning an atomic conditional
- *     UPDATE. The database decides who gets the piece, not the app —
- *     concurrent requests cannot both see it as available.
- *  2. `soldAt` is written only by the Stripe webhook, after Stripe says
- *     the payment succeeded. The browser returning to the success URL
- *     proves nothing: it is attacker-controlled and fires before the
- *     payment may have settled.
+ *   A paid Checkout Session may mark an item sold only if that exact
+ *   session still owns the item's reservation.
+ *
+ * Every statement below enforces one of the predicates in
+ * `./transitions.ts`, inside a single atomic UPDATE — the database
+ * decides races, not the app. `sold_at IS NULL` is never the only
+ * guard: a reservation can lapse and be re-acquired, and a late webhook
+ * from the abandoned session must not sell the piece out from under
+ * whoever holds it now.
+ *
+ * `soldAt` is written only by the verified Stripe webhook. A browser
+ * arriving at the success URL proves nothing — that URL is
+ * attacker-controlled and can fire before the payment settles.
  *
  * A reservation expires on its own, so an abandoned checkout releases
  * the piece without anyone intervening.
@@ -83,9 +89,13 @@ export async function startCheckout(
   const now = new Date();
   const until = new Date(now.getTime() + HOLD_MINUTES * 60_000);
 
+  // Enforces decideClaim(). Clearing stripeSessionId is essential, not
+  // tidiness: leaving the previous holder's session id on the row would
+  // let their late webhook satisfy the ownership check below and sell
+  // the piece out from under whoever holds it now.
   const claimed = await db
     .update(schema.galleryItems)
-    .set({ reservedUntil: until, updatedAt: now })
+    .set({ reservedUntil: until, stripeSessionId: null, updatedAt: now })
     .where(
       and(
         eq(schema.galleryItems.slug, piece.slug),
@@ -141,15 +151,20 @@ export async function startCheckout(
 
     if (!session.url) throw new Error("Stripe returned no checkout URL");
 
-    await db
-      .update(schema.galleryItems)
-      .set({ stripeSessionId: session.id, updatedAt: new Date() })
-      .where(eq(schema.galleryItems.slug, piece.slug));
+    // Record ownership before handing out the URL, conditional on this
+    // request's own reservation. A hold that has already moved on is
+    // never stamped with this session.
+    const attached = await attachSession(piece.slug, until, session.id);
+    if (!attached) {
+      throw new Error("reservation moved on before the session was recorded");
+    }
 
     return { ok: true, url: session.url };
   } catch (err) {
-    // The claim must not outlive a checkout that never opened.
-    await releaseReservation(piece.slug).catch(() => {});
+    // Release immediately rather than stranding the piece for the full
+    // hold. The buyer never received a URL, so nothing can have been
+    // charged against the abandoned session.
+    await releaseClaim(piece.slug, until).catch(() => {});
     console.error("[sales] checkout creation failed:", err);
     return {
       ok: false,
@@ -159,22 +174,70 @@ export async function startCheckout(
   }
 }
 
-export async function releaseReservation(slug: string): Promise<void> {
-  await db
+/**
+ * Stamp the owning session onto this request's reservation.
+ *
+ * Conditional on the exact reservation instant written by the claim, so
+ * a request whose hold has since lapsed and been re-acquired cannot
+ * overwrite the new holder's session. Returns false when that happened.
+ */
+export async function attachSession(
+  slug: string,
+  reservedUntil: Date,
+  sessionId: string,
+): Promise<boolean> {
+  const updated = await db
     .update(schema.galleryItems)
-    .set({ reservedUntil: null, stripeSessionId: null, updatedAt: new Date() })
+    .set({ stripeSessionId: sessionId, updatedAt: new Date() })
     .where(
-      and(eq(schema.galleryItems.slug, slug), isNull(schema.galleryItems.soldAt)),
-    );
+      and(
+        eq(schema.galleryItems.slug, slug),
+        isNull(schema.galleryItems.soldAt),
+        eq(schema.galleryItems.reservedUntil, reservedUntil),
+      ),
+    )
+    .returning({ slug: schema.galleryItems.slug });
+  return updated.length > 0;
 }
 
 /**
- * Mark a piece sold. Idempotent: Stripe retries webhooks, and the
- * `soldAt IS NULL` guard means a redelivery is a no-op rather than a
- * second sale record. Returns whether this call was the one that sold it.
+ * Roll back a claim whose checkout never opened. Enforces
+ * decideClaimRollback(): matched on the reservation instant this
+ * request wrote, so it can only ever undo its own claim, never a newer
+ * buyer's. Idempotent — a second call matches nothing.
+ */
+export async function releaseClaim(
+  slug: string,
+  reservedUntil: Date,
+): Promise<boolean> {
+  const released = await db
+    .update(schema.galleryItems)
+    .set({ reservedUntil: null, stripeSessionId: null, updatedAt: new Date() })
+    .where(
+      and(
+        eq(schema.galleryItems.slug, slug),
+        isNull(schema.galleryItems.soldAt),
+        eq(schema.galleryItems.reservedUntil, reservedUntil),
+      ),
+    )
+    .returning({ slug: schema.galleryItems.slug });
+  return released.length > 0;
+}
+
+/**
+ * Mark a piece sold. Enforces decideSale().
+ *
+ * The `stripe_session_id = :sessionId` term is the sale invariant: a
+ * paid session may only sell the piece it still holds. Without it a
+ * late webhook from an expired session would sell a piece another buyer
+ * has since reserved — `sold_at IS NULL` would still be true.
+ *
+ * Idempotent: Stripe retries deliveries, and a redelivery finds
+ * `sold_at` already set and changes nothing.
  */
 export async function markSold(
   slug: string,
+  sessionId: string,
   paymentIntentId: string | null,
 ): Promise<boolean> {
   const sold = await db
@@ -186,18 +249,26 @@ export async function markSold(
       updatedAt: new Date(),
     })
     .where(
-      and(eq(schema.galleryItems.slug, slug), isNull(schema.galleryItems.soldAt)),
+      and(
+        eq(schema.galleryItems.slug, slug),
+        isNull(schema.galleryItems.soldAt),
+        eq(schema.galleryItems.stripeSessionId, sessionId),
+      ),
     )
     .returning({ slug: schema.galleryItems.slug });
   return sold.length > 0;
 }
 
-/** Release a hold only if it still belongs to the expiring session. */
+/**
+ * Release a hold only if it still belongs to the expiring session.
+ * Enforces decideRelease(): a stale expiry or async-failure from an
+ * abandoned session must not free the current holder's reservation.
+ */
 export async function releaseIfSession(
   slug: string,
   sessionId: string,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const released = await db
     .update(schema.galleryItems)
     .set({ reservedUntil: null, stripeSessionId: null, updatedAt: new Date() })
     .where(
@@ -206,7 +277,9 @@ export async function releaseIfSession(
         eq(schema.galleryItems.stripeSessionId, sessionId),
         isNull(schema.galleryItems.soldAt),
       ),
-    );
+    )
+    .returning({ slug: schema.galleryItems.slug });
+  return released.length > 0;
 }
 
 /** A checkout-capable view of a public piece, or undefined. */
