@@ -303,16 +303,22 @@ export const galleryItems = pgTable("gallery_items", {
    */
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 
-  /* --- Selling: extension point, nothing reads these yet ---
-     Reserved so a future Stripe integration is an additive change
-     rather than a reshape of the gallery. No UI, no Stripe dependency,
-     and nothing here reaches the public view. */
+  /* --- Selling: one-off originals ---
+     Every piece is unique, so the whole model is "available or not".
+     `soldAt` is set only by the Stripe webhook, never by the browser
+     returning from checkout — a redirect is not proof of payment.
+     `reservedUntil` holds the piece while a checkout is open so two
+     buyers cannot pay for the same original. */
   forSale: boolean("for_sale").notNull().default(false),
   priceCents: integer("price_cents"),
   currency: text("currency"),
-  editionSize: integer("edition_size"),
   soldAt: timestamp("sold_at", { withTimezone: true }),
-  stripePriceId: text("stripe_price_id"),
+  /** Soft hold during an open checkout; expiry frees the piece. */
+  reservedUntil: timestamp("reserved_until", { withTimezone: true }),
+  /** The checkout currently holding the piece, for reconciliation. */
+  stripeSessionId: text("stripe_session_id"),
+  /** Set on completion; the receipt of record lives in Stripe. */
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

@@ -48,6 +48,17 @@ const envSchema = z.object({
   /** Server-only token used for repository sync (never sent to clients). */
   GITHUB_TOKEN: z.string().optional(),
 
+  /**
+   * Stripe, for selling original pieces. Optional: with either value
+   * missing, nothing in the gallery offers a purchase and the
+   * checkout endpoint refuses.
+   */
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  /** ISO 4217 default when a piece does not name its own. */
+  SALES_CURRENCY: z.string().length(3).default("AUD"),
+
   /** Shared secret for webhook signature verification. */
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
 
@@ -104,6 +115,9 @@ function loadEnv() {
     ),
     githubSyncConfigured: Boolean(env.GITHUB_TOKEN),
     webhookConfigured: Boolean(env.GITHUB_WEBHOOK_SECRET),
+    salesConfigured: Boolean(
+      env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET,
+    ),
     allowedLogins: env.ALLOWED_GITHUB_LOGINS.split(",")
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean),

@@ -25,6 +25,9 @@ export type PieceFormValue = {
   note: string;
   project: string;
   body: string;
+  forSale: boolean;
+  price: string;
+  currency: string;
 };
 
 export const emptyPieceDraft: PieceFormValue = {
@@ -38,6 +41,9 @@ export const emptyPieceDraft: PieceFormValue = {
   note: "",
   project: "",
   body: "",
+  forSale: false,
+  price: "",
+  currency: "",
 };
 
 function slugify(title: string): string {
@@ -275,6 +281,51 @@ export function GalleryPieceForm({
             className={field}
           />
         </label>
+
+        <fieldset className="mt-8 border-t border-line pt-6">
+          <legend className="type-meta text-ink-faint">Selling</legend>
+          <label className="mt-3 flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={value.forSale}
+              onChange={(e) => patch({ forSale: e.target.checked })}
+              className="mt-0.5"
+            />
+            <span>
+              Offer this original for sale
+              <span className="block text-ink-faint">
+                One-off: it sells once, then shows as sold.
+              </span>
+            </span>
+          </label>
+
+          {value.forSale ? (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="text-ink-soft">Price</span>
+                <input
+                  value={value.price}
+                  onChange={(e) => patch({ price: e.target.value })}
+                  placeholder="850"
+                  inputMode="decimal"
+                  className={field}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-ink-soft">Currency</span>
+                <input
+                  value={value.currency}
+                  onChange={(e) =>
+                    patch({ currency: e.target.value.toUpperCase() })
+                  }
+                  placeholder="AUD"
+                  maxLength={3}
+                  className={field}
+                />
+              </label>
+            </div>
+          ) : null}
+        </fieldset>
 
         <label className="mt-4 block text-sm">
           <span className="text-ink-soft">Body (Markdown)</span>

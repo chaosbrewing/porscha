@@ -8,6 +8,9 @@ import {
   getPublicGalleryView,
 } from "@/server/gallery/service";
 import { getPublicProject } from "@/server/projects/service";
+import { saleStateFor } from "@/server/sales/service";
+import { BuyOriginal, type SaleView } from "@/components/public/BuyOriginal";
+import { formatMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +39,23 @@ export default async function GalleryPiecePage({ params }: Props) {
   if (!piece) notFound();
 
   const related = piece.project ? await getPublicProject(piece.project) : null;
+
+  const sale = await saleStateFor(slug);
+  const saleView: SaleView | null =
+    sale.status === "sold"
+      ? {
+          status: "sold",
+          price:
+            sale.priceCents === null
+              ? null
+              : formatMoney(sale.priceCents, sale.currency),
+        }
+      : sale.status === "not_for_sale"
+        ? null
+        : {
+            status: sale.status,
+            price: formatMoney(sale.priceCents, sale.currency),
+          };
 
   return (
     <article className="mx-auto max-w-5xl px-5 sm:px-8">
@@ -78,6 +98,8 @@ export default async function GalleryPiecePage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: piece.html }}
         />
       ) : null}
+
+      {saleView ? <BuyOriginal slug={piece.slug} sale={saleView} /> : null}
 
       {related ? (
         <p className="mt-8 border-t border-line pt-6 text-sm">

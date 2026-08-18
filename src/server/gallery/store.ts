@@ -3,6 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/server/db/client";
 import {
   GALLERY_DISPLAY_DEFAULTS,
+  priceToCents,
   galleryDisplaySchema,
   type GalleryDisplaySettings,
   type GalleryOverlayInput,
@@ -136,6 +137,9 @@ export async function insertPiece(input: GalleryPieceInput): Promise<boolean> {
       relatedProject: input.project || null,
       body: input.body || null,
       origin: "console",
+      forSale: input.forSale,
+      priceCents: priceToCents(input.price),
+      currency: input.currency || null,
     })
     .onConflictDoNothing({ target: schema.galleryItems.slug })
     .returning({ slug: schema.galleryItems.slug });
@@ -158,6 +162,9 @@ export async function updatePiece(
       note: input.note || null,
       relatedProject: input.project || null,
       body: input.body || null,
+      forSale: input.forSale,
+      priceCents: priceToCents(input.price),
+      currency: input.currency || null,
       updatedAt: new Date(),
     })
     .where(eq(schema.galleryItems.slug, slug));

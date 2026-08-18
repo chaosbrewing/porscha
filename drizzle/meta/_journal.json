@@ -36,6 +36,20 @@
       "when": 1787024569791,
       "tag": "0004_gallery_delete_and_sale",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787025839576,
+      "tag": "0005_gallery_sales",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787025853222,
+      "tag": "0006_drop_edition_fields",
+      "breakpoints": true
     }
   ]
 }

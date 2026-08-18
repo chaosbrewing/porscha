@@ -85,7 +85,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
  * /public. Remote URLs are refused: the gallery must keep working
  * without third-party hosts.
  */
-export const galleryPieceSchema = z.object({
+const galleryPieceBase = z.object({
   slug: z
     .string()
     .trim()
@@ -115,12 +115,58 @@ export const galleryPieceSchema = z.object({
   note: z.string().trim().max(300).optional().or(z.literal("")),
   project: z.string().trim().max(80).optional().or(z.literal("")),
   body: z.string().max(8000).optional().or(z.literal("")),
+
+  /* Selling. Originals are one-offs: available or not, one price. */
+  forSale: z.boolean().default(false),
+  /** Whole currency units in the form; stored as cents. */
+  price: z
+    .string()
+    .trim()
+    .regex(/^\d{1,7}(\.\d{1,2})?$/, "Use a price like 850 or 850.00")
+    .optional()
+    .or(z.literal("")),
+  currency: z
+    .string()
+    .trim()
+    .length(3, "Use a 3-letter currency code")
+    .optional()
+    .or(z.literal("")),
 });
+
+/**
+ * Shared rule, applied to both create and edit. It lives outside the
+ * object schema because zod refuses `.omit()` on a refined schema —
+ * refining the base once and deriving from it keeps the edit variant
+ * possible.
+ */
+function forSaleNeedsPrice(
+  v: { forSale?: boolean; price?: string },
+  ctx: z.RefinementCtx,
+) {
+  if (v.forSale && !v.price) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["price"],
+      message: "A piece for sale needs a price",
+    });
+  }
+}
+
+export const galleryPieceSchema =
+  galleryPieceBase.superRefine(forSaleNeedsPrice);
 
 export type GalleryPieceInput = z.infer<typeof galleryPieceSchema>;
 
+/** Cents from the form value, or null when not priced. */
+export function priceToCents(price?: string): number | null {
+  if (!price) return null;
+  return Math.round(Number(price) * 100);
+}
+
 /** Editing an existing piece never moves it to a different slug. */
-export const galleryPieceUpdateSchema = galleryPieceSchema.omit({ slug: true });
+export const galleryPieceUpdateSchema = galleryPieceBase
+  .omit({ slug: true })
+  .superRefine(forSaleNeedsPrice);
 
 export type GalleryPieceUpdateInput = z.infer<typeof galleryPieceUpdateSchema>;
 

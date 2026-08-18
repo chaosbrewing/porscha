@@ -44,6 +44,8 @@ To work on the console without a GitHub OAuth app, create
 | `GITHUB_TOKEN` | for sync | Fine-grained PAT (read-only: contents, issues, PRs, actions) |
 | `GITHUB_WEBHOOK_SECRET` | for webhooks | Shared secret for signature verification |
 | `SNAPSHOT_STALE_MINUTES` | no | Staleness threshold (default 30) |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | for selling | Both required; absent disables purchasing entirely |
+| `SALES_CURRENCY` | no | ISO 4217 default for prices (default AUD) |
 | `AUTH_DEV_LOGIN` | never in prod | Local dev sign-in |
 
 Validation happens once at boot in `src/server/env.ts`; a misconfigured
@@ -124,16 +126,47 @@ Deleting a piece does not delete its uploaded R2 object. Keys are
 immutable and may be referenced elsewhere, so reclaiming storage is a
 bucket lifecycle concern rather than a delete-button one.
 
-### Selling (not implemented)
+### Selling originals
 
-`gallery_items` carries `for_sale`, `price_cents`, `currency`,
-`edition_size`, `sold_at`, and `stripe_price_id` as a reserved
-extension point for a future Stripe integration. Nothing reads or
-writes them: there is no Stripe dependency, no UI, and none of these
-columns reach the public view. They exist so adding checkout later is
-an additive change rather than a reshape of the gallery — and so that
-the delete semantics above stay compatible with a piece that has a
-sales history worth keeping.
+Every piece is a one-off, so the model is simply *available or not*.
+Set a price in **Console → Settings → Gallery → edit a piece →
+Selling**; the public piece page then offers **Buy this original**.
+
+Enabled only when both `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
+are set. Without them no purchase is offered anywhere and the checkout
+endpoint returns 503 — the same shape as the other optional
+integrations. Prices default to `SALES_CURRENCY` (AUD) unless a piece
+names its own.
+
+Two rules keep a unique object from being sold twice:
+
+1. **A checkout only starts by winning an atomic conditional UPDATE.**
+   The database decides who gets the piece — concurrent buyers cannot
+   both see it as available. The loser gets a 409 explaining whether
+   waiting would help.
+2. **`sold_at` is written only by the Stripe webhook**, after Stripe
+   confirms `payment_status: paid`. The browser returning to the
+   success URL is never treated as proof of payment: that URL is
+   attacker-controlled and can fire before the charge settles.
+
+A reservation holds the piece for 30 minutes, matching the checkout
+session's own expiry, and lapses on its own — an abandoned checkout
+frees the piece with nobody intervening. `checkout.session.expired`
+releases it sooner, and only if the hold still belongs to that session.
+
+No card data touches this site; buyers go to Stripe's hosted checkout,
+which also collects the shipping address. Buyer details are not copied
+into this database — the order of record lives in Stripe, and only the
+session and payment-intent ids are stored, for reconciliation.
+
+**Stripe webhook**: point an endpoint at
+`<SITE_URL>/api/stripe/webhook` with events `checkout.session.completed`,
+`checkout.session.expired`, `checkout.session.async_payment_succeeded`,
+and `checkout.session.async_payment_failed`. Its signing secret is
+`STRIPE_WEBHOOK_SECRET`. Signatures are verified against the raw body
+with a 5-minute replay window before anything is parsed; events for
+objects without a `gallery_slug` are accepted and dropped, so an
+account-wide endpoint is safe.
 
 **Media uploads** need an R2 bucket bound as `MEDIA`. It is optional:
 without it the upload endpoint returns 503 with an explanation, and

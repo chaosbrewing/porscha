@@ -36,6 +36,10 @@ export default async function EditGalleryPiecePage({
             note: row.note ?? "",
             project: row.relatedProject ?? "",
             body: row.body ?? "",
+            forSale: row.forSale,
+            // Cents in the database, whole units in the form.
+            price: row.priceCents === null ? "" : (row.priceCents / 100).toFixed(2),
+            currency: row.currency ?? "",
           }}
         />
       </div>
