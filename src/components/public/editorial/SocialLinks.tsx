@@ -29,6 +29,10 @@ const MARKS: Record<SocialId, ReactNode> = {
       <path d="M5.9 7.6v4.9M5.9 5.3v.05M9 12.5V7.6M9 9.4c0-1 .7-1.8 1.7-1.8s1.6.8 1.6 1.8v3.1" />
     </>
   ),
+  snapchat: (
+    // The ghost, drawn as one outline in the same weight as the rest.
+    <path d="M9 2.4c2.3 0 3.8 1.7 3.8 3.9 0 .8-.08 1.5-.13 2 .5.22 1-.14 1.4-.14.42 0 .84.28.84.7 0 .55-.9.86-1.4 1.05-.3.11-.5.2-.5.44 0 .5 1.3 2.3 3 2.75.28.08.4.24.34.5-.12.5-1.2.8-2.1.94-.16.02-.24.16-.28.4-.06.36-.13.7-.5.7-.42 0-.9-.22-1.7-.22-1 0-1.4.9-2.77.9s-1.77-.9-2.77-.9c-.8 0-1.28.22-1.7.22-.37 0-.44-.34-.5-.7-.04-.24-.12-.38-.28-.4-.9-.14-1.98-.44-2.1-.94-.06-.26.06-.42.34-.5 1.7-.45 3-2.25 3-2.75 0-.24-.2-.33-.5-.44-.5-.19-1.4-.5-1.4-1.05 0-.42.42-.7.84-.7.4 0 .9.36 1.4.14-.05-.5-.13-1.2-.13-2C5.2 4.1 6.7 2.4 9 2.4Z" />
+  ),
   mail: (
     <>
       <rect x="2.2" y="4" width="13.6" height="10" rx="1.5" />
@@ -73,7 +77,10 @@ export function SocialLinks({
               {MARKS[link.id]}
             </svg>
             {labelled ? (
-              <span className="type-kicker">{link.label}</span>
+              <span className="flex flex-col">
+                <span className="type-kicker">{link.label}</span>
+                <span className="type-caption">{link.handle}</span>
+              </span>
             ) : null}
           </a>
         </li>

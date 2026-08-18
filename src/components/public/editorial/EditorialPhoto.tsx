@@ -1,19 +1,17 @@
 import Image from "next/image";
-import {
-  aspectRatio,
-  resolvePhoto,
-  type PhotoSlotKey,
-} from "@/config/photography";
+import { aspectRatio, type PhotoSlot } from "@/config/photography";
+import { getPhoto } from "@/server/photography/service";
 
 /**
  * One photography slot on the page.
  *
- * The layout asks for a slot key, never a file. Whether a real
- * photograph exists is decided in `src/config/photography.ts`; either
- * way this reserves the same box at the same aspect ratio, so dropping
- * the real frame in never moves the type around it.
+ * The layout asks for a slot key, never a file. What that slot shows is
+ * decided in the private console, falling back to the registry in
+ * `src/config/photography.ts`; either way this reserves the same box at
+ * the same aspect ratio, so swapping the photograph never moves the
+ * type around it.
  */
-export function EditorialPhoto({
+export async function EditorialPhoto({
   slot,
   className = "",
   sizes = "100vw",
@@ -28,18 +26,21 @@ export function EditorialPhoto({
    * the spread and bleeds off the page edge.
    */
   fillParent = false,
+  fallback,
 }: {
-  slot: PhotoSlotKey;
+  slot: string;
   className?: string;
   sizes?: string;
   preload?: boolean;
   mono?: boolean;
-  /** `false` prints no caption; a string overrides the registry's. */
+  /** `false` prints no caption; a string overrides the stored one. */
   caption?: string | false;
   aspect?: string;
   fillParent?: boolean;
+  /** The default for a slot outside the registry — an app's own frame. */
+  fallback?: PhotoSlot;
 }) {
-  const photo = resolvePhoto(slot);
+  const photo = await getPhoto(slot, fallback);
   const ratio = aspectRatio(aspect ?? photo.aspect);
   const printed = caption === false ? null : (caption ?? photo.caption ?? null);
   // A filled parent has no ratio of its own; everywhere else the box is

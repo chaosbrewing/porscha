@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Settings has one section so far; go straight to it. */
+/** Settings opens on the gallery; photography is a tab away. */
 export default function SettingsIndexPage() {
   redirect("/console/settings/gallery");
 }

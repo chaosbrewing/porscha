@@ -6,11 +6,18 @@
 
 export type WorkshopState = "open" | "working" | "quiet";
 
-export type SocialId = "instagram" | "github" | "linkedin" | "mail";
+export type SocialId =
+  | "instagram"
+  | "github"
+  | "linkedin"
+  | "snapchat"
+  | "mail";
 
 export type SocialLink = {
   id: SocialId;
   label: string;
+  /** The handle as it is written — printed where there is room for it. */
+  handle: string;
   /** `null` until the real account/address is filled in. */
   href: string | null;
 };
@@ -65,18 +72,48 @@ export const siteConfig = {
 
   /**
    * Social links, shown beside the identity on the homepage and in the
-   * footer.
+   * footer, in this order.
    *
    * An entry with `href: null` is a slot, not an account: it renders
    * nowhere until the real handle is filled in here. Nothing on this
-   * site links to an account that does not exist, and no personal email
-   * address is published until it is deliberately put in this file.
+   * site links to an account that does not exist.
+   *
+   * Handles are kept beside the URL because the footer prints them and
+   * a bare "Instagram" is worth less than the name someone can search
+   * for. LinkedIn URLs are stored without the share tracking that the
+   * mobile app appends.
    */
   social: [
-    { id: "instagram", label: "Instagram", href: null },
-    { id: "github", label: "GitHub", href: "https://github.com/chaosbrewing" },
-    { id: "linkedin", label: "LinkedIn", href: null },
-    { id: "mail", label: "Mail", href: null },
+    {
+      id: "instagram",
+      label: "Instagram",
+      handle: "@porscha.Ryder",
+      href: "https://www.instagram.com/porscha.ryder/",
+    },
+    {
+      id: "github",
+      label: "GitHub",
+      handle: "chaosbrewing",
+      href: "https://github.com/chaosbrewing",
+    },
+    {
+      id: "linkedin",
+      label: "LinkedIn",
+      handle: "Porscha Gamil",
+      href: "https://www.linkedin.com/in/porscha-gamil-8a9344408",
+    },
+    {
+      id: "snapchat",
+      label: "Snapchat",
+      handle: "@ryder.porscha",
+      href: "https://www.snapchat.com/add/ryder.porscha",
+    },
+    {
+      id: "mail",
+      label: "Mail",
+      handle: "hello@porscha.today",
+      href: "mailto:hello@porscha.today",
+    },
   ] as SocialLink[],
 } as const;
 

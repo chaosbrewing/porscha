@@ -4,11 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Section tabs inside Settings. Gallery is the only section that has
- * graduated from file-backed content so far; lab and notes will sit
- * beside it when they do.
+ * Section tabs inside Settings. Gallery and photography have graduated
+ * from file-backed content so far; lab and notes will sit beside them
+ * when they do.
  */
-const SECTIONS = [{ label: "Gallery", href: "/console/settings/gallery" }];
+const SECTIONS = [
+  { label: "Gallery", href: "/console/settings/gallery" },
+  { label: "Photography", href: "/console/settings/photography" },
+];
 
 export function SettingsNav() {
   const pathname = usePathname();

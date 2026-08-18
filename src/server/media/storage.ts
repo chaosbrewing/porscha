@@ -46,7 +46,7 @@ export function extensionFor(contentType: string): string | undefined {
 }
 
 /** Folders inside the bucket, one per kind of upload. */
-export type MediaFolder = "gallery" | "logos";
+export type MediaFolder = "gallery" | "logos" | "photography";
 
 /**
  * Object key for an upload. Grouped by folder and named after the

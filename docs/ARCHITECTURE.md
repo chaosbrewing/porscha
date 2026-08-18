@@ -17,7 +17,8 @@ plus explicitly allowlisted collaborators (console).
 ## Core journeys
 
 **Public:** land on `/` → immediately understand who/what/current →
-explore Workshop, Apps, Lab, Gallery, Notes, Porscha.
+explore the three worlds (ART, APPS, HEADQUARTERS) and, inside
+Headquarters, Workshop, Lab, Notes, Porscha.
 
 **Owner:** land on `/console` (redirects to `/console/overview`) →
 within seconds answer: what moved, what needs me, are builds healthy,
@@ -53,7 +54,8 @@ Key modules (all under `src/`):
 | Path | Responsibility |
 | --- | --- |
 | `config/registry.ts` | The explicit project registry + visibility flags |
-| `config/site.ts` | Site settings, workshop state, nav |
+| `config/site.ts` | Identity, roles, navigation, social links |
+| `config/photography.ts` | Editorial photography slots (registry defaults) |
 | `server/env.ts` | zod-validated environment, parsed once |
 | `server/db/` | Drizzle schema + pooled client |
 | `server/github/` | verify, normalize, ingest, REST client, sync |
@@ -61,6 +63,7 @@ Key modules (all under `src/`):
 | `server/auth/` | session (jose), GitHub OAuth, guards |
 | `server/realtime/bus.ts` | runtime-aware event bus feeding SSE (EventEmitter on Node, Durable Object on Workers) |
 | `server/content/loader.ts` | Markdown collections (notes/lab/gallery/bio) |
+| `server/photography/` | Console overrides for photography slots, laid over the registry |
 | `app/(public)/` | public routes |
 | `app/console/` | console routes (guarded in layout AND per-API) |
 | `app/api/` | auth, webhook, public API, console API, SSE |
@@ -82,7 +85,9 @@ Postgres tables (Drizzle schema in `src/server/db/schema.ts`):
 - `project_snapshots` — current normalized repository state per project,
   so page loads never reconstruct from raw event history
 - `webhook_deliveries` — processed delivery IDs (duplicate protection)
-- `site_settings` — key/value extension point
+- `site_settings` — key/value settings: `gallery.display` (the wall's
+  presentation) and `site.photography` (per-slot photograph overrides,
+  including one `app:<slug>` frame per product)
 - `gallery_items`, `lab_experiments`, `notes` — file-backed in v1;
   tables exist as the extension point for a future editing interface
 

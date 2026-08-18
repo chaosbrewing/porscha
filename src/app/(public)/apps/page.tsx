@@ -9,6 +9,8 @@ import { SectionLabel } from "@/components/public/editorial/SectionLabel";
 import { EditorialPhoto } from "@/components/public/editorial/EditorialPhoto";
 import { getPublicProjects } from "@/server/projects/service";
 import { getProjectStory } from "@/server/content/loader";
+import { getPhoto } from "@/server/photography/service";
+import { appFrameDefault, appFrameSlot, aspectRatio } from "@/config/photography";
 import { sectionNumber } from "@/config/site";
 import { formatDate } from "@/lib/dates";
 
@@ -32,32 +34,46 @@ export const metadata: Metadata = {
  */
 
 /**
- * The frame beside a product. A real screenshot when the project's
- * story has one; otherwise a typographic plate carrying the product's
- * own mark — deliberate, and the slot a device shot drops into later.
+ * The frame beside a product.
+ *
+ * Whatever the console has set for this app, falling back to the
+ * screenshot in the project's own story, and finally to a typographic
+ * plate carrying the product's mark — deliberate, and the slot a device
+ * shot drops into later.
  */
-function ProductFrame({
+async function ProductFrame({
   project,
   shot,
 }: {
   project: PublicProjectView;
   shot?: { src: string; alt: string; caption?: string };
 }) {
-  if (shot) {
+  const photo = await getPhoto(
+    appFrameSlot(project.slug),
+    appFrameDefault(project.name, shot),
+  );
+
+  if (!photo.held) {
     return (
       <figure>
-        <div className="photo" style={{ aspectRatio: "4 / 3" }}>
+        <div
+          className="photo"
+          style={{ aspectRatio: aspectRatio(photo.aspect) }}
+        >
           <Image
-            src={shot.src}
-            alt={shot.alt}
+            src={photo.src}
+            alt={photo.alt}
             fill
             sizes="(max-width: 1024px) 100vw, 42vw"
+            style={{ objectPosition: photo.focal ?? "50% 50%" }}
           />
         </div>
-        <figcaption className="type-caption mt-3 flex items-center gap-3">
-          <span aria-hidden="true" className="rule-copper w-6 shrink-0" />
-          {shot.caption ?? `${project.name} — in use`}
-        </figcaption>
+        {photo.caption ? (
+          <figcaption className="type-caption mt-3 flex items-center gap-3">
+            <span aria-hidden="true" className="rule-copper w-6 shrink-0" />
+            {photo.caption}
+          </figcaption>
+        ) : null}
       </figure>
     );
   }
@@ -66,7 +82,7 @@ function ProductFrame({
     <figure>
       <div
         className="photo-plate flex flex-col justify-between p-6 sm:p-8"
-        style={{ aspectRatio: "4 / 3" }}
+        style={{ aspectRatio: aspectRatio(photo.aspect) }}
       >
         <ProjectGlyph slug={project.slug} logo={project.logoPath} />
         <div>
@@ -76,13 +92,13 @@ function ProductFrame({
       </div>
       <figcaption className="type-caption mt-3 flex items-center gap-3">
         <span aria-hidden="true" className="rule-copper w-6 shrink-0" />
-        Product photography for {project.name} drops in here.
+        {photo.brief}
       </figcaption>
     </figure>
   );
 }
 
-function ProductSpread({
+async function ProductSpread({
   project,
   index,
 }: {

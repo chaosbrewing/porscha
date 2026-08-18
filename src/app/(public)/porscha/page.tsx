@@ -7,6 +7,9 @@ import { Wordmark } from "@/components/public/editorial/Wordmark";
 import { getBiography } from "@/server/content/loader";
 import { roleLine } from "@/config/site";
 
+// The bio portrait is console-editable, so the page resolves per request.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Porscha",
   description:

@@ -1,20 +1,25 @@
 # porscha.today
 
-Porscha's personal digital headquarters — part public portfolio, part
-workshop, part experimental lab, part art gallery, and part authenticated
-operational console.
+POR$CHA — Founder • Artist • Builder. An editorial magazine printed on
+black, in three worlds: an art practice, a software company, and the
+authenticated operational console where both get built.
 
 ## What it is
 
-**Public workshop.** Visitors explore who Porscha is and what she makes:
+**Public magazine.** ART • APPS • HEADQUARTERS:
 
-- `/` — editorial homepage with her portrait and the current workbench
+- `/` — the cover: masthead, portrait, socials, and the three worlds
+- `/art` — OBRA by Porscha; originals, one of one (+ `/art/[piece]`)
+- `/apps` — Apps by Chaos Origins, one spread per product
+- `/headquarters` — the operating layer: focus, bench, notes, experiments
 - `/porscha` — biography
 - `/workshop` — the central project index (+ `/workshop/[project]`)
-- `/apps` — product-oriented view of the same projects
 - `/lab` — numbered experiments (+ `/lab/[experiment]`)
-- `/gallery` — art and studies (+ `/gallery/[piece]`)
 - `/notes` — lightweight Markdown publishing (+ `/notes/[slug]`)
+
+`/gallery` permanently redirects to `/art`; `/gallery/[piece]` stays a
+live alias (Stripe returns buyers to it) that declares `/art/[piece]` as
+its canonical URL.
 
 Projects show curated, near-realtime development progress derived from
 GitHub **without exposing private repository information** — every signal
@@ -30,6 +35,10 @@ same site becomes Porscha's operational console at `/console`:
 - Activity — unified filterable stream across all registered projects
 - Project detail — PRs, issues, CI, commits, releases, branches, milestones
 - Live updates over Server-Sent Events, with staleness fallbacks
+- Settings → Gallery — the wall's pieces, categories and display
+- Settings → Photography — every editorial photograph on the public
+  site, including one frame per app; uploads land in R2 and a slot with
+  no photograph shows a reserved plate at the same proportions
 
 v1 is **read-only** by design; the service layer is structured so write
 actions (merge, rerun, create issue) can be added safely later.
