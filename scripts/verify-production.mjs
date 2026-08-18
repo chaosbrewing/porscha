@@ -42,16 +42,17 @@ console.log(`Verifying ${origin}\n`);
 console.log("Public routes:");
 for (const path of [
   "/",
+  "/art",
+  "/art/reservoir-walk",
+  "/apps",
+  "/headquarters",
   "/porscha",
   "/workshop",
   "/workshop/kubli",
   "/workshop/prism",
   "/workshop/habi",
-  "/apps",
   "/lab",
   "/lab/whispering-city",
-  "/gallery",
-  "/gallery/reservoir-walk",
   "/notes",
   "/notes/webhooks-not-polling",
   "/login",
@@ -62,18 +63,67 @@ for (const path of [
 }
 await expectStatus("/workshop/does-not-exist", 404, "unknown project → 404");
 
+/*
+ * Gallery compatibility.
+ *
+ * The wall moved to /art. The index redirects, but a piece's old URL
+ * must keep answering 200: Stripe returns buyers to
+ * /gallery/<slug>?purchase=… and a redirect would drop the query
+ * string. This pair is the regression guard for that.
+ *
+ * The piece is taken from whatever /art currently publishes rather than
+ * hard-coded: which pieces are visible is console state, so naming one
+ * here would make this check fail for a reason that isn't a regression.
+ */
+console.log("\nGallery compatibility:");
+{
+  const index = await get("/gallery");
+  if (index && [301, 308].includes(index.status)) {
+    const target = (index.headers.get("location") ?? "").replace(origin, "");
+    if (target === "/art") ok(`/gallery → ${index.status} to /art`);
+    else fail("/gallery redirect target", `got "${target}"`);
+  } else {
+    fail("/gallery redirects", `status ${index?.status}`);
+  }
+
+  const wall = await get("/art");
+  const html = wall ? await wall.text() : "";
+  const slug = html.match(/href="\/art\/([a-z0-9-]+)"/)?.[1];
+
+  if (!slug) {
+    console.log("  — no pieces published; alias check skipped");
+  } else {
+    const alias = await get(`/gallery/${slug}?purchase=complete`);
+    if (alias?.status === 200) {
+      ok(`/gallery/${slug} still answers 200 (Stripe return trip)`);
+      const aliasHtml = await alias.text();
+      if (aliasHtml.includes(`/art/${slug}`)) {
+        ok("alias declares the canonical /art URL");
+      } else {
+        fail("alias canonical", `no /art/${slug} canonical found`);
+      }
+    } else {
+      fail(`/gallery/${slug}`, `status ${alias?.status}`);
+    }
+  }
+}
+
 console.log("\nHomepage content:");
 try {
   const res = await get("/");
   if (!res) throw new Error("request failed");
   const html = await res.text();
   const checks = [
-    ["Porscha is", "canonical headline present"],
-    ["the process.", "canonical headline complete"],
-    ["/portrait/porscha", "portrait asset referenced"],
-    ["On the workbench.", "workbench section present"],
-    ["The deeper layer.", "console teaser present"],
-    ["Enter the workshop", "primary CTA present"],
+    // The masthead sets the `$` in its own element, so the contiguous
+    // name only appears in the accessible label.
+    ['aria-label="POR$CHA"', "masthead present"],
+    ["Founder", "role line — Founder"],
+    ["Artist", "role line — Artist"],
+    ["Builder", "role line — Builder"],
+    ['href="/art"', "ART entry present"],
+    ['href="/apps"', "APPS entry present"],
+    ['href="/headquarters"', "HEADQUARTERS entry present"],
+    ["/portrait/porscha", "cover photograph referenced"],
   ];
   for (const [needle, label] of checks) {
     if (html.includes(needle)) ok(label);
@@ -196,6 +246,21 @@ console.log("\nWebhook endpoint:");
   } else {
     fail("unsigned delivery rejected", `status ${res?.status}`);
   }
+}
+
+console.log("\nRetired branding:");
+{
+  const res = await get("/");
+  const html = res ? await res.text() : "";
+  const retired = ["songwriter", "Art. Apps. Stories. Origins", "porscha-logo.png"];
+  let found = false;
+  for (const needle of retired) {
+    if (html.toLowerCase().includes(needle.toLowerCase())) {
+      found = true;
+      fail("retired branding", `homepage contains "${needle}"`);
+    }
+  }
+  if (!found) ok("no retired positioning on the homepage");
 }
 
 console.log("\nPublic privacy boundary:");
