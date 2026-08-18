@@ -85,7 +85,34 @@ for the initial snapshot population and any reconciliation.
 Nothing becomes public without its visibility flag; new repositories
 are private-by-default.
 
-## Gallery
+## Gallery — OBRA
+
+The public gallery is branded **OBRA by Porscha** and still lives at
+`/gallery`; the route is unchanged so existing links and the piece
+URLs Stripe checkouts return to keep working. Brand art is in
+`public/brand/` — `obra-mark.jpg` heads the gallery, `porscha-logo.png`
+is the site header. Both are photographed on their own ground rather
+than knocked out, so each is shown on a matching plate; a
+transparent PNG or SVG could sit directly on the page instead.
+
+**Categories are free text.** `digital` and `canvas` are only the
+suggestions offered in the console — anything typed becomes a
+category the moment a piece uses it, normalised to lowercase
+hyphenated form so a file-backed piece and a console one never split
+a category in two. The settings page merges in every category
+actually in use, so a newly invented one can still be renamed or
+hidden. Discovered categories default to visible: a piece must never
+vanish from the wall because nobody had configured its category yet.
+
+**The image is uploaded, never typed.** The upload returns the path
+it wrote and the aspect ratio it read from the file's own header
+(`src/server/media/dimensions.ts` parses PNG, JPEG, and WebP headers
+and the SVG `viewBox` — no decoding, no dependency, Workers-safe).
+Accepted formats are PNG, SVG, JPG, and WebP.
+
+**Alt text is derived from the title**, server-side. The field was
+removed from the form, the attribute was not: shipping images with
+no alt would make the gallery unusable with a screen reader.
 
 The gallery has two sources, reconciled in `src/server/gallery/service.ts`:
 

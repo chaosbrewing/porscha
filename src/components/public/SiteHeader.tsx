@@ -1,15 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { siteConfig } from "@/config/site";
 import { ThemeToggle } from "./ThemeToggle";
 
 /**
- * Public navigation, kept visually light: serif wordmark, plain text
+ * Public navigation, kept visually light: the PORSCHA mark, plain text
  * links, thin rule beneath. No console entry point lives here — the
  * only mark on the right is the light/dark switch.
+ *
+ * The logo is copper leaf photographed on white, so it is shown on its
+ * own light plate: knocking it out would need an alpha channel the
+ * file does not have, and letting it sit directly on the page would
+ * put a white rectangle in the dark theme. The plate is deliberate,
+ * not a workaround left showing.
  */
 export function SiteHeader() {
   const pathname = usePathname();
@@ -21,9 +28,18 @@ export function SiteHeader() {
         <div className="flex items-center justify-between gap-6 py-5">
           <Link
             href="/"
-            className="type-heading text-xl tracking-tight hover:text-accent-deep transition-colors duration-[var(--duration-micro)]"
+            aria-label={`${siteConfig.name} — home`}
+            className="inline-flex shrink-0 items-center rounded-[4px] bg-[#fbfaf7] px-3 py-1.5 transition-opacity duration-[var(--duration-micro)] hover:opacity-85"
           >
-            porscha.today
+            <Image
+              src="/brand/porscha-logo.png"
+              alt="Porscha"
+              width={1536}
+              height={1024}
+              priority
+              sizes="(max-width: 640px) 132px, 168px"
+              className="h-auto w-[132px] sm:w-[168px]"
+            />
           </Link>
 
           <nav aria-label="Main" className="hidden md:block">

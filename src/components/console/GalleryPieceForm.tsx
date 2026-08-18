@@ -3,15 +3,19 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { GALLERY_CATEGORIES } from "@/config/gallery";
+import { normalizeCategory, SUGGESTED_CATEGORIES } from "@/config/gallery";
 
 /**
  * Create/edit form for a console-authored gallery piece.
  *
- * Media is a path this site serves: either an uploaded object under
- * /media/ or a file already in public/. Uploading needs the R2 binding,
- * which only exists in the Workers runtime — where it's absent, the
- * upload button says so and the path field still works.
+ * The image is uploaded, never typed: the upload returns both the
+ * path it wrote and the aspect ratio it read out of the file's own
+ * header, so neither is a question worth asking. Alt text is derived
+ * server-side from the title — the field is gone, the attribute is
+ * not.
+ *
+ * Uploading needs the R2 binding, which only exists in the Workers
+ * runtime; where it is absent the endpoint says so plainly.
  */
 
 export type PieceFormValue = {
@@ -20,10 +24,8 @@ export type PieceFormValue = {
   category: string;
   year: string;
   media: string;
-  alt: string;
   aspect: string;
   note: string;
-  project: string;
   body: string;
   forSale: boolean;
   price: string;
@@ -36,10 +38,8 @@ export const emptyPieceDraft: PieceFormValue = {
   category: "digital",
   year: String(new Date().getFullYear()),
   media: "",
-  alt: "",
   aspect: "4/5",
   note: "",
-  project: "",
   body: "",
   forSale: false,
   price: "",
@@ -98,7 +98,7 @@ export function GalleryPieceForm({
         setError(json.error ?? "The upload failed.");
         return;
       }
-      patch({ media: json.media });
+      patch({ media: json.media, aspect: json.aspect ?? value.aspect });
     } catch {
       setError("Couldn't reach the server.");
     } finally {
@@ -140,7 +140,7 @@ export function GalleryPieceForm({
 
   const field =
     "mt-1.5 w-full rounded-[3px] border border-line-strong bg-paper px-3 py-2 text-sm focus:border-accent focus:outline-none";
-  const valid = value.title && value.slug && value.media && value.alt;
+  const valid = value.title && value.slug && value.category && value.media;
 
   return (
     <form onSubmit={save} className="grid gap-10 lg:grid-cols-[1fr_300px]">
@@ -176,20 +176,26 @@ export function GalleryPieceForm({
           </span>
         </label>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
             <span className="text-ink-soft">Category</span>
-            <select
+            <input
               value={value.category}
               onChange={(e) => patch({ category: e.target.value })}
+              onBlur={(e) => patch({ category: normalizeCategory(e.target.value) })}
+              list="gallery-category-suggestions"
+              placeholder="digital"
+              maxLength={40}
+              required
               className={field}
-            >
-              {GALLERY_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+            />
+            {/* Suggestions, not a vocabulary — anything typed becomes a
+                category the moment a piece uses it. */}
+            <datalist id="gallery-category-suggestions">
+              {SUGGESTED_CATEGORIES.map((c) => (
+                <option key={c} value={c} />
               ))}
-            </select>
+            </datalist>
           </label>
           <label className="block text-sm">
             <span className="text-ink-soft">Year</span>
@@ -201,83 +207,49 @@ export function GalleryPieceForm({
               className={field}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-ink-soft">Aspect</span>
+        </div>
+
+        <div className="mt-6">
+          <span className="block text-sm text-ink-soft">Image</span>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
             <input
-              value={value.aspect}
-              onChange={(e) => patch({ aspect: e.target.value })}
-              placeholder="4/5"
-              className={field}
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/svg+xml,image/jpeg,image/webp"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) upload(f);
+              }}
+              className="hidden"
+              id="gallery-media-upload"
             />
-          </label>
+            <label
+              htmlFor="gallery-media-upload"
+              className="cursor-pointer rounded-[3px] border border-line-strong px-4 py-2 text-sm hover:border-ink transition-colors duration-[var(--duration-micro)]"
+            >
+              {uploading
+                ? "Uploading…"
+                : value.media
+                  ? "Replace image"
+                  : "Upload image"}
+            </label>
+            <span className="text-xs text-ink-faint">
+              PNG, SVG, JPG, or WebP.
+            </span>
+          </div>
+          {value.media ? (
+            <p className="mt-2 text-xs text-ink-faint">
+              Uploaded · shape read as {value.aspect || "4/5"}
+            </p>
+          ) : null}
         </div>
 
-        <label className="mt-4 block text-sm">
-          <span className="text-ink-soft">Image path</span>
-          <input
-            value={value.media}
-            onChange={(e) => patch({ media: e.target.value })}
-            placeholder="/gallery/piece.svg"
-            required
-            className={field}
-          />
-        </label>
-
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/avif,image/gif,image/svg+xml"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) upload(f);
-            }}
-            className="hidden"
-            id="gallery-media-upload"
-          />
-          <label
-            htmlFor="gallery-media-upload"
-            className="cursor-pointer rounded-[3px] border border-line-strong px-4 py-2 text-sm hover:border-ink transition-colors duration-[var(--duration-micro)]"
-          >
-            {uploading ? "Uploading…" : "Upload image"}
-          </label>
-          <span className="text-xs text-ink-faint">
-            Or point at a file already in <code>public/</code>.
-          </span>
-        </div>
-
-        <label className="mt-4 block text-sm">
-          <span className="text-ink-soft">Alt text</span>
-          <textarea
-            value={value.alt}
-            onChange={(e) => patch({ alt: e.target.value })}
-            rows={2}
-            maxLength={300}
-            required
-            className={field}
-          />
-          <span className="mt-1 block text-xs text-ink-faint">
-            Describe the image for anyone who can&rsquo;t see it.
-          </span>
-        </label>
-
-        <label className="mt-4 block text-sm">
+        <label className="mt-6 block text-sm">
           <span className="text-ink-soft">Note</span>
           <input
             value={value.note}
             onChange={(e) => patch({ note: e.target.value })}
             maxLength={300}
-            className={field}
-          />
-        </label>
-
-        <label className="mt-4 block text-sm">
-          <span className="text-ink-soft">Related project</span>
-          <input
-            value={value.project}
-            onChange={(e) => patch({ project: e.target.value })}
-            placeholder="kubli"
-            maxLength={80}
             className={field}
           />
         </label>
@@ -374,7 +346,7 @@ export function GalleryPieceForm({
           {value.media ? (
             <Image
               src={value.media}
-              alt={value.alt}
+              alt={value.title}
               width={600}
               height={750}
               className="h-full w-full object-cover"

@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { getGalleryAdminView, categoryLabel } from "@/server/gallery/service";
+import {
+  getGalleryAdminView,
+  categoryLabel,
+  withUsedCategories,
+} from "@/server/gallery/service";
 import { GalleryDisplayForm } from "@/components/console/GalleryDisplayForm";
 import { GalleryPieceList } from "@/components/console/GalleryPieceList";
 import { GalleryRemovedList } from "@/components/console/GalleryRemovedList";
@@ -9,7 +13,11 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Gallery" };
 
 export default async function GallerySettingsPage() {
-  const { settings, pieces, removed } = await getGalleryAdminView();
+  const { settings: stored, pieces, removed } = await getGalleryAdminView();
+  // Typed categories only exist on pieces until someone saves them,
+  // so surface every one in use — otherwise a new category could
+  // never be renamed or hidden.
+  const settings = withUsedCategories(stored, [...pieces, ...removed]);
 
   return (
     <div className="space-y-14">

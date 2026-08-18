@@ -7,8 +7,9 @@ import { categoryLabel, getPublicGalleryView } from "@/server/gallery/service";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Gallery",
-  description: "Pictures, sketches, and studies from around the workbench.",
+  title: "OBRA",
+  description:
+    "OBRA by Porscha — original pieces, studies, and sketches from around the workbench.",
   alternates: { canonical: "/gallery" },
 };
 
@@ -25,10 +26,28 @@ export default async function GalleryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8">
-      <header className="py-14 md:py-20 max-w-2xl">
-        <h1 className="type-display text-5xl sm:text-6xl">{settings.heading}</h1>
+      <header className="py-14 md:py-20 flex flex-col items-center text-center">
+        {/*
+          The mark is gold leaf photographed on black, so it carries its
+          own ground rather than being knocked out — it needs the dark
+          plate to read as metal in either theme. The heading stays in
+          the DOM as the h1 and is visually hidden, so the page keeps a
+          real outline for screen readers and search.
+        */}
+        <span className="inline-flex items-center justify-center rounded-[6px] bg-[#0d0b09] p-3">
+          <Image
+            src="/brand/obra-mark.jpg"
+            alt=""
+            width={220}
+            height={220}
+            priority
+            className="h-auto w-[150px] sm:w-[190px]"
+          />
+        </span>
+        <h1 className="sr-only">{settings.heading}</h1>
+        <p className="mt-6 type-meta text-ink-faint">by Porscha</p>
         {settings.intro ? (
-          <p className="mt-5 text-lg text-ink-soft leading-relaxed">
+          <p className="mt-5 max-w-2xl text-lg text-ink-soft leading-relaxed">
             {settings.intro}
           </p>
         ) : null}

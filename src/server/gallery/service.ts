@@ -1,5 +1,5 @@
 import "server-only";
-import type { GalleryCategory } from "@/config/gallery";
+import { defaultCategoryLabel } from "@/config/gallery";
 import {
   getGalleryPieces,
   renderMarkdown,
@@ -52,7 +52,7 @@ function pieceFromRow(row: GalleryItemRow): ResolvedPiece {
   return {
     slug: row.slug,
     title: row.title,
-    category: row.category as GalleryCategory,
+    category: row.category,
     year: row.year ?? "",
     media: row.mediaPath ?? "",
     alt: row.alt ?? row.title,
@@ -158,4 +158,30 @@ export function categoryLabel(
   key: string,
 ): string {
   return settings.categories.find((c) => c.key === key)?.label ?? key;
+}
+
+/**
+ * Settings with every category the work actually uses.
+ *
+ * Categories are typed per piece, so the stored settings list is only
+ * ever a partial record — a category invented on a new piece would
+ * otherwise be unreachable in the console, impossible to rename or
+ * hide. Merging here means the settings page always lists what exists,
+ * and saving adopts it.
+ *
+ * Newly discovered categories default to visible: a piece must never
+ * vanish from the wall because nobody had configured its category yet.
+ */
+export function withUsedCategories(
+  settings: GalleryDisplaySettings,
+  pieces: Array<{ category: string }>,
+): GalleryDisplaySettings {
+  const known = new Set(settings.categories.map((c) => c.key));
+  const discovered = [...new Set(pieces.map((p) => p.category))]
+    .filter((key) => key && !known.has(key))
+    .sort()
+    .map((key) => ({ key, label: defaultCategoryLabel(key), visible: true }));
+
+  if (discovered.length === 0) return settings;
+  return { ...settings, categories: [...settings.categories, ...discovered] };
 }

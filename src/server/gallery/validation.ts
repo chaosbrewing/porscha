@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GALLERY_CATEGORIES } from "@/config/gallery";
+import { defaultCategoryLabel, SUGGESTED_CATEGORIES } from "@/config/gallery";
 
 /**
  * Validation for the gallery console. Shared by the API routes and the
@@ -7,16 +7,19 @@ import { GALLERY_CATEGORIES } from "@/config/gallery";
  * malformed `site_settings` row can never reach a page.
  */
 
-export const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
-  photography: "Photography",
-  digital: "Digital",
-  ui: "UI",
-  experiments: "Experiments",
-  sketches: "Sketches",
-};
+/** Normalised category key: lowercase words joined by single hyphens. */
+export const categoryKeySchema = z
+  .string()
+  .trim()
+  .min(1, "A category needs a name")
+  .max(40)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Use lowercase words separated by single hyphens",
+  );
 
 export const galleryCategorySettingSchema = z.object({
-  key: z.enum(GALLERY_CATEGORIES),
+  key: categoryKeySchema,
   label: z.string().trim().min(1, "A category needs a label").max(40),
   visible: z.boolean(),
 });
@@ -34,7 +37,9 @@ export const galleryDisplaySchema = z.object({
   featuredFirst: z.boolean(),
   categories: z
     .array(galleryCategorySettingSchema)
-    .max(GALLERY_CATEGORIES.length)
+    // Free text means the list grows with the work, so the cap is a
+    // sanity bound rather than a fixed vocabulary.
+    .max(50)
     .superRefine((cats, ctx) => {
       const seen = new Set<string>();
       for (const c of cats) {
@@ -52,15 +57,17 @@ export const galleryDisplaySchema = z.object({
 export type GalleryDisplaySettings = z.infer<typeof galleryDisplaySchema>;
 
 export const GALLERY_DISPLAY_DEFAULTS: GalleryDisplaySettings = {
-  heading: "Gallery",
+  heading: "OBRA",
   intro:
     "Not everything made here compiles. Studies, sketches, and pictures — mostly siblings of the software.",
   columns: 3,
   sort: "year-desc",
   featuredFirst: true,
-  categories: GALLERY_CATEGORIES.map((key) => ({
+  // Seeded from the suggestions; the settings page merges in whatever
+  // categories the pieces themselves are actually using.
+  categories: SUGGESTED_CATEGORIES.map((key) => ({
     key,
-    label: DEFAULT_CATEGORY_LABELS[key] ?? key,
+    label: defaultCategoryLabel(key),
     visible: true,
   })),
 };
@@ -80,9 +87,14 @@ export type GalleryOverlayInput = z.infer<typeof galleryOverlaySchema>;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /**
- * A console-authored piece. `media` is a path the site can serve —
- * either an uploaded object under /media/ or a file already in
- * /public. Remote URLs are refused: the gallery must keep working
+ * A console-authored piece.
+ *
+ * `media` and `aspect` are produced by the upload, never typed: the
+ * upload returns the path it wrote and the ratio it read out of the
+ * file's own header. Both are still validated here, because the client
+ * supplies them on save and a client is never trusted.
+ *
+ * Remote media URLs are refused — the gallery must keep working
  * without third-party hosts.
  */
 const galleryPieceBase = z.object({
@@ -93,7 +105,8 @@ const galleryPieceBase = z.object({
     .max(80)
     .regex(SLUG_RE, "Use lowercase words separated by single hyphens"),
   title: z.string().trim().min(1, "A piece needs a title").max(120),
-  category: z.enum(GALLERY_CATEGORIES),
+  /** Free text: the wall holds whatever kinds of work it holds. */
+  category: categoryKeySchema,
   year: z
     .string()
     .trim()
@@ -101,19 +114,19 @@ const galleryPieceBase = z.object({
   media: z
     .string()
     .trim()
-    .min(1, "A piece needs an image")
+    .min(1, "A piece needs an image — upload one")
     .refine((v) => v.startsWith("/"), "Media must be a path on this site"),
-  alt: z
-    .string()
-    .trim()
-    .min(1, "Alt text is required — describe the image")
-    .max(300),
+  /**
+   * Read from the uploaded file, so the ratio can be any reduction —
+   * not just the small hand-typed ones the old form allowed.
+   */
   aspect: z
     .string()
     .trim()
-    .regex(/^\d{1,2}\/\d{1,2}$/, 'Use a ratio like "4/5"'),
+    .regex(/^[\d.]{1,7}\/[\d.]{1,7}$/, "Aspect must look like 4/5")
+    .optional()
+    .or(z.literal("")),
   note: z.string().trim().max(300).optional().or(z.literal("")),
-  project: z.string().trim().max(80).optional().or(z.literal("")),
   body: z.string().max(8000).optional().or(z.literal("")),
 
   /* Selling. Originals are one-offs: available or not, one price. */

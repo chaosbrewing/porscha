@@ -131,10 +131,12 @@ export async function insertPiece(input: GalleryPieceInput): Promise<boolean> {
       category: input.category,
       year: input.year,
       mediaPath: input.media,
-      alt: input.alt,
-      aspect: input.aspect,
+      // Alt text is no longer asked for; the title is the honest
+      // description of the piece, and an empty alt would be worse.
+      alt: input.title,
+      aspect: input.aspect || null,
       note: input.note || null,
-      relatedProject: input.project || null,
+      relatedProject: null,
       body: input.body || null,
       origin: "console",
       forSale: input.forSale,
@@ -157,10 +159,12 @@ export async function updatePiece(
       category: input.category,
       year: input.year,
       mediaPath: input.media,
-      alt: input.alt,
-      aspect: input.aspect,
+      // Alt text is no longer asked for; the title is the honest
+      // description of the piece, and an empty alt would be worse.
+      alt: input.title,
+      aspect: input.aspect || null,
       note: input.note || null,
-      relatedProject: input.project || null,
+      relatedProject: null,
       body: input.body || null,
       forSale: input.forSale,
       priceCents: priceToCents(input.price),

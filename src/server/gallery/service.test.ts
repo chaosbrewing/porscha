@@ -157,11 +157,14 @@ describe("gallery read model", () => {
   });
 
   it("drops pieces whose category has been switched off", async () => {
+    // Categories are free text, so the defaults no longer enumerate
+    // every one in use — the switched-off entry is stated outright.
     state.settings = {
       ...GALLERY_DISPLAY_DEFAULTS,
-      categories: GALLERY_DISPLAY_DEFAULTS.categories.map((c) =>
-        c.key === "experiments" ? { ...c, visible: false } : c,
-      ),
+      categories: [
+        { key: "digital", label: "Digital", visible: true },
+        { key: "experiments", label: "Experiments", visible: false },
+      ],
     };
     const { pieces } = await getPublicGalleryView();
     expect(pieces.map((p) => p.slug)).toEqual(["reservoir-walk"]);
@@ -224,5 +227,48 @@ describe("gallery read model", () => {
     const { pieces, removed } = await getGalleryAdminView();
     expect(pieces.map((p) => p.slug)).toContain("reservoir-walk");
     expect(removed).toEqual([]);
+  });
+});
+
+describe("withUsedCategories", () => {
+  it("adds categories a piece uses but settings has never seen", async () => {
+    const { withUsedCategories } = await import("./service");
+    const merged = withUsedCategories(GALLERY_DISPLAY_DEFAULTS, [
+      { category: "linocut" },
+      { category: "digital" },
+    ]);
+    const keys = merged.categories.map((c) => c.key);
+    expect(keys).toContain("linocut");
+    // Existing entries are not duplicated.
+    expect(keys.filter((k) => k === "digital")).toHaveLength(1);
+  });
+
+  it("titles a discovered category and leaves it visible", async () => {
+    const { withUsedCategories } = await import("./service");
+    const merged = withUsedCategories(GALLERY_DISPLAY_DEFAULTS, [
+      { category: "mixed-media" },
+    ]);
+    const found = merged.categories.find((c) => c.key === "mixed-media")!;
+    // A piece must never vanish because its category was unconfigured.
+    expect(found.visible).toBe(true);
+    expect(found.label).toBe("Mixed Media");
+  });
+
+  it("preserves a configured label and visibility", async () => {
+    const { withUsedCategories } = await import("./service");
+    const settings = {
+      ...GALLERY_DISPLAY_DEFAULTS,
+      categories: [{ key: "canvas", label: "On Canvas", visible: false }],
+    };
+    const merged = withUsedCategories(settings, [{ category: "canvas" }]);
+    expect(merged.categories).toEqual(settings.categories);
+  });
+
+  it("returns the same object when nothing is new", async () => {
+    const { withUsedCategories } = await import("./service");
+    const merged = withUsedCategories(GALLERY_DISPLAY_DEFAULTS, [
+      { category: "digital" },
+    ]);
+    expect(merged).toBe(GALLERY_DISPLAY_DEFAULTS);
   });
 });

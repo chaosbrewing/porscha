@@ -4,7 +4,6 @@ import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
 import { z } from "zod";
-import { GALLERY_CATEGORIES } from "@/config/gallery";
 import { isCloudflareWorkers } from "@/server/runtime";
 import contentBundle from "./content-bundle.json";
 
@@ -148,7 +147,13 @@ export function getLabExperiment(slug: string): LabExperiment | undefined {
 
 const galleryFrontmatter = z.object({
   title: z.string(),
-  category: z.enum(GALLERY_CATEGORIES),
+  /** Free text, matching the console. Normalised so a file and a
+   *  console piece never split one category into two. */
+  category: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .transform((v) => v.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")),
   year: z.coerce.string(),
   media: z.string(),
   alt: z.string(),

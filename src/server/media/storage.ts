@@ -18,11 +18,9 @@ export const MEDIA_PREFIX = "/media/";
 
 const ALLOWED: Record<string, string> = {
   "image/png": "png",
+  "image/svg+xml": "svg",
   "image/jpeg": "jpg",
   "image/webp": "webp",
-  "image/avif": "avif",
-  "image/gif": "gif",
-  "image/svg+xml": "svg",
 };
 
 export const ALLOWED_MEDIA_TYPES = Object.keys(ALLOWED);

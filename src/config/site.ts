@@ -30,7 +30,7 @@ export const siteConfig = {
     { label: "Porscha", href: "/porscha" },
     { label: "Workshop", href: "/workshop" },
     { label: "Lab", href: "/lab" },
-    { label: "Gallery", href: "/gallery" },
+    { label: "OBRA", href: "/gallery" },
     { label: "Apps", href: "/apps" },
     { label: "Notes", href: "/notes" },
   ],

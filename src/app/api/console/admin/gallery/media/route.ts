@@ -9,6 +9,7 @@ import {
   mediaStorage,
   publicPathFor,
 } from "@/server/media/storage";
+import { aspectFrom, readDimensions } from "@/server/media/dimensions";
 
 export const dynamic = "force-dynamic";
 
@@ -69,10 +70,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const key = mediaKey("gallery", slug, ext);
-    await bucket.put(key, await file.arrayBuffer(), {
+    const bytes = await file.arrayBuffer();
+
+    // The file knows its own proportions, so the console never asks.
+    const aspect = aspectFrom(readDimensions(file.type, bytes));
+
+    await bucket.put(key, bytes, {
       httpMetadata: { contentType: file.type },
     });
-    return NextResponse.json({ ok: true, media: publicPathFor(key) });
+    return NextResponse.json({ ok: true, media: publicPathFor(key), aspect });
   } catch (err) {
     console.error("[gallery] media upload failed:", err);
     return NextResponse.json({ error: "The upload didn't complete." }, { status: 500 });

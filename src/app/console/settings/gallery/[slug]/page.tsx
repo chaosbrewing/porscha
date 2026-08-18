@@ -31,10 +31,8 @@ export default async function EditGalleryPiecePage({
             category: row.category,
             year: row.year ?? "",
             media: row.mediaPath ?? "",
-            alt: row.alt ?? "",
             aspect: row.aspect ?? "4/5",
             note: row.note ?? "",
-            project: row.relatedProject ?? "",
             body: row.body ?? "",
             forSale: row.forSale,
             // Cents in the database, whole units in the form.
