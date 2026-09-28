@@ -88,7 +88,19 @@ custom domains replace them with Worker routes. `workers/entry.js`
 Put the client id/secret into Worker secrets (§1b). Console access is
 OAuth → `ALLOWED_GITHUB_LOGINS` allowlist → mandatory TOTP.
 
-## 3. GitHub webhooks
+## 3. GitHub webhooks and the scheduled sync
+
+The console receives project updates two ways:
+
+- **Webhooks** (real time) — configured on GitHub as below. Needs
+  `GITHUB_WEBHOOK_SECRET`.
+- **Scheduled sync** (every 30 minutes) — a Cloudflare Cron Trigger in
+  `wrangler.jsonc` calls the Worker's `scheduled()` handler, which
+  reconciles every registered project through the REST API. Needs only
+  `GITHUB_TOKEN`; nothing to configure on GitHub. Logs appear in the
+  Worker's observability stream as `[cron]` lines.
+
+### Webhooks
 
 On each connected repository (or the org): webhook →
 `https://porscha.today/api/github/webhook`, content type

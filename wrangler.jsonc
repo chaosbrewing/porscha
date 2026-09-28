@@ -81,6 +81,14 @@
     "SNAPSHOT_STALE_MINUTES": "30"
   },
 
+  // Scheduled GitHub reconciliation: every 30 minutes the Worker's
+  // `scheduled()` handler (workers/entry.js) asks the app to sync every
+  // project, so the console stays current even if a webhook is missed
+  // or none is configured. Webhooks remain the real-time path.
+  "triggers": {
+    "crons": ["*/30 * * * *"]
+  },
+
   "observability": {
     "enabled": true
   }

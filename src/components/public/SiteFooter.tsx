@@ -4,7 +4,8 @@ import { PMark } from "./PMark";
 
 /**
  * Footer: the mark, the same five words, outward links, a year. The
- * P. doubles as the quiet door to the owner's console.
+ * copyright line doubles as the quiet door to the owner's console;
+ * the P. is just the signature.
  */
 export function SiteFooter({
   name,
@@ -20,14 +21,9 @@ export function SiteFooter({
     <footer className="mt-auto border-t border-line">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-8 lg:px-12">
         <div className="flex flex-col gap-5">
-          <Link
-            href="/login"
-            aria-label="Owner sign-in"
-            title="Owner sign-in"
-            className="inline-flex h-11 w-11 items-center text-[1.6rem] text-ink-faint transition-colors duration-[var(--duration-micro)] hover:text-ink"
-          >
+          <span className="inline-flex h-11 w-11 items-center text-[1.6rem] text-ink-faint">
             <PMark />
-          </Link>
+          </span>
           <nav aria-label="Footer">
             <ul className="flex flex-wrap gap-x-6 gap-y-2">
               {navigation.map((item) => (
@@ -59,7 +55,13 @@ export function SiteFooter({
             ))}
           </ul>
           <p className="text-ink-faint">
-            © {new Date().getFullYear()} {name}
+            <Link
+              href="/login"
+              title="Owner sign-in"
+              className="inline-flex min-h-11 items-center transition-colors duration-[var(--duration-micro)] hover:text-ink"
+            >
+              © {new Date().getFullYear()} {name}
+            </Link>
           </p>
         </div>
       </div>
