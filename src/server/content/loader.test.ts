@@ -10,8 +10,9 @@ import { getGalleryPieces } from "./loader";
  */
 describe("gallery content files", () => {
   it("all parse and point at images that exist", () => {
+    // The wall is console-owned now, so this folder is normally empty;
+    // the rule still holds for any Markdown piece that is added.
     const pieces = getGalleryPieces();
-    expect(pieces.length).toBeGreaterThan(0);
     for (const piece of pieces) {
       expect(piece.title, piece.slug).not.toBe("");
       expect(piece.alt, piece.slug).not.toBe("");

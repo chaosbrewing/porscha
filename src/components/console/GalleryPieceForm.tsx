@@ -3,16 +3,17 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { normalizeCategory, SUGGESTED_CATEGORIES } from "@/config/gallery";
+import { normalizeCategory } from "@/config/gallery";
 
 /**
  * Create/edit form for a console-authored gallery piece.
  *
  * The image is uploaded, never typed: the upload returns both the
  * path it wrote and the aspect ratio it read out of the file's own
- * header, so neither is a question worth asking. Alt text is derived
- * server-side from the title — the field is gone, the attribute is
- * not.
+ * header, so neither is a question worth asking. The category is a
+ * dropdown of what the wall already holds, with a way to start a new
+ * one; a description for screen readers is optional and falls back to
+ * the title.
  *
  * Uploading needs the R2 binding, which only exists in the Workers
  * runtime; where it is absent the endpoint says so plainly.
@@ -23,6 +24,7 @@ export type PieceFormValue = {
   title: string;
   category: string;
   year: string;
+  alt: string;
   media: string;
   aspect: string;
   note: string;
@@ -37,6 +39,7 @@ export const emptyPieceDraft: PieceFormValue = {
   title: "",
   category: "digital",
   year: String(new Date().getFullYear()),
+  alt: "",
   media: "",
   aspect: "4/5",
   note: "",
@@ -54,15 +57,25 @@ function slugify(title: string): string {
     .slice(0, 80);
 }
 
+export type CategoryOption = { key: string; label: string };
+
+const NEW_CATEGORY = "__new__";
+
 export function GalleryPieceForm({
   mode,
   initial,
+  categories,
 }: {
   mode: "create" | "edit";
   initial: PieceFormValue;
+  /** Categories the wall already uses, for the dropdown. */
+  categories: CategoryOption[];
 }) {
   const router = useRouter();
   const [value, setValue] = useState(initial);
+  const [newCategory, setNewCategory] = useState(
+    () => !categories.some((c) => c.key === initial.category) && initial.category !== "",
+  );
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,23 +192,45 @@ export function GalleryPieceForm({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
             <span className="text-ink-soft">Category</span>
-            <input
-              value={value.category}
-              onChange={(e) => patch({ category: e.target.value })}
-              onBlur={(e) => patch({ category: normalizeCategory(e.target.value) })}
-              list="gallery-category-suggestions"
-              placeholder="digital"
-              maxLength={40}
-              required
+            <select
+              value={newCategory ? NEW_CATEGORY : value.category}
+              onChange={(e) => {
+                if (e.target.value === NEW_CATEGORY) {
+                  setNewCategory(true);
+                  patch({ category: "" });
+                } else {
+                  setNewCategory(false);
+                  patch({ category: e.target.value });
+                }
+              }}
               className={field}
-            />
-            {/* Suggestions, not a vocabulary — anything typed becomes a
-                category the moment a piece uses it. */}
-            <datalist id="gallery-category-suggestions">
-              {SUGGESTED_CATEGORIES.map((c) => (
-                <option key={c} value={c} />
+              required={!newCategory}
+            >
+              {categories.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
               ))}
-            </datalist>
+              <option value={NEW_CATEGORY}>New category…</option>
+            </select>
+            {newCategory ? (
+              <input
+                value={value.category}
+                onChange={(e) => patch({ category: e.target.value })}
+                onBlur={(e) => patch({ category: normalizeCategory(e.target.value) })}
+                placeholder="e.g. photography"
+                maxLength={40}
+                required
+                autoFocus
+                aria-label="New category name"
+                className={field}
+              />
+            ) : null}
+            <span className="mt-1 block text-xs text-ink-faint">
+              {newCategory
+                ? "Lowercase words; it becomes a group on the wall the moment you save."
+                : "Groups the piece on the wall. Rename or hide categories in Display."}
+            </span>
           </label>
           <label className="block text-sm">
             <span className="text-ink-soft">Year</span>
@@ -204,8 +239,12 @@ export function GalleryPieceForm({
               onChange={(e) => patch({ year: e.target.value })}
               inputMode="numeric"
               maxLength={4}
+              placeholder="Optional"
               className={field}
             />
+            <span className="mt-1 block text-xs text-ink-faint">
+              Leave blank for an undated piece.
+            </span>
           </label>
         </div>
 
@@ -243,6 +282,20 @@ export function GalleryPieceForm({
             </p>
           ) : null}
         </div>
+
+        <label className="mt-6 block text-sm">
+          <span className="text-ink-soft">Description for screen readers</span>
+          <input
+            value={value.alt}
+            onChange={(e) => patch({ alt: e.target.value })}
+            maxLength={300}
+            placeholder="What is in the picture, in a sentence"
+            className={field}
+          />
+          <span className="mt-1 block text-xs text-ink-faint">
+            Optional. The title is used when this is blank.
+          </span>
+        </label>
 
         <label className="mt-6 block text-sm">
           <span className="text-ink-soft">Note</span>

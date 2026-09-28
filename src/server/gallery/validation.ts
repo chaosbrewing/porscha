@@ -107,10 +107,16 @@ const galleryPieceBase = z.object({
   title: z.string().trim().min(1, "A piece needs a title").max(120),
   /** Free text: the wall holds whatever kinds of work it holds. */
   category: categoryKeySchema,
+  /** Four digits, or blank when a piece is undated. */
   year: z
     .string()
     .trim()
-    .regex(/^\d{4}$/, "Year should be four digits"),
+    .regex(/^(\d{4})?$/, "Year should be four digits, or left blank"),
+  /**
+   * Description for people using a screen reader. Optional; the title
+   * stands in when it is blank.
+   */
+  alt: z.string().trim().max(300).optional().or(z.literal("")),
   media: z
     .string()
     .trim()

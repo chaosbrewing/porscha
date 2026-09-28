@@ -279,9 +279,7 @@ export function GalleryPieceList({
 
       {order.length === 0 ? (
         <p className="py-8 text-sm text-ink-soft">
-          No pieces yet. Add one, or drop a Markdown file in
-          {" "}
-          <code>src/content/gallery</code>.
+          No pieces yet. Add one above.
         </p>
       ) : null}
 
