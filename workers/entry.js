@@ -27,9 +27,18 @@ const CANONICAL_HOST = "porscha.today";
  * internet. A token minted once per isolate and shared through the
  * global does that without a managed secret; see
  * src/server/github/cron.ts for the other half.
+ *
+ * Minted lazily: Workers forbid generating random values in the global
+ * scope, so the first scheduled run creates it, inside the handler.
  */
-const CRON_TOKEN = crypto.randomUUID() + crypto.randomUUID();
-globalThis.__porschaCronToken = CRON_TOKEN;
+let cronToken = null;
+function getCronToken() {
+  if (!cronToken) {
+    cronToken = crypto.randomUUID() + crypto.randomUUID();
+    globalThis.__porschaCronToken = cronToken;
+  }
+  return cronToken;
+}
 
 export default {
   async fetch(request, env, ctx) {
@@ -45,7 +54,7 @@ export default {
   async scheduled(event, env, ctx) {
     const request = new Request(`https://${CANONICAL_HOST}/api/internal/sync`, {
       method: "POST",
-      headers: { "x-porscha-cron": CRON_TOKEN },
+      headers: { "x-porscha-cron": getCronToken() },
     });
     ctx.waitUntil(
       openNextHandler
