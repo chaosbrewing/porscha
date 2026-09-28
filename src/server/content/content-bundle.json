@@ -2,12 +2,17 @@
  "generatedFrom": "src/content",
  "files": {
   "gallery/adrift.md": "---\ntitle: Adrift\ncategory: canvas\nyear: \"\"\nmedia: /art/adrift.jpg\nalt: A weathered barrel tumbles through churning turquoise water under a pale, foaming sky.\naspect: \"2000/1475\"\n---\n",
+  "gallery/bloom.md": "---\ntitle: Bloom\ncategory: canvas\nyear: \"\"\nmedia: /art/bloom.jpg\nalt: A pink impasto bloom on a dark stem rises from a patch of blue, set in a mottled field of mauve, grey and yellow.\naspect: \"1500/2000\"\n---\n",
   "gallery/blue.md": "---\ntitle: Blue\ncategory: canvas\nyear: \"\"\nmedia: /art/blue.jpg\nalt: Thick blue and white impasto strokes surge across a dark ground, shown matted in a gold frame.\naspect: \"1024/1536\"\n---\n",
   "gallery/denim-bag.md": "---\ntitle: Denim bag\ncategory: textile\nyear: \"\"\nmedia: /art/denim-bag.jpg\nalt: A slouchy shoulder bag sewn from reworked jeans, with frayed seams, a pocket, and a panel of pink lace.\naspect: \"1500/2000\"\n---\n",
   "gallery/falling-light.md": "---\ntitle: Falling light\ncategory: canvas\nyear: \"\"\nmedia: /art/falling-light.jpg\nalt: A luminous white-gold waterfall of light pours down through dark storm clouds lit orange and red from within.\naspect: \"1453/2000\"\n---\n",
+  "gallery/gold.md": "---\ntitle: Gold\ncategory: canvas\nyear: \"\"\nmedia: /art/gold.jpg\nalt: A cascade of gold impasto pours down from a pale white form over a dark, wine-flecked ground.\naspect: \"1556/2000\"\n---\n",
   "gallery/message-in-a-bottle.md": "---\ntitle: Message in a bottle\ncategory: canvas\nyear: \"\"\nmedia: /art/message-in-a-bottle.jpg\nalt: A lone figure walks toward a pale sun between dark headlands across a pink sea, while a corked bottle drifts in the foreground.\naspect: \"1276/2000\"\n---\n",
+  "gallery/phoenix.md": "---\ntitle: Phoenix\ncategory: canvas\nyear: \"\"\nmedia: /art/phoenix.jpg\nalt: A bird-like burst of red, ochre and yellow impasto rises through black and cold blue, wings flung wide.\naspect: \"1553/2000\"\n---\n",
   "gallery/tears.md": "---\ntitle: Tears\ncategory: canvas\nyear: \"\"\nmedia: /art/tears.jpg\nalt: Two bloodshot, tear-filled eyes beneath dark brows, a tear caught on the lower lashes and another running down the cheek.\naspect: \"2000/1315\"\n---\n",
+  "gallery/the-crow.md": "---\ntitle: The crow\ncategory: canvas\nyear: \"\"\nmedia: /art/the-crow.jpg\nalt: A hunched black crow with a red beak, built from heavy strokes, against slashes of pink, magenta and teal.\naspect: \"1500/2000\"\n---\n",
   "gallery/the-eye.md": "---\ntitle: The eye\ncategory: canvas\nyear: \"\"\nmedia: /art/the-eye.jpg\nalt: A close-up of a wide, bloodshot eye with a deep teal iris, painted in loose strokes of pink, white and red.\naspect: \"2000/1565\"\n---\n",
-  "gallery/the-lighthouse.md": "---\ntitle: The lighthouse\ncategory: canvas\nyear: \"\"\nmedia: /art/the-lighthouse.jpg\nalt: A red-and-white lighthouse braces against towering white surf while lightning forks through a brown-black sky.\naspect: \"2000/1992\"\n---\n"
+  "gallery/the-lighthouse.md": "---\ntitle: The lighthouse\ncategory: canvas\nyear: \"\"\nmedia: /art/the-lighthouse.jpg\nalt: A red-and-white lighthouse braces against towering white surf while lightning forks through a brown-black sky.\naspect: \"2000/1992\"\n---\n",
+  "gallery/the-red-dress.md": "---\ntitle: The red dress\ncategory: canvas\nyear: \"\"\nmedia: /art/the-red-dress.jpg\nalt: A figure in a thick red impasto gown, arms and pearls picked out in white, against a dark green and grey ground.\naspect: \"1539/2000\"\n---\n"
  }
 }
