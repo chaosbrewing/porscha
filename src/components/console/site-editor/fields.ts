@@ -13,7 +13,15 @@ export type FieldSpec =
   | { kind: "text"; path: string; label: string; help?: string; maxLength?: number; showIf?: ShowIf }
   | { kind: "textarea"; path: string; label: string; help?: string; rows?: number; showIf?: ShowIf }
   | { kind: "lines"; path: string; label: string; help?: string; rows?: number; showIf?: ShowIf }
-  | { kind: "image"; path: string; label: string; help?: string; showIf?: ShowIf }
+  | {
+      kind: "image";
+      path: string;
+      label: string;
+      help?: string;
+      /** May be left empty (stored as null); shows a "Remove" control. */
+      optional?: boolean;
+      showIf?: ShowIf;
+    }
   | {
       kind: "select";
       path: string;
@@ -137,31 +145,25 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
   ],
 
   building: [
-    { kind: "text", path: "label", label: "Eyebrow", help: "The small word above the name.", maxLength: 40 },
-    { kind: "text", path: "name", label: "Name", maxLength: 120 },
-    { kind: "text", path: "tagline", label: "Tagline", maxLength: 200 },
-    { kind: "lines", path: "summary", label: "Summary paragraphs", help: "One paragraph per row.", rows: 6 },
+    { kind: "text", path: "eyebrow", label: "Eyebrow", help: "The small word above the header.", maxLength: 40 },
+    { kind: "text", path: "heading", label: "Header", maxLength: 120 },
+    { kind: "textarea", path: "subheading", label: "Sub-header", rows: 2 },
+    { kind: "text", path: "projectsLabel", label: "Projects label", help: "The small heading above the list.", maxLength: 40 },
     {
       kind: "list",
-      path: "sections",
-      label: "Sections",
-      itemLabel: "section",
-      titleField: "title",
+      path: "projects",
+      label: "Projects",
+      itemLabel: "project",
+      titleField: "name",
       fields: [
-        { kind: "text", path: "number", label: "Number", help: "e.g. 01. Leave blank for none.", maxLength: 4 },
-        { kind: "text", path: "title", label: "Title", maxLength: 80 },
-        { kind: "lines", path: "paragraphs", label: "Paragraphs", help: "One paragraph per row.", rows: 5 },
+        { kind: "image", path: "logo", label: "Logo", help: `Square reads best. ${IMAGE_HELP}`, optional: true },
+        { kind: "text", path: "name", label: "Project name", maxLength: 80 },
+        { kind: "textarea", path: "description", label: "Description", help: "A blank line starts a new paragraph.", rows: 6 },
+        { kind: "image", path: "media", label: "Media", help: `A screenshot, a photograph, a still. ${IMAGE_HELP}`, optional: true },
+        { kind: "text", path: "link.label", label: "Linked text", maxLength: 80 },
+        { kind: "text", path: "link.href", label: "Link goes to", help: "Leave blank for no link.", maxLength: 500 },
       ],
-      blank: { number: "", title: "", paragraphs: [""] },
-    },
-    {
-      kind: "section",
-      label: "Outward link",
-      help: "Where visitors go to see the real thing. Leave the address blank to show no link.",
-      fields: [
-        { kind: "text", path: "link.label", label: "Link text", maxLength: 60 },
-        { kind: "text", path: "link.url", label: "Address", help: "https:// only.", maxLength: 500 },
-      ],
+      blank: { name: "", logo: null, description: "", media: null, link: { label: "", href: "" } },
     },
   ],
 

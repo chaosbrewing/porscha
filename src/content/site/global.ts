@@ -13,10 +13,10 @@ export const globalDefaults = {
   description:
     "Porscha makes things, starts things, and occasionally finishes them. Selected work, art, ideas and fragments — an introduction, not a biography.",
   navigation: [
+    { label: "Today", href: "/now" },
     { label: "Work", href: "/work" },
     { label: "Art", href: "/art" },
     { label: "Building", href: "/building" },
-    { label: "Now", href: "/now" },
     { label: "Me", href: "/me" },
   ],
   social: [{ label: "GitHub", url: "https://github.com/chaosbrewing" }],

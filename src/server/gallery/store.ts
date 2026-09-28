@@ -109,6 +109,7 @@ export async function upsertOverlay(
       hidden: overlay.hidden,
       featured: overlay.featured,
       position: overlay.position,
+      ...(overlay.forSale === undefined ? {} : { forSale: overlay.forSale }),
     })
     .onConflictDoUpdate({
       target: schema.galleryItems.slug,
@@ -116,6 +117,7 @@ export async function upsertOverlay(
         hidden: overlay.hidden,
         featured: overlay.featured,
         position: overlay.position,
+        ...(overlay.forSale === undefined ? {} : { forSale: overlay.forSale }),
         updatedAt: new Date(),
       },
     });

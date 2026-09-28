@@ -36,6 +36,9 @@ export default async function GallerySettingsPage() {
           origin: p.origin,
           hidden: p.hidden,
           featured: p.featured,
+          forSale: p.forSale,
+          sold: p.sold,
+          hasPrice: (p.priceCents ?? 0) > 0,
         }))}
       />
 

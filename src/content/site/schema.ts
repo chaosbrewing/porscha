@@ -111,25 +111,31 @@ export const experimentsSchema = z.object({
 
 /* ----------------------------- Building --------------------------- */
 
+/**
+ * What I'm building: an eyebrow, a header, a sub-header, then the
+ * projects. Each project is a logo, a name, a description, one piece
+ * of media and a linked line. Logo and media are optional; a blank
+ * link address shows no link.
+ */
 export const buildingSchema = z.object({
-  label: z.string().trim().min(1).max(40),
-  name: heading,
-  tagline: z.string().trim().min(1).max(200),
-  summary: z.array(paragraph).max(6),
-  sections: z
+  eyebrow: z.string().trim().max(40),
+  heading,
+  subheading: z.string().trim().max(300),
+  projectsLabel: z.string().trim().min(1).max(40),
+  projects: z
     .array(
       z.object({
-        number: z.string().trim().max(4),
-        title: z.string().trim().min(1).max(80),
-        paragraphs: z.array(paragraph).max(8),
+        name: z.string().trim().min(1, "A project needs a name").max(80),
+        logo: imageSchema.nullable(),
+        description: z.string().trim().max(2000),
+        media: imageSchema.nullable(),
+        link: z.object({
+          label: z.string().trim().max(80),
+          href: z.union([hrefSchema, z.literal("")]),
+        }),
       }),
     )
-    .max(8),
-  link: z.object({
-    label: z.string().trim().min(1).max(60),
-    /** Blank means "no outward link yet"; the page shows none. */
-    url: z.union([z.string().trim().regex(/^https:\/\/[^\s]+$/, "Use an https:// address"), z.literal("")]),
-  }),
+    .max(12),
 });
 
 /* -------------------------------- Now ----------------------------- */
@@ -244,9 +250,9 @@ export type SiteContent = {
 export const PAGE_META: Record<PageKey, { label: string; path: string; blurb: string }> = {
   home: { label: "Home", path: "/", blurb: "The opening screen: a name, two lines, a question, four doors." },
   work: { label: "My work", path: "/work", blurb: "The three windows: Sulit, Obra, Experiments." },
-  building: { label: "What I’m building", path: "/building", blurb: "The Sulit Co. editorial page." },
+  building: { label: "What I’m building", path: "/building", blurb: "Eyebrow, header, sub-header, then the projects: logo, name, description, media, a linked line." },
   experiments: { label: "Experiments", path: "/work/experiments", blurb: "Selected products, ideas and things explored." },
-  now: { label: "Currently", path: "/now", blurb: "The living snapshot. Bump the date when you change it." },
+  now: { label: "Today", path: "/now", blurb: "The living snapshot. Bump the date when you change it." },
   me: { label: "Who I am", path: "/me", blurb: "Fragments, Making, Selected chapters, The little things, the ending." },
   global: { label: "Site-wide", path: "/", blurb: "Name, description, navigation, social links, how to get in touch." },
 };

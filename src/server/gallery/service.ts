@@ -35,7 +35,21 @@ export type ResolvedPiece = GalleryPiece & {
   featured: boolean;
   position: number | null;
   removedAt: Date | null;
+  /** Offered for sale: flagged, priced, and not yet sold. */
+  forSale: boolean;
+  sold: boolean;
+  priceCents: number | null;
 };
+
+function saleFlags(row?: GalleryItemRow) {
+  const priced = (row?.priceCents ?? 0) > 0;
+  const sold = Boolean(row?.soldAt);
+  return {
+    forSale: Boolean(row?.forSale) && priced && !sold,
+    sold,
+    priceCents: row?.priceCents ?? null,
+  };
+}
 
 export type GalleryView = {
   settings: GalleryDisplaySettings;
@@ -66,6 +80,7 @@ function pieceFromRow(row: GalleryItemRow): ResolvedPiece {
     featured: row.featured,
     position: row.position,
     removedAt: row.deletedAt,
+    ...saleFlags(row),
   };
 }
 
@@ -77,6 +92,7 @@ function applyOverlay(piece: GalleryPiece, row?: GalleryItemRow): ResolvedPiece 
     featured: row?.featured ?? false,
     position: row?.position ?? null,
     removedAt: row?.deletedAt ?? null,
+    ...saleFlags(row),
   };
 }
 

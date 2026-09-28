@@ -110,8 +110,15 @@ function Wall({
                 <span className="type-heading text-base text-ink transition-colors duration-[var(--duration-micro)] group-hover:text-accent-deep">
                   {piece.title}
                 </span>
-                <span className="type-meta shrink-0 text-ink-faint">
-                  {piece.year}
+                <span className="flex shrink-0 items-baseline gap-3">
+                  {piece.sold ? (
+                    <span className="type-meta text-ink-faint">Sold</span>
+                  ) : piece.forSale ? (
+                    <span className="type-meta rounded-[2px] bg-accent-wash px-1.5 py-0.5 text-accent-deep">
+                      For sale
+                    </span>
+                  ) : null}
+                  <span className="type-meta text-ink-faint">{piece.year}</span>
                 </span>
               </span>
             </Link>

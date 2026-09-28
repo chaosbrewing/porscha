@@ -91,7 +91,7 @@ stored document and the page returns to the typed defaults:
 | Site-wide | `src/content/site/global.ts` | name, description, navigation, social links, contact |
 | Home | `src/content/site/home.ts` | opening lines, the question, the doors, the one image, note |
 | My work | `src/content/site/work.ts` | heading, intro, the three windows |
-| What I’m building | `src/content/site/work.ts` | Sulit Co. copy, sections, outward link |
+| What I’m building | `src/content/site/work.ts` | eyebrow, header, sub-header, projects (logo, name, description, media, linked text) |
 | Experiments | `src/content/site/work.ts` | heading, intro, empty note, items |
 | Currently | `src/content/site/now.ts` | snapshot rows, updated, note |
 | Who I am | `src/content/site/me.ts` | fragments, Making, chapters, little things, ending |

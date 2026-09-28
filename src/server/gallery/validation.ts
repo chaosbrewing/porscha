@@ -80,6 +80,8 @@ export const galleryOverlaySchema = z.object({
   hidden: z.boolean(),
   featured: z.boolean(),
   position: z.number().int().min(0).max(9999).nullable(),
+  /** Quick toggle from the list; only pieces that carry a price can turn it on. */
+  forSale: z.boolean().optional(),
 });
 
 export type GalleryOverlayInput = z.infer<typeof galleryOverlaySchema>;

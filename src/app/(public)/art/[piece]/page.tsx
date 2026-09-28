@@ -11,6 +11,9 @@ import {
   getPublicGalleryView,
 } from "@/server/gallery/service";
 import { saleStateFor } from "@/server/sales/service";
+import { getSiteContent } from "@/server/site/service";
+import { env } from "@/server/env";
+import { ArrowLink } from "@/components/public/ArrowLink";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +42,11 @@ export default async function ArtPiecePage({ params }: Props) {
   const piece = pieces.find((p) => p.slug === slug);
   if (!piece) notFound();
 
-  const sale = piece.placeholder ? null : await saleStateFor(slug);
+  const [sale, { global }] = await Promise.all([
+    piece.placeholder ? Promise.resolve(null) : saleStateFor(slug),
+    getSiteContent(),
+  ]);
+  const checkoutOpen = env.salesConfigured;
   const saleView: SaleView | null =
     !sale || sale.status === "not_for_sale"
       ? null
@@ -88,9 +95,18 @@ export default async function ArtPiecePage({ params }: Props) {
           />
           <figcaption className="mx-auto mt-6 flex max-w-3xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <h1 className="type-heading text-2xl sm:text-3xl">{piece.title}</h1>
-            <p className="type-meta text-ink-faint">
-              {categoryLabel(settings, piece.category)}
-              {piece.year ? ` · ${piece.year}` : ""}
+            <p className="type-meta flex items-baseline gap-3 text-ink-faint">
+              {piece.sold ? (
+                <span>Sold</span>
+              ) : piece.forSale ? (
+                <span className="rounded-[2px] bg-accent-wash px-1.5 py-0.5 text-accent-deep">
+                  For sale
+                </span>
+              ) : null}
+              <span>
+                {categoryLabel(settings, piece.category)}
+                {piece.year ? ` · ${piece.year}` : ""}
+              </span>
             </p>
           </figcaption>
         </figure>
@@ -109,7 +125,21 @@ export default async function ArtPiecePage({ params }: Props) {
             />
           ) : null}
 
-          {saleView ? <BuyOriginal slug={piece.slug} sale={saleView} /> : null}
+          {saleView && (checkoutOpen || saleView.status === "sold") ? (
+            <BuyOriginal slug={piece.slug} sale={saleView} />
+          ) : saleView ? (
+            <div className="mt-8 border-t border-line pt-6">
+              <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="type-heading text-xl">{saleView.price}</span>
+                <span className="type-meta text-ink-faint">Original · one of one</span>
+              </p>
+              <p className="mt-3">
+                <ArrowLink href={global.contact.href} className="min-h-11 text-base">
+                  {global.contact.label}
+                </ArrowLink>
+              </p>
+            </div>
+          ) : null}
         </div>
       </article>
     </Container>

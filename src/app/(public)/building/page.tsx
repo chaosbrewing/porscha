@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { ArrowLink } from "@/components/public/ArrowLink";
 import { Container } from "@/components/public/Container";
 import { Eyebrow } from "@/components/public/Eyebrow";
@@ -10,72 +11,115 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const { building } = await getSiteContent();
   return {
-    title: `${building.name} — what I’m building`,
-    description: `${building.name}: ${building.tagline}`,
+    title: building.heading,
+    description: building.subheading || building.heading,
     alternates: { canonical: "/building" },
   };
 }
 
+/**
+ * Eyebrow, header, sub-header, then the projects — each a logo, a
+ * name, a description, one piece of media and a linked line.
+ */
 export default async function BuildingPage() {
-  const { building: sulit } = await getSiteContent();
+  const { building } = await getSiteContent();
+
   return (
     <article className="pb-20 pt-10 sm:pt-16 lg:pb-32">
       <Container>
         <header className="reveal max-w-[44rem]">
-          <Eyebrow className="mb-5">{sulit.label}</Eyebrow>
+          {building.eyebrow ? <Eyebrow className="mb-5">{building.eyebrow}</Eyebrow> : null}
           <h1 className="type-display text-[clamp(2.75rem,8vw,5.5rem)]">
-            {sulit.name}
+            {building.heading}
           </h1>
-          <p className="type-heading mt-6 text-[clamp(1.375rem,3vw,1.875rem)] text-ink">
-            {sulit.tagline}
-          </p>
+          {building.subheading ? (
+            <p className="type-heading mt-6 text-[clamp(1.375rem,3vw,1.875rem)] text-ink-soft">
+              {building.subheading}
+            </p>
+          ) : null}
         </header>
-
-        {sulit.summary.length > 0 ? (
-          <div className="mt-12 max-w-[36rem] space-y-5 text-[1.0625rem] leading-relaxed text-ink-soft sm:text-lg lg:mt-16">
-            {sulit.summary.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-          </div>
-        ) : null}
       </Container>
 
-      <Container className="mt-20 lg:mt-28">
-        {sulit.sections.length > 0 ? (
-          <div className="border-t border-line">
-            {sulit.sections.map((section, i) => (
-              <section
+      <Container className="mt-16 lg:mt-24">
+        <Eyebrow as="h2" className="border-t border-line pt-6">
+          {building.projectsLabel}
+        </Eyebrow>
+
+        {building.projects.length > 0 ? (
+          <ol className="mt-4">
+            {building.projects.map((project, i) => (
+              <li
                 key={i}
-                aria-labelledby={`sulit-${i}`}
-                className="reveal-view grid gap-y-4 border-b border-line py-10 sm:py-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-16"
+                className="reveal-view grid gap-y-8 border-b border-line py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-16"
               >
-                <h2
-                  id={`sulit-${i}`}
-                  className="type-heading flex items-baseline gap-4 text-[clamp(1.75rem,4vw,2.5rem)]"
-                >
-                  {section.number ? (
-                    <>
-                      <span className="type-meta text-ink-faint">{section.number}</span>{" "}
-                    </>
+                <div>
+                  <h3 className="flex items-center gap-4">
+                    {project.logo ? (
+                      <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[6px] border border-line bg-paper-raised sm:h-14 sm:w-14">
+                        <Image
+                          src={project.logo.src}
+                          alt={project.logo.alt}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      </span>
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="type-heading flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border border-line bg-paper-raised text-xl text-ink-faint sm:h-14 sm:w-14"
+                      >
+                        {project.name.trim().charAt(0)}
+                      </span>
+                    )}
+                    <span className="type-display text-[clamp(1.75rem,4.5vw,2.75rem)]">
+                      {project.name}
+                    </span>
+                  </h3>
+
+                  {project.description ? (
+                    <div className="mt-6 max-w-[34rem] space-y-4 text-[1.0625rem] leading-relaxed text-ink-soft">
+                      {project.description
+                        .split(/\n\s*\n/)
+                        .map((paragraph, j) => (
+                          <p key={j}>{paragraph}</p>
+                        ))}
+                    </div>
                   ) : null}
-                  <span>{section.title}</span>
-                </h2>
-                <div className="max-w-[34rem] space-y-4 leading-relaxed text-ink-soft">
-                  {section.paragraphs.map((paragraph, j) => (
-                    <p key={j}>{paragraph}</p>
-                  ))}
+
+                  {project.link.href && project.link.label ? (
+                    <p className="mt-8">
+                      <ArrowLink href={project.link.href} className="min-h-11 text-lg">
+                        {project.link.label}
+                      </ArrowLink>
+                    </p>
+                  ) : null}
                 </div>
-              </section>
+
+                {project.media ? (
+                  <figure
+                    className="relative w-full overflow-hidden rounded-[3px] bg-paper-sunken"
+                    style={{ aspectRatio: `${project.media.width} / ${project.media.height}` }}
+                  >
+                    <Image
+                      src={project.media.src}
+                      alt={project.media.alt}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
+                    />
+                  </figure>
+                ) : null}
+              </li>
             ))}
-          </div>
-        ) : null}
+          </ol>
+        ) : (
+          <p className="mt-6 max-w-[34rem] leading-relaxed text-ink-soft">
+            Nothing to show yet.
+          </p>
+        )}
 
         <footer className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 lg:mt-16">
-          {sulit.link.url ? (
-            <ArrowLink href={sulit.link.url} className="min-h-11 text-lg">
-              {sulit.link.label}
-            </ArrowLink>
-          ) : null}
           <ArrowLink href="/now" className="min-h-11 text-lg">
             What’s current
           </ArrowLink>

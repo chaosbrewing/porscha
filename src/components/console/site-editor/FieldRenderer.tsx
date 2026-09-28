@@ -122,7 +122,8 @@ export function FieldRenderer({ spec, doc, base, onChange, uploadSlug }: Props) 
         <ImageField
           label={spec.label}
           help={spec.help}
-          value={(value ?? { src: "", alt: "", width: 0, height: 0 }) as ImageValue}
+          optional={spec.optional}
+          value={(value ?? null) as ImageValue | null}
           onChange={(next) => onChange(setAt(doc, path, next))}
           uploadSlug={uploadSlug}
         />
@@ -189,19 +190,24 @@ export function FieldRenderer({ spec, doc, base, onChange, uploadSlug }: Props) 
 
 type ImageValue = { src: string; alt: string; width: number; height: number };
 
+const EMPTY_IMAGE: ImageValue = { src: "", alt: "", width: 0, height: 0 };
+
 function ImageField({
   label,
   help,
-  value,
+  optional,
+  value: stored,
   onChange,
   uploadSlug,
 }: {
   label: string;
   help?: string;
-  value: ImageValue;
-  onChange: (next: ImageValue) => void;
+  optional?: boolean;
+  value: ImageValue | null;
+  onChange: (next: ImageValue | null) => void;
   uploadSlug: string;
 }) {
+  const value = stored ?? EMPTY_IMAGE;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -258,8 +264,13 @@ function ImageField({
           <label htmlFor={id} className={`${button} inline-block cursor-pointer`}>
             {uploading ? "Uploading…" : value.src ? "Replace image" : "Upload image"}
           </label>
+          {optional && value.src ? (
+            <button type="button" onClick={() => onChange(null)} className={`${button} ml-2`}>
+              Remove
+            </button>
+          ) : null}
           <p className="mt-1.5 truncate text-xs text-ink-faint" title={value.src}>
-            {value.src || "No image yet"}
+            {value.src || (optional ? "None" : "No image yet")}
             {value.width && value.height ? ` · ${value.width}×${value.height}` : ""}
           </p>
           <label className="mt-3 block">
