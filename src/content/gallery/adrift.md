@@ -1,8 +1,8 @@
 ---
 title: Adrift
 category: canvas
-year: ""
+year: "2026"
 media: /art/adrift.jpg
-alt: A weathered barrel tumbles through churning turquoise water under a pale, foaming sky.
-aspect: "2000/1475"
+alt: A red-and-white lighthouse braces against towering white surf while lightning forks through a brown-black sky.
+aspect: "2000/1992"
 ---
