@@ -42,25 +42,35 @@ console.log(`Verifying ${origin}\n`);
 console.log("Public routes:");
 for (const path of [
   "/",
-  "/porscha",
-  "/workshop",
-  "/workshop/kubli",
-  "/workshop/prism",
-  "/workshop/habi",
-  "/apps",
-  "/lab",
-  "/lab/whispering-city",
-  "/gallery",
-  "/gallery/reservoir-walk",
-  "/notes",
-  "/notes/webhooks-not-polling",
+  "/work",
+  "/work/experiments",
+  "/building",
+  "/now",
+  "/art",
+  "/me",
   "/login",
   "/robots.txt",
   "/sitemap.xml",
+  "/og/porscha.png",
 ]) {
   await expectStatus(path, 200);
 }
-await expectStatus("/workshop/does-not-exist", 404, "unknown project → 404");
+await expectStatus("/art/does-not-exist", 404, "unknown piece → 404");
+
+console.log("\nRetired routes redirect:");
+for (const [from, to] of [
+  ["/porscha", "/me"],
+  ["/workshop", "/work"],
+  ["/gallery", "/art"],
+  ["/gallery/some-piece", "/art/some-piece"],
+  ["/lab", "/work/experiments"],
+  ["/notes", "/"],
+]) {
+  const res = await get(from);
+  const location = res?.headers.get("location") ?? "";
+  if (res && res.status === 308 && location.endsWith(to)) ok(`${from} → ${to}`);
+  else fail(`${from} → ${to}`, `status ${res?.status}, location ${location}`);
+}
 
 console.log("\nHomepage content:");
 try {
@@ -68,12 +78,14 @@ try {
   if (!res) throw new Error("request failed");
   const html = await res.text();
   const checks = [
-    ["Porscha is", "canonical headline present"],
-    ["the process.", "canonical headline complete"],
+    ["I make things, start things,", "opening line present"],
+    ["and occasionally finish them.", "opening line complete"],
+    ["What brings you here?", "the question is asked"],
     ["/portrait/porscha", "portrait asset referenced"],
-    ["On the workbench.", "workbench section present"],
-    ["The deeper layer.", "console teaser present"],
-    ["Enter the workshop", "primary CTA present"],
+    ['href="/work"', "path to work present"],
+    ['href="/art"', "path to art present"],
+    ['href="/building"', "path to building present"],
+    ['href="/me"', "path to who I am present"],
   ];
   for (const [needle, label] of checks) {
     if (html.includes(needle)) ok(label);

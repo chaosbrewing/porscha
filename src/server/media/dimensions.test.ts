@@ -6,9 +6,10 @@ import { aspectFrom, readDimensions } from "./dimensions";
 /**
  * Header parsing is the only thing standing between an upload and a
  * correctly proportioned tile, now that the console no longer asks for
- * an aspect ratio. Exercised against the real brand files in the repo
- * so the parsers are checked against actual encoder output, not
- * hand-built fixtures that only prove the test author's assumptions.
+ * an aspect ratio. Exercised against real image files in the repo (the
+ * social preview PNG and the portrait JPEG) so the parsers are checked
+ * against actual encoder output, not hand-built fixtures that only
+ * prove the test author's assumptions.
  */
 
 function bytesOf(file: string): ArrayBuffer {
@@ -18,16 +19,14 @@ function bytesOf(file: string): ArrayBuffer {
 
 describe("readDimensions", () => {
   it("reads a real PNG header", () => {
-    const d = readDimensions("image/png", bytesOf("public/brand/porscha-logo.png"));
-    expect(d).toEqual({ width: 1536, height: 1024 });
+    const d = readDimensions("image/png", bytesOf("public/og/porscha.png"));
+    expect(d).toEqual({ width: 1200, height: 630 });
   });
 
   it("reads a real JPEG SOF frame", () => {
-    const d = readDimensions("image/jpeg", bytesOf("public/brand/obra-mark.jpg"));
-    expect(d?.width).toBeGreaterThan(0);
-    expect(d?.height).toBeGreaterThan(0);
-    // The OBRA mark is square.
-    expect(d!.width).toBe(d!.height);
+    // Progressive JPEG (SOF2), portrait orientation.
+    const d = readDimensions("image/jpeg", bytesOf("public/portrait/porscha.jpg"));
+    expect(d).toEqual({ width: 1043, height: 1508 });
   });
 
   it("reads an SVG viewBox", () => {

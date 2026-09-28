@@ -60,6 +60,7 @@ function pieceFromRow(row: GalleryItemRow): ResolvedPiece {
     note: row.note ?? undefined,
     project: row.relatedProject ?? undefined,
     html: row.body ? renderMarkdown(row.body.trim()) : "",
+    placeholder: false,
     origin: "console",
     hidden: row.hidden,
     featured: row.featured,
@@ -132,15 +133,30 @@ export async function getGalleryAdminView(): Promise<GalleryView> {
   };
 }
 
+/**
+ * Placeholder pieces hold the wall only while nothing real is hung.
+ * The moment one real piece is visible, every placeholder steps aside.
+ */
+export function withoutPlaceholdersWhenRealWorkExists<
+  T extends { placeholder: boolean },
+>(pieces: T[]): T[] {
+  return pieces.some((p) => !p.placeholder)
+    ? pieces.filter((p) => !p.placeholder)
+    : pieces;
+}
+
 /** Visible pieces in visible categories. For the public gallery. */
 export async function getPublicGalleryView(): Promise<GalleryView> {
   const { settings, pieces } = await getGalleryAdminView();
   const hiddenCategories = new Set(
     settings.categories.filter((c) => !c.visible).map((c) => c.key),
   );
+  const visible = pieces.filter(
+    (p) => !p.hidden && !hiddenCategories.has(p.category),
+  );
   return {
     settings,
-    pieces: pieces.filter((p) => !p.hidden && !hiddenCategories.has(p.category)),
+    pieces: withoutPlaceholdersWhenRealWorkExists(visible),
     removed: [],
   };
 }

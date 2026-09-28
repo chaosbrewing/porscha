@@ -142,8 +142,8 @@ export async function startCheckout(
       priceCents: row.priceCents!,
       currency: row.currency ?? env.SALES_CURRENCY,
       imageUrl: piece.media.startsWith("/") ? `${origin}${piece.media}` : undefined,
-      successUrl: `${origin}/gallery/${piece.slug}?purchase=complete`,
-      cancelUrl: `${origin}/gallery/${piece.slug}?purchase=cancelled`,
+      successUrl: `${origin}/art/${piece.slug}?purchase=complete`,
+      cancelUrl: `${origin}/art/${piece.slug}?purchase=cancelled`,
       // Scoped to this reservation, so a retry inside one hold reuses
       // the same session instead of opening a second one.
       idempotencyKey: `${piece.slug}:${until.getTime()}`,

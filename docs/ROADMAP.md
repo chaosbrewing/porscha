@@ -42,6 +42,24 @@
 
 ## Release notes
 
+### v0.2.0 — the introduction
+
+- Public site rebuilt around controlled discovery: opening screen,
+  My work, Sulit Co., Currently, Obra, and Who I am (Fragments, the
+  Making interlude, Selected chapters, The little things, an ending).
+- Visitor-facing copy moved into typed content modules under
+  `src/content/site/`; Markdown remains for file-backed gallery pieces.
+- Warm ivory / near-black / deep olive palette; Fraunces + Inter;
+  single-theme public site (the console keeps its dark variant).
+- Old routes redirect permanently; Stripe return URLs follow the gallery
+  to `/art`. Project pages are no longer public; the console keeps its
+  privacy-boundary preview of the public DTO.
+- No analytics or trackers, as before. Static social preview image,
+  Person structured data, sitemap and robots refreshed.
+- Placeholder images are documented in `public/placeholders/README.md`
+  and gallery placeholders retire themselves once real work is hung.
+
+
 ### v0.1.0 — first release
 
 - Public workshop: editorial homepage with portrait slot, Workshop,

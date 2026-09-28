@@ -14,7 +14,7 @@ const filePieces = vi.hoisted(() => [
   {
     slug: "reservoir-walk",
     title: "Reservoir walk",
-    category: "digital" as const,
+    category: "digital",
     year: "2026",
     media: "/gallery/reservoir-walk.svg",
     alt: "bands",
@@ -22,11 +22,12 @@ const filePieces = vi.hoisted(() => [
     note: undefined,
     project: undefined,
     html: "<p>file</p>",
+    placeholder: false,
   },
   {
     slug: "density-study-03",
     title: "Density study 03",
-    category: "experiments" as const,
+    category: "experiments",
     year: "2024",
     media: "/gallery/density-study-03.svg",
     alt: "grid",
@@ -34,6 +35,7 @@ const filePieces = vi.hoisted(() => [
     note: undefined,
     project: undefined,
     html: "<p>file</p>",
+    placeholder: false,
   },
 ]);
 
@@ -56,9 +58,12 @@ vi.mock("./store", () => ({
   readItems: async () => state.rows,
 }));
 
-const { getGalleryAdminView, getPublicGalleryView, categoryLabel } = await import(
-  "./service"
-);
+const {
+  getGalleryAdminView,
+  getPublicGalleryView,
+  categoryLabel,
+  withoutPlaceholdersWhenRealWorkExists,
+} = await import("./service");
 
 function row(over: Record<string, unknown>) {
   return {
@@ -270,5 +275,46 @@ describe("withUsedCategories", () => {
       { category: "digital" },
     ]);
     expect(merged).toBe(GALLERY_DISPLAY_DEFAULTS);
+  });
+});
+
+describe("placeholder pieces", () => {
+  const ph = { slug: "placeholder-study-01", placeholder: true };
+  const real = { slug: "harbour", placeholder: false };
+
+  it("hold the wall while nothing real is visible", () => {
+    expect(withoutPlaceholdersWhenRealWorkExists([ph])).toEqual([ph]);
+  });
+
+  it("step aside the moment one real piece is visible", () => {
+    expect(withoutPlaceholdersWhenRealWorkExists([ph, real])).toEqual([real]);
+  });
+
+  it("are dropped from the public view when a console piece is published", async () => {
+    filePieces.push({
+      slug: "placeholder-study-01",
+      title: "Study 01",
+      category: "canvas",
+      year: "2026",
+      media: "/placeholders/artwork-01.svg",
+      alt: "",
+      aspect: "4/5",
+      note: undefined,
+      project: undefined,
+      html: "",
+      placeholder: true,
+    });
+    try {
+      // Real file pieces exist in the fixture, so the placeholder is
+      // already excluded publicly — and still listed for the console.
+      const admin = await getGalleryAdminView();
+      const publicView = await getPublicGalleryView();
+      expect(admin.pieces.map((p) => p.slug)).toContain("placeholder-study-01");
+      expect(publicView.pieces.map((p) => p.slug)).not.toContain(
+        "placeholder-study-01",
+      );
+    } finally {
+      filePieces.pop();
+    }
   });
 });

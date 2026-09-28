@@ -9,7 +9,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <SiteHeader />
-      <main id="main" className="flex-1">
+      <main id="main" className="flex-1 flex flex-col">
         {children}
       </main>
       <SiteFooter />

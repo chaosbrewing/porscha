@@ -8,6 +8,24 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/*": ["./node_modules/pg-cloudflare/**/*"],
   },
+
+  // The 2026 rebuild replaced the old public routes. Old links keep
+  // landing somewhere sensible.
+  async redirects() {
+    return [
+      { source: "/porscha", destination: "/me", permanent: true },
+      { source: "/workshop", destination: "/work", permanent: true },
+      { source: "/workshop/:slug", destination: "/work", permanent: true },
+      { source: "/apps", destination: "/work", permanent: true },
+      { source: "/apps/:slug", destination: "/work", permanent: true },
+      { source: "/lab", destination: "/work/experiments", permanent: true },
+      { source: "/lab/:slug", destination: "/work/experiments", permanent: true },
+      { source: "/notes", destination: "/", permanent: true },
+      { source: "/notes/:slug", destination: "/", permanent: true },
+      { source: "/gallery", destination: "/art", permanent: true },
+      { source: "/gallery/:slug", destination: "/art/:slug", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

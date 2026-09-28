@@ -1,39 +1,58 @@
-import { siteConfig } from "@/config/site";
+import Link from "next/link";
+import { navigation, site, social } from "@/content/site";
+import { PMark } from "./PMark";
 
+/**
+ * Footer: the mark, the same five words, outward links, a year. The
+ * P. doubles as the quiet door to the owner's console.
+ */
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line mt-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-ink-soft">
-          © {new Date().getFullYear()} Porscha
-        </p>
-        <p className="text-sm text-ink-faint text-center">
-          Built with intention. Fueled by curiosity.
-        </p>
-        <ul className="flex items-center gap-5">
-          {siteConfig.elsewhere.map((item) => (
-            <li key={item.url}>
-              <a
-                href={item.url}
-                rel="me noopener"
-                aria-label={item.label}
-                title={item.label}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-soft hover:text-ink transition-colors duration-[var(--duration-micro)]"
-              >
-                {/* GitHub mark */}
-                <svg
-                  aria-hidden="true"
-                  width="19"
-                  height="19"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
+    <footer className="mt-auto border-t border-line">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-8 lg:px-12">
+        <div className="flex flex-col gap-5">
+          <Link
+            href="/login"
+            aria-label="Owner sign-in"
+            title="Owner sign-in"
+            className="inline-flex h-11 w-11 items-center text-[1.6rem] text-ink-faint transition-colors duration-[var(--duration-micro)] hover:text-ink"
+          >
+            <PMark />
+          </Link>
+          <nav aria-label="Footer">
+            <ul className="flex flex-wrap gap-x-6 gap-y-2">
+              {navigation.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="inline-flex min-h-11 items-center px-1 -mx-1 text-sm text-ink-soft transition-colors duration-[var(--duration-micro)] hover:text-ink"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+
+        <div className="flex flex-col items-start gap-2 text-sm text-ink-soft sm:items-end">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2">
+            {social.map((item) => (
+              <li key={item.url}>
+                <a
+                  href={item.url}
+                  rel="me noopener"
+                  className="inline-flex min-h-11 items-center transition-colors duration-[var(--duration-micro)] hover:text-ink"
                 >
-                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
-                </svg>
-              </a>
-            </li>
-          ))}
-        </ul>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="text-ink-faint">
+            © {new Date().getFullYear()} {site.name}
+          </p>
+        </div>
       </div>
     </footer>
   );

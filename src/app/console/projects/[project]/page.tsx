@@ -82,12 +82,6 @@ export default async function ConsoleProjectPage({ params, searchParams }: Props
           >
             Manage milestones
           </Link>
-          <Link
-            href={`/workshop/${project.slug}`}
-            className="border border-line-strong px-3.5 py-2 text-xs rounded-[3px] text-ink-soft hover:text-ink hover:border-ink transition-colors duration-[var(--duration-micro)]"
-          >
-            Preview public page
-          </Link>
         </div>
 
         {project.repository ? (

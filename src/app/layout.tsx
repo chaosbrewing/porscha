@@ -1,39 +1,43 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/fraunces";
+import "@fontsource-variable/fraunces/full.css";
+import "@fontsource-variable/fraunces/full-italic.css";
 import "@fontsource-variable/inter";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
+import { site } from "@/content/site";
+
+const siteUrl = process.env.SITE_URL ?? site.fallbackUrl;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL ?? "https://porscha.today"),
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "Porscha is the process",
-    template: "%s · porscha.today",
+    default: site.title,
+    template: `%s · ${site.name}`,
   },
-  description:
-    "Software. Experiments. Art. Porscha's headquarters on the internet — where she builds, breaks, and refines what matters, publicly.",
+  description: site.description,
   openGraph: {
-    siteName: "porscha.today",
+    siteName: site.domain,
     type: "website",
+    locale: "en_AU",
+    images: [{ url: "/og/porscha.png", width: 1200, height: 630, alt: "Porscha" }],
   },
+  twitter: {
+    card: "summary_large_image",
+  },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f0e6" },
-    { media: "(prefers-color-scheme: dark)", color: "#191612" },
-  ],
+  themeColor: "#f3eee3",
   width: "device-width",
   initialScale: 1,
 };
 
 /**
- * Applies the stored theme before first paint. Without this the page
- * renders light and then corrects — a visible flash on every load for
- * anyone who chose dark. Deliberately tiny and dependency-free because
- * it blocks rendering; a stored value other than "light"/"dark" is
- * ignored, leaving the system preference to decide.
+ * Applies a stored console theme before first paint. The public site is
+ * single-theme; only the console wrapper reads this stamp, so on public
+ * pages the script is a no-op that keeps the console's preference intact.
  */
 const NO_FLASH_THEME = `(function(){try{var t=localStorage.getItem("porscha-theme");if(t==="dark"||t==="light"){document.documentElement.dataset.theme=t}}catch(e){}})()`;
 

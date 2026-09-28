@@ -1,24 +1,26 @@
 # porscha.today
 
-Porscha's personal digital headquarters — part public portfolio, part
-workshop, part experimental lab, part art gallery, and part authenticated
-operational console.
+Porscha's place on the internet: an introduction, not a biography.
+Visitors gradually meet her through selected work, art, a living
+snapshot and small fragments — without being handed her private life.
+Behind sign-in, the same app is her private operational console.
 
 ## What it is
 
-**Public workshop.** Visitors explore who Porscha is and what she makes:
+**Public site.** Controlled discovery through four windows into the
+same person:
 
-- `/` — editorial homepage with her portrait and the current workbench
-- `/porscha` — biography
-- `/workshop` — the central project index (+ `/workshop/[project]`)
-- `/apps` — product-oriented view of the same projects
-- `/lab` — numbered experiments (+ `/lab/[experiment]`)
-- `/gallery` — art and studies (+ `/gallery/[piece]`)
-- `/notes` — lightweight Markdown publishing (+ `/notes/[slug]`)
+- `/` — the opening screen: a name, two lines, a question, four doors
+- `/work` — My work: Sulit Co., Obra, Experiments (+ `/work/experiments`)
+- `/building` — Sulit Co., as an editorial project page
+- `/now` — Currently: a living snapshot table
+- `/art` — Obra, a small digital gallery (+ `/art/[piece]`)
+- `/me` — Who I am: Fragments, the Making interlude, Selected chapters,
+  The little things, and an intentional ending
 
-Projects show curated, near-realtime development progress derived from
-GitHub **without exposing private repository information** — every signal
-is gated by an explicit per-project visibility flag.
+Everything a visitor reads lives as plain data in `src/content/site/`
+(see [Content](#content)). Old routes (`/porscha`, `/workshop`, `/apps`,
+`/lab`, `/notes`, `/gallery`) redirect permanently to their successors.
 
 **Private console.** After signing in (GitHub OAuth, allowlisted), the
 same site becomes Porscha's operational console at `/console`:
@@ -29,10 +31,11 @@ same site becomes Porscha's operational console at `/console`:
   stalled milestones, unexpected inactivity, sync failures)
 - Activity — unified filterable stream across all registered projects
 - Project detail — PRs, issues, CI, commits, releases, branches, milestones
+- Settings — the Obra gallery: upload pieces, order, hide, sell originals
 - Live updates over Server-Sent Events, with staleness fallbacks
 
-v1 is **read-only** by design; the service layer is structured so write
-actions (merge, rerun, create issue) can be added safely later.
+Projects tracked in the console are private tooling; the public site no
+longer lists them. Only intentionally selected work is published.
 
 ## Stack
 
@@ -42,7 +45,8 @@ actions (merge, rerun, create issue) can be added safely later.
   + per-project snapshots; REST reconciliation sync as fallback
 - **jose**-signed session cookies; GitHub OAuth for console sign-in
 - **Vitest** for unit + integration tests
-- Markdown content (gray-matter + marked) for notes/lab/gallery/bio
+- Typed content modules for the public site; Markdown (gray-matter +
+  marked) for file-backed gallery pieces
 
 ## Quick start
 
@@ -73,12 +77,31 @@ Development conveniences:
 | `npm run db:generate` | Generate SQL migration from schema changes |
 | `npm run db:migrate` | Apply migrations |
 
-## The portrait
+## Content
 
-The homepage hero renders Porscha's editorial portrait from
-`public/portrait/porscha.jpg` (or `.png`/`.webp`). Until the file exists,
-an intentional placeholder composition holds the slot. See
-`public/portrait/README.md` for guidance.
+| What | Where |
+| --- | --- |
+| Opening screen, navigation, site title | `src/content/site/site.ts` |
+| Currently snapshot | `src/content/site/currently.ts` |
+| Fragments | `src/content/site/fragments.ts` |
+| Making interlude | `src/content/site/making.ts` |
+| Selected chapters | `src/content/site/chapters.ts` |
+| The little things | `src/content/site/little-things.ts` |
+| My work, Sulit Co., Experiments | `src/content/site/work.ts` |
+| Social links, contact, the ending | `src/content/site/links.ts` |
+| Gallery pieces (file-backed) | `src/content/gallery/*.md` (console uploads live in Postgres/R2) |
+
+`npm test` checks the content layer: every link points somewhere real,
+every image exists, and nothing that looks like a phone number, email
+address or street address is published.
+
+## Images
+
+The approved portrait lives at `public/portrait/porscha.jpg` and is the
+one visual on the opening screen. Every other image is currently a
+documented placeholder — see `public/placeholders/README.md` for exactly
+what should replace each file. Export replacements without EXIF or
+location metadata.
 
 ## Documentation
 
