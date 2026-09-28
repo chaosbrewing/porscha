@@ -203,7 +203,7 @@ describe("gallery read model", () => {
   });
 
   it("falls back to the raw key for an unknown category label", async () => {
-    expect(categoryLabel(GALLERY_DISPLAY_DEFAULTS, "digital")).toBe("Digital");
+    expect(categoryLabel(GALLERY_DISPLAY_DEFAULTS, "canvas")).toBe("Canvas");
     expect(categoryLabel(GALLERY_DISPLAY_DEFAULTS, "nope")).toBe("nope");
   });
   it("moves a tombstoned file-backed piece out of the wall and into removed", async () => {
@@ -272,7 +272,7 @@ describe("withUsedCategories", () => {
   it("returns the same object when nothing is new", async () => {
     const { withUsedCategories } = await import("./service");
     const merged = withUsedCategories(GALLERY_DISPLAY_DEFAULTS, [
-      { category: "digital" },
+      { category: "canvas" },
     ]);
     expect(merged).toBe(GALLERY_DISPLAY_DEFAULTS);
   });

@@ -2,15 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Annotation } from "@/components/public/Annotation";
 import { Container } from "@/components/public/Container";
-import { currently } from "@/content/site";
+import { getSiteContent } from "@/server/site/service";
 
-export const metadata: Metadata = {
-  title: "Currently",
-  description: `What Porscha is building, exploring, making and thinking about — updated ${currently.updated}.`,
-  alternates: { canonical: "/now" },
-};
+export const dynamic = "force-dynamic";
 
-export default function NowPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const { now, global } = await getSiteContent();
+  return {
+    title: now.heading.replace(/\.$/, ""),
+    description: `What ${global.name} is building, exploring, making and thinking about — updated ${now.updated}.`,
+    alternates: { canonical: "/now" },
+  };
+}
+
+export default async function NowPage() {
+  const { now: currently } = await getSiteContent();
   return (
     <Container width="text" className="pb-20 pt-10 sm:pt-16 lg:pb-32">
       <header className="reveal">
@@ -20,9 +26,9 @@ export default function NowPage() {
       </header>
 
       <dl className="reveal mt-12 border-t border-line lg:mt-16" style={{ ["--reveal-step" as string]: 1 }}>
-        {currently.entries.map((entry) => (
+        {currently.entries.map((entry, i) => (
           <div
-            key={entry.label}
+            key={i}
             className="grid gap-y-1 border-b border-line py-6 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-x-8 sm:py-7"
           >
             <dt className="type-meta pt-1.5 text-ink-faint">{entry.label}</dt>
@@ -48,9 +54,11 @@ export default function NowPage() {
         </div>
       </dl>
 
-      <Annotation mark className="reveal mt-10" >
-        {currently.annotation}
-      </Annotation>
+      {currently.annotation ? (
+        <Annotation mark className="reveal mt-10">
+          {currently.annotation}
+        </Annotation>
+      ) : null}
     </Container>
   );
 }

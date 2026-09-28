@@ -4,32 +4,32 @@ import { Annotation } from "@/components/public/Annotation";
 import { ArrowLink } from "@/components/public/ArrowLink";
 import { Container } from "@/components/public/Container";
 import { Eyebrow } from "@/components/public/Eyebrow";
+import { Lines } from "@/components/public/Lines";
 import { PMark } from "@/components/public/PMark";
-import {
-  chapters,
-  ending,
-  fragments,
-  littleThings,
-  making,
-  type Fragment,
-} from "@/content/site";
+import type { Fragment } from "@/content/site/schema";
+import { getSiteContent } from "@/server/site/service";
 
-export const metadata: Metadata = {
-  title: "Who I am",
-  description: `${fragments.intro} Fragments, a few chapters, and the little things — an introduction, not a biography.`,
-  alternates: { canonical: "/me" },
-};
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { me } = await getSiteContent();
+  return {
+    title: "Who I am",
+    description: `${me.fragments.intro} Fragments, a few chapters, and the little things — an introduction, not a biography.`,
+    alternates: { canonical: "/me" },
+  };
+}
 
 /* ---------------------------- Fragments --------------------------- */
 
-const SPAN: Record<NonNullable<Fragment["size"]>, string> = {
+const SPAN: Record<"small" | "wide" | "tall", string> = {
   small: "",
   wide: "sm:col-span-2",
   tall: "sm:row-span-2",
 };
 
 function FragmentCard({ fragment }: { fragment: Fragment }) {
-  const span = SPAN[fragment.size ?? "small"];
+  const span = SPAN[fragment.size];
 
   if (fragment.kind === "image") {
     return (
@@ -37,11 +37,11 @@ function FragmentCard({ fragment }: { fragment: Fragment }) {
         <figure className="h-full">
           <div
             className="relative h-full min-h-[14rem] w-full overflow-hidden rounded-[3px] bg-paper-sunken"
-            style={{ aspectRatio: fragment.aspect.replace("/", " / ") }}
+            style={{ aspectRatio: `${fragment.image.width} / ${fragment.image.height}` }}
           >
             <Image
-              src={fragment.src}
-              alt={fragment.alt}
+              src={fragment.image.src}
+              alt={fragment.image.alt}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover"
@@ -75,7 +75,10 @@ function FragmentCard({ fragment }: { fragment: Fragment }) {
 
 /* ------------------------------ Page ------------------------------ */
 
-export default function MePage() {
+export default async function MePage() {
+  const { me } = await getSiteContent();
+  const { fragments, making, chapters, littleThings, ending } = me;
+
   return (
     <div className="pt-10 sm:pt-16">
       {/* Fragments */}
@@ -119,14 +122,14 @@ export default function MePage() {
                 id="making-heading"
                 className="type-display text-[clamp(2.5rem,7.5vw,5.5rem)] text-ink-inverse"
               >
-                {making.overlay[0]}{" "}
-                <br />
-                {making.overlay[1]}
+                <Lines lines={making.overlay} />
               </h2>
-              <p className="type-annotation mt-5 text-[1.125rem] text-ink-inverse-soft sm:text-[1.25rem]">
-                <PMark className="mr-2 text-[0.85em]" />
-                {making.annotation}
-              </p>
+              {making.annotation ? (
+                <p className="type-annotation mt-5 text-[1.125rem] text-ink-inverse-soft sm:text-[1.25rem]">
+                  <PMark className="mr-2 text-[0.85em]" />
+                  {making.annotation}
+                </p>
+              ) : null}
               <ArrowLink
                 href={making.cta.href}
                 className="mt-8 min-h-11 text-base text-ink-inverse hover:text-ink-inverse focus-visible:text-ink-inverse"
@@ -150,12 +153,12 @@ export default function MePage() {
 
           <ol className="relative mt-12 border-l border-line pl-8 lg:mt-16 lg:grid lg:grid-cols-4 lg:gap-x-8 lg:border-l-0 lg:border-t lg:pl-0 lg:pt-8">
             {chapters.items.map((chapter, index) => (
-              <li key={chapter.title} className="relative pb-10 last:pb-0 lg:pb-0">
+              <li key={index} className="relative pb-10 last:pb-0 lg:pb-0">
                 <span
                   aria-hidden="true"
                   className="absolute -left-8 top-2 h-px w-4 bg-line-strong lg:-top-8 lg:left-0 lg:h-4 lg:w-px"
                 />
-                <Eyebrow>0{index + 1}</Eyebrow>
+                <Eyebrow>{String(index + 1).padStart(2, "0")}</Eyebrow>
                 <h3 className="type-heading mt-3 text-2xl uppercase tracking-[0.06em] sm:text-[1.625rem]">
                   {chapter.title}
                 </h3>
@@ -181,14 +184,16 @@ export default function MePage() {
             <p className="mt-5 max-w-[26rem] text-[1.0625rem] leading-relaxed text-ink-soft">
               {littleThings.intro}
             </p>
-            <Annotation mark className="mt-8">
-              {littleThings.annotation}
-            </Annotation>
+            {littleThings.annotation ? (
+              <Annotation mark className="mt-8">
+                {littleThings.annotation}
+              </Annotation>
+            ) : null}
           </div>
           <ul className="grid grid-cols-1 border-t border-line sm:grid-cols-2 sm:gap-x-10">
-            {littleThings.items.map((item) => (
+            {littleThings.items.map((item, i) => (
               <li
-                key={item}
+                key={i}
                 className="type-heading border-b border-line py-4 text-xl sm:text-2xl"
               >
                 {item}
@@ -200,26 +205,22 @@ export default function MePage() {
 
       {/* Ending */}
       <section aria-labelledby="ending-heading" className="mt-24 lg:mt-36">
-        <div className="relative">
-          <div className="relative aspect-[4/3] w-full sm:aspect-[16/9] lg:aspect-[21/9] lg:max-h-[38rem]">
-            <Image
-              src={ending.image.src}
-              alt={ending.image.alt}
-              fill
-              sizes="100vw"
-              className="object-cover"
-            />
-          </div>
+        <div className="relative aspect-[4/3] w-full sm:aspect-[16/9] lg:aspect-[21/9] lg:max-h-[38rem]">
+          <Image
+            src={ending.image.src}
+            alt={ending.image.alt}
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
         </div>
         <Container className="pb-24 pt-14 sm:pt-20 lg:pb-32">
           <h2 id="ending-heading" className="type-display text-[clamp(2.5rem,8vw,6rem)]">
-            {ending.heading[0]}{" "}
-            <br />
-            {ending.heading[1]}
+            <Lines lines={ending.heading} />
           </h2>
           <ul className="mt-10 flex flex-col gap-2 sm:mt-12">
-            {ending.links.map((link) => (
-              <li key={link.href}>
+            {ending.links.map((link, i) => (
+              <li key={i}>
                 <ArrowLink
                   href={link.href}
                   className="type-heading min-h-11 py-1 text-[1.375rem] sm:text-2xl"

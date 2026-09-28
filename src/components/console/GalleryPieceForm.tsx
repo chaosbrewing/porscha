@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { normalizeCategory } from "@/config/gallery";
+import type { PieceFormValue } from "./piece-draft";
 
 /**
  * Create/edit form for a console-authored gallery piece.
@@ -19,35 +20,7 @@ import { normalizeCategory } from "@/config/gallery";
  * runtime; where it is absent the endpoint says so plainly.
  */
 
-export type PieceFormValue = {
-  slug: string;
-  title: string;
-  category: string;
-  year: string;
-  alt: string;
-  media: string;
-  aspect: string;
-  note: string;
-  body: string;
-  forSale: boolean;
-  price: string;
-  currency: string;
-};
-
-export const emptyPieceDraft: PieceFormValue = {
-  slug: "",
-  title: "",
-  category: "digital",
-  year: String(new Date().getFullYear()),
-  alt: "",
-  media: "",
-  aspect: "4/5",
-  note: "",
-  body: "",
-  forSale: false,
-  price: "",
-  currency: "",
-};
+export type { PieceFormValue } from "./piece-draft";
 
 function slugify(title: string): string {
   return title
@@ -394,7 +367,7 @@ export function GalleryPieceForm({
         <h2 className="type-meta text-ink-faint">Preview</h2>
         <div
           className="mt-3 overflow-hidden rounded-[4px] border border-line bg-paper-raised"
-          style={{ aspectRatio: value.aspect.replace("/", " / ") }}
+          style={{ aspectRatio: (value.aspect || "4/5").replace("/", " / ") }}
         >
           {value.media ? (
             <Image

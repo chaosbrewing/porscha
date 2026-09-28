@@ -1,12 +1,21 @@
 import Link from "next/link";
-import { navigation, site, social } from "@/content/site";
+import type { GlobalContent } from "@/content/site/schema";
 import { PMark } from "./PMark";
 
 /**
  * Footer: the mark, the same five words, outward links, a year. The
  * P. doubles as the quiet door to the owner's console.
  */
-export function SiteFooter() {
+export function SiteFooter({
+  name,
+  nav,
+  social,
+}: {
+  name: string;
+  nav: GlobalContent["navigation"];
+  social: GlobalContent["social"];
+}) {
+  const navigation = nav;
   return (
     <footer className="mt-auto border-t border-line">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-8 lg:px-12">
@@ -50,7 +59,7 @@ export function SiteFooter() {
             ))}
           </ul>
           <p className="text-ink-faint">
-            © {new Date().getFullYear()} {site.name}
+            © {new Date().getFullYear()} {name}
           </p>
         </div>
       </div>

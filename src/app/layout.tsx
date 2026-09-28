@@ -5,7 +5,7 @@ import "@fontsource-variable/inter";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
-import { site } from "@/content/site";
+import { SITE_DEFAULTS, site } from "@/content/site";
 
 const siteUrl = process.env.SITE_URL ?? site.fallbackUrl;
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: site.title,
     template: `%s · ${site.name}`,
   },
-  description: site.description,
+  description: SITE_DEFAULTS.global.description,
   openGraph: {
     siteName: site.domain,
     type: "website",

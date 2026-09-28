@@ -55,7 +55,10 @@ Key modules (all under `src/`):
 | --- | --- |
 | `config/registry.ts` | The explicit project registry + visibility flags |
 | `config/site.ts` | Owner name shared with the console |
-| `content/site/*.ts` | Everything a visitor reads on the public site, as typed data |
+| `content/site/*.ts` | Schemas and typed defaults for every public page |
+| `server/site/` | Page content store (`site_settings`), read model, admin |
+| `components/console/site-editor/` | Settings → Pages: field specs, generic editor, preview |
+| `server/media/strip.ts` | EXIF/XMP/IPTC removal on every console upload |
 | `server/env.ts` | zod-validated environment, parsed once |
 | `server/db/` | Drizzle schema + pooled client |
 | `server/github/` | verify, normalize, ingest, REST client, sync |

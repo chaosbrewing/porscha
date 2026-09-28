@@ -1,9 +1,7 @@
-import type { EditorialSection, Experiment, WorkCategory } from "./types";
+import type { BuildingContent, ExperimentsContent, WorkContent } from "./schema";
 
-/**
- * My work — three windows, intentionally selected.
- */
-export const work = {
+/** My work — three windows, intentionally selected. */
+export const workDefaults = {
   heading: "My work",
   intro:
     "Selected projects, businesses and experiments that I’ve been part of (or started).",
@@ -26,17 +24,15 @@ export const work = {
       cta: "View experiments",
       href: "/work/experiments",
     },
-  ] satisfies WorkCategory[],
-} as const;
+  ],
+} satisfies WorkContent;
 
 /**
- * Sulit Co. — an editorial project page, not a landing page.
- *
- * `link.url` is the outward Sulit property. It is intentionally unset
- * until the right URL is confirmed; while it is null the page simply
- * shows no outward link rather than a guessed one.
+ * Sulit Co. — an editorial project page, not a landing page. The
+ * outward link is blank until the right URL is confirmed; while blank
+ * the page shows no outward link rather than a guessed one.
  */
-export const sulit = {
+export const buildingDefaults = {
   label: "Building",
   name: "Sulit Co.",
   tagline: "Infrastructure for independent service businesses.",
@@ -69,26 +65,18 @@ export const sulit = {
         "That is the part I care about: technology that makes a small business feel more personal, not less.",
       ],
     },
-  ] satisfies EditorialSection[],
-  link: {
-    label: "Visit Sulit",
-    url: null as `https://${string}` | null,
-  },
-} as const;
+  ],
+  link: { label: "Visit Sulit", url: "" },
+} satisfies BuildingContent;
 
 /**
- * Experiments — selected products, ideas and things explored.
- *
- * Only intentionally selected work belongs here. The list ships empty
- * on purpose: nothing is published because it happens to exist in a
- * repository. Add entries like:
- *
- *   { name: "Name", description: "One honest line.", href: "https://…" }
+ * Experiments — only intentionally selected work belongs here. The
+ * list ships empty on purpose; add entries from the console.
  */
-export const experiments = {
+export const experimentsDefaults = {
   heading: "Experiments",
   intro: "Selected products, ideas and things I’ve explored.",
   emptyNote:
     "A few of these are still being written up. Until then, the snapshot on Currently is the most honest answer.",
-  items: [] as Experiment[],
-} as const;
+  items: [],
+} satisfies ExperimentsContent;

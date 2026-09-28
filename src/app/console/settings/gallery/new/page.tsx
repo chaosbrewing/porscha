@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import {
-  GalleryPieceForm,
-  emptyPieceDraft,
-} from "@/components/console/GalleryPieceForm";
+import { GalleryPieceForm } from "@/components/console/GalleryPieceForm";
+import { emptyPieceDraft } from "@/components/console/piece-draft";
 import { getGalleryAdminView, withUsedCategories } from "@/server/gallery/service";
 
 export const dynamic = "force-dynamic";

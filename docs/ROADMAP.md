@@ -15,9 +15,8 @@
   Node server the bus is in-process: multiple instances still work —
   clients fall back to polling — but live pushes only reflect events
   ingested by the instance a client is connected to.
-- **Configuration-backed content editing.** Registry, milestones, work
-  items, and site settings are edited in code. The database tables for
-  gallery/lab/notes exist but are unused (extension point).
+- **Registry-backed projects.** Registry, milestones and work items are
+  still edited in code; page content and the gallery are console-owned.
 - **Milestone weighting** is not implemented; progress is a flat
   done/total ratio of scoped work items.
 - **No visitor analytics** of any kind (deliberate for now).
@@ -41,6 +40,20 @@
    responsive variants.
 
 ## Release notes
+
+### v0.3.0 — the studio
+
+- Settings → Pages: every word, list and image on the public site is
+  editable from the console, per page, with a live preview and a
+  "back to defaults" switch. Content is stored per page in
+  `site_settings` and validated on both sides by shared zod schemas.
+- The wall is console-owned: migration 0007 adopts the 32 committed
+  pieces as editable rows. Category is a dropdown, year is optional,
+  and a description for screen readers can be set per piece.
+- Every console upload passes through metadata stripping (EXIF, XMP,
+  IPTC, including GPS) before it is stored.
+- "I write songs." joins the fragments.
+
 
 ### v0.2.0 — the introduction
 

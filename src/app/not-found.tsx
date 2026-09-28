@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PMark } from "@/components/public/PMark";
 import { SiteFooter } from "@/components/public/SiteFooter";
 import { SiteHeader } from "@/components/public/SiteHeader";
+import { SITE_DEFAULTS, site } from "@/content/site";
 
 /**
  * Global 404. Lives at the app root (the only place Next.js reads it
@@ -13,7 +14,7 @@ export default function NotFound() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <SiteHeader />
+      <SiteHeader name={site.name} nav={SITE_DEFAULTS.global.navigation} />
       <main id="main" className="flex flex-1 items-center justify-center px-4 py-24">
         <div className="max-w-md text-center">
           <PMark className="text-3xl text-ink-faint" />
@@ -30,7 +31,11 @@ export default function NotFound() {
           </Link>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter
+        name={site.name}
+        nav={SITE_DEFAULTS.global.navigation}
+        social={SITE_DEFAULTS.global.social}
+      />
     </>
   );
 }

@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-/**
- * Section tabs inside Settings. Gallery is the only section that has
- * graduated from file-backed content so far; lab and notes will sit
- * beside it when they do.
- */
-const SECTIONS = [{ label: "Gallery", href: "/console/settings/gallery" }];
+/** Section tabs inside Settings. */
+const SECTIONS = [
+  { label: "Pages", href: "/console/settings/pages" },
+  { label: "Gallery", href: "/console/settings/gallery" },
+];
 
 export function SettingsNav() {
   const pathname = usePathname();

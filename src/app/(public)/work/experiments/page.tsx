@@ -2,19 +2,25 @@ import type { Metadata } from "next";
 import { ArrowLink } from "@/components/public/ArrowLink";
 import { Container } from "@/components/public/Container";
 import { PageIntro } from "@/components/public/PageIntro";
-import { experiments } from "@/content/site";
+import { getSiteContent } from "@/server/site/service";
 
-export const metadata: Metadata = {
-  title: "Experiments",
-  description: experiments.intro,
-  alternates: { canonical: "/work/experiments" },
-};
+export const dynamic = "force-dynamic";
 
-export default function ExperimentsPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const { experiments } = await getSiteContent();
+  return {
+    title: experiments.heading,
+    description: experiments.intro,
+    alternates: { canonical: "/work/experiments" },
+  };
+}
+
+export default async function ExperimentsPage() {
+  const { experiments, work } = await getSiteContent();
   return (
     <Container className="pb-20 pt-10 sm:pt-16 lg:pb-32">
       <PageIntro
-        eyebrow="My work"
+        eyebrow={work.heading}
         heading={experiments.heading}
         intro={experiments.intro}
       />

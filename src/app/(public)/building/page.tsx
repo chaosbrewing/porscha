@@ -3,15 +3,21 @@ import { ArrowLink } from "@/components/public/ArrowLink";
 import { Container } from "@/components/public/Container";
 import { Eyebrow } from "@/components/public/Eyebrow";
 import { PMark } from "@/components/public/PMark";
-import { sulit } from "@/content/site";
+import { getSiteContent } from "@/server/site/service";
 
-export const metadata: Metadata = {
-  title: `${sulit.name} — what I’m building`,
-  description: `${sulit.name}: ${sulit.tagline}`,
-  alternates: { canonical: "/building" },
-};
+export const dynamic = "force-dynamic";
 
-export default function BuildingPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const { building } = await getSiteContent();
+  return {
+    title: `${building.name} — what I’m building`,
+    description: `${building.name}: ${building.tagline}`,
+    alternates: { canonical: "/building" },
+  };
+}
+
+export default async function BuildingPage() {
+  const { building: sulit } = await getSiteContent();
   return (
     <article className="pb-20 pt-10 sm:pt-16 lg:pb-32">
       <Container>
@@ -25,36 +31,44 @@ export default function BuildingPage() {
           </p>
         </header>
 
-        <div className="mt-12 max-w-[36rem] space-y-5 text-[1.0625rem] leading-relaxed text-ink-soft sm:text-lg lg:mt-16">
-          {sulit.summary.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
+        {sulit.summary.length > 0 ? (
+          <div className="mt-12 max-w-[36rem] space-y-5 text-[1.0625rem] leading-relaxed text-ink-soft sm:text-lg lg:mt-16">
+            {sulit.summary.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
+          </div>
+        ) : null}
       </Container>
 
       <Container className="mt-20 lg:mt-28">
-        <div className="border-t border-line">
-          {sulit.sections.map((section) => (
-            <section
-              key={section.number}
-              aria-labelledby={`sulit-${section.number}`}
-              className="reveal-view grid gap-y-4 border-b border-line py-10 sm:py-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-16"
-            >
-              <h2
-                id={`sulit-${section.number}`}
-                className="type-heading flex items-baseline gap-4 text-[clamp(1.75rem,4vw,2.5rem)]"
+        {sulit.sections.length > 0 ? (
+          <div className="border-t border-line">
+            {sulit.sections.map((section, i) => (
+              <section
+                key={i}
+                aria-labelledby={`sulit-${i}`}
+                className="reveal-view grid gap-y-4 border-b border-line py-10 sm:py-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-16"
               >
-                <span className="type-meta text-ink-faint">{section.number}</span>{" "}
-                <span>{section.title}</span>
-              </h2>
-              <div className="max-w-[34rem] space-y-4 leading-relaxed text-ink-soft">
-                {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+                <h2
+                  id={`sulit-${i}`}
+                  className="type-heading flex items-baseline gap-4 text-[clamp(1.75rem,4vw,2.5rem)]"
+                >
+                  {section.number ? (
+                    <>
+                      <span className="type-meta text-ink-faint">{section.number}</span>{" "}
+                    </>
+                  ) : null}
+                  <span>{section.title}</span>
+                </h2>
+                <div className="max-w-[34rem] space-y-4 leading-relaxed text-ink-soft">
+                  {section.paragraphs.map((paragraph, j) => (
+                    <p key={j}>{paragraph}</p>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : null}
 
         <footer className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 lg:mt-16">
           {sulit.link.url ? (

@@ -3,14 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { navigation, site } from "@/content/site";
+import type { GlobalContent } from "@/content/site/schema";
 import { PMark } from "./PMark";
 
 /**
  * Header: the P. mark, five words, a hairline. On small screens the
  * words fold behind a plain "Menu" button.
  */
-export function SiteHeader() {
+export function SiteHeader({
+  name,
+  nav,
+}: {
+  name: string;
+  nav: GlobalContent["navigation"];
+}) {
+  const navigation = nav;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -22,7 +29,7 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-4 py-5 sm:px-8 sm:py-6 lg:px-12">
         <Link
           href="/"
-          aria-label={`${site.name} — home`}
+          aria-label={`${name} — home`}
           className="inline-flex h-11 min-w-11 items-center rounded-[3px] text-[1.6rem] text-ink transition-colors duration-[var(--duration-micro)] hover:text-accent-deep"
         >
           <PMark />

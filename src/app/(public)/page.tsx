@@ -3,26 +3,34 @@ import Image from "next/image";
 import { Annotation } from "@/components/public/Annotation";
 import { ArrowLink } from "@/components/public/ArrowLink";
 import { Container } from "@/components/public/Container";
-import { home, site, social } from "@/content/site";
+import { Lines } from "@/components/public/Lines";
+import { site } from "@/content/site";
+import { getSiteContent } from "@/server/site/service";
 
-export const metadata: Metadata = {
-  title: { absolute: `${site.name} — ${site.domain}` },
-  description: site.description,
-  alternates: { canonical: "/" },
-};
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { global } = await getSiteContent();
+  return {
+    title: { absolute: `${global.name} — ${site.domain}` },
+    description: global.description,
+    alternates: { canonical: "/" },
+  };
+}
 
 /**
  * The opening screen. A name, two lines, a question, four doors, and
  * one image. Nothing else.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const { home, global } = await getSiteContent();
   const siteUrl = process.env.SITE_URL ?? site.fallbackUrl;
   const person = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: site.name,
+    name: global.name,
     url: siteUrl,
-    sameAs: social.map((s) => s.url),
+    sameAs: global.social.map((s) => s.url),
   };
 
   return (
@@ -37,15 +45,13 @@ export default function HomePage() {
             className="reveal type-display uppercase text-[clamp(3.5rem,13vw,9.5rem)] tracking-[0.02em]"
             style={{ ["--reveal-step" as string]: 0 }}
           >
-            {site.name}
+            {global.name}
           </h1>
           <p
             className="reveal type-heading mt-8 text-[clamp(1.5rem,3.4vw,2.25rem)] text-ink"
             style={{ ["--reveal-step" as string]: 1 }}
           >
-            {home.intro[0]}{" "}
-            <br />
-            {home.intro[1]}
+            <Lines lines={home.intro} />
           </p>
 
           <nav
@@ -56,7 +62,7 @@ export default function HomePage() {
             <p className="type-meta text-ink-faint">{home.question}</p>
             <ul className="mt-5 flex flex-col gap-1">
               {home.paths.map((path) => (
-                <li key={path.href}>
+                <li key={path.href + path.label}>
                   <ArrowLink
                     href={path.href}
                     className="type-heading min-h-11 py-1 text-[1.5rem] sm:text-[1.75rem]"
@@ -84,9 +90,11 @@ export default function HomePage() {
               className="aspect-[4/5] h-auto w-full object-cover object-[50%_20%]"
             />
           </div>
-          <figcaption className="mt-4 flex items-start justify-between gap-6">
-            <Annotation mark>{home.annotation}</Annotation>
-          </figcaption>
+          {home.annotation ? (
+            <figcaption className="mt-4 flex items-start justify-between gap-6">
+              <Annotation mark>{home.annotation}</Annotation>
+            </figcaption>
+          ) : null}
         </figure>
       </div>
     </Container>

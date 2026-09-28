@@ -79,29 +79,42 @@ Development conveniences:
 
 ## Content
 
-| What | Where |
-| --- | --- |
-| Opening screen, navigation, site title | `src/content/site/site.ts` |
-| Currently snapshot | `src/content/site/currently.ts` |
-| Fragments | `src/content/site/fragments.ts` |
-| Making interlude | `src/content/site/making.ts` |
-| Selected chapters | `src/content/site/chapters.ts` |
-| The little things | `src/content/site/little-things.ts` |
-| My work, Sulit Co., Experiments | `src/content/site/work.ts` |
-| Social links, contact, the ending | `src/content/site/links.ts` |
-| Gallery pieces (file-backed) | `src/content/gallery/*.md` (console uploads live in Postgres/R2) |
+Everything a visitor reads is editable in the console under
+**Settings → Pages**: pick a page from the dropdown, change any word,
+list or picture, save, and it is live. Each page is stored as one JSON
+document in `site_settings` (key `site.page.<name>`), validated by the
+schemas in `src/content/site/schema.ts`. "Back to defaults" drops the
+stored document and the page returns to the typed defaults:
 
-`npm test` checks the content layer: every link points somewhere real,
-every image exists, and nothing that looks like a phone number, email
-address or street address is published.
+| Page | Defaults | Fields |
+| --- | --- | --- |
+| Site-wide | `src/content/site/global.ts` | name, description, navigation, social links, contact |
+| Home | `src/content/site/home.ts` | opening lines, the question, the doors, the one image, note |
+| My work | `src/content/site/work.ts` | heading, intro, the three windows |
+| What I’m building | `src/content/site/work.ts` | Sulit Co. copy, sections, outward link |
+| Experiments | `src/content/site/work.ts` | heading, intro, empty note, items |
+| Currently | `src/content/site/now.ts` | snapshot rows, updated, note |
+| Who I am | `src/content/site/me.ts` | fragments, Making, chapters, little things, ending |
+
+The editor is driven by `src/components/console/site-editor/fields.ts`;
+adding a field there (and to the schema) is how new content becomes
+editable. Obra is managed under **Settings → Gallery**: every piece is a
+console-owned row in `gallery_items`, uploads go to R2 with EXIF, XMP
+and IPTC stripped, and categories group the wall.
+
+`npm test` checks that every page's defaults satisfy its schema, that
+links resolve, that images exist, and that nothing that looks like a
+phone number, email address or street address is published.
 
 ## Images
 
 The approved portrait lives at `public/portrait/porscha.jpg` and is the
-one visual on the opening screen. Obra's file-backed paintings live in
-`public/art/`. The remaining images on `/me` are documented placeholders;
-see `public/placeholders/README.md` for exactly what should replace each
-file. Export images without EXIF or location metadata.
+one visual on the opening screen. Obra's original images live in
+`public/art/` until replaced from the console. The remaining images on
+`/me` are documented placeholders (see `public/placeholders/README.md`);
+replace them from Settings → Pages → Who I am. Uploads through the
+console are stripped of metadata; anything committed directly should be
+exported without EXIF or location data.
 
 ## Documentation
 
