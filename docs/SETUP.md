@@ -91,11 +91,11 @@ The public gallery is **Obra** and lives at `/art` (+ `/art/[piece]`).
 `/gallery` and `/gallery/[piece]` redirect there permanently, and
 Stripe checkouts return to the `/art` piece URL.
 
-Three file-backed pieces under `src/content/gallery/placeholder-*.md`
-are marked `placeholder: true`. They hold the wall only while no real
-piece is visible; the moment one real piece is published (uploaded in
-the console, or added as a Markdown file without the flag) they step
-aside automatically. Delete them once real work exists.
+File-backed pieces live in `src/content/gallery/*.md` with their images
+under `public/art/` (exported without EXIF, longest side 2000 px). A
+piece marked `placeholder: true` shows only while no real piece is
+visible, so a stand-in can hold the wall without ever outliving real
+work.
 
 **Categories are free text.** `digital` and `canvas` are only the
 suggestions offered in the console — anything typed becomes a

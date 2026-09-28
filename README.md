@@ -98,10 +98,10 @@ address or street address is published.
 ## Images
 
 The approved portrait lives at `public/portrait/porscha.jpg` and is the
-one visual on the opening screen. Every other image is currently a
-documented placeholder — see `public/placeholders/README.md` for exactly
-what should replace each file. Export replacements without EXIF or
-location metadata.
+one visual on the opening screen. Obra's file-backed paintings live in
+`public/art/`. The remaining images on `/me` are documented placeholders;
+see `public/placeholders/README.md` for exactly what should replace each
+file. Export images without EXIF or location metadata.
 
 ## Documentation
 

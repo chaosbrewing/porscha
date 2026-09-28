@@ -13,7 +13,6 @@ file in and updating that one path.
 | `fragment-paint.svg` | `src/content/site/fragments.ts` | A portrait-orientation (4:5) photograph of paint, brushes, a canvas detail or a work in progress. |
 | `fragment-photo.svg` | `src/content/site/fragments.ts` | A landscape (3:2) photograph — a street, an object, a place. Something Porscha photographed. |
 | `fragment-object.svg` | `src/content/site/fragments.ts` | A square (1:1) photograph of an object, a sketch or something from the desk. |
-| `artwork-01.svg`, `artwork-02.svg`, `artwork-03.svg` | `src/content/gallery/placeholder-*.md` — Obra | Real artwork. These three pieces are marked `placeholder: true` and disappear from `/art` automatically the moment a real piece is published (uploaded through the console, or added as a Markdown file without the flag). Delete the three files and their Markdown once real work exists. |
 
 Guidance for the real images:
 

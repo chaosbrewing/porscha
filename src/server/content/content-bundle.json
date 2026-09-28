@@ -1,8 +1,8 @@
 {
  "generatedFrom": "src/content",
  "files": {
-  "gallery/placeholder-study-01.md": "---\ntitle: Study 01\ncategory: canvas\nyear: \"2026\"\nmedia: /placeholders/artwork-01.svg\nalt: Placeholder composition — a single olive brushstroke rising across ivory paper\naspect: \"4/5\"\nplaceholder: true\n---\n",
-  "gallery/placeholder-study-02.md": "---\ntitle: Study 02\ncategory: canvas\nyear: \"2026\"\nmedia: /placeholders/artwork-02.svg\nalt: Placeholder composition — two overlapping triangular forms on a warm horizon\naspect: \"3/2\"\nplaceholder: true\n---\n",
-  "gallery/placeholder-study-03.md": "---\ntitle: Study 03\ncategory: digital\nyear: \"2026\"\nmedia: /placeholders/artwork-03.svg\nalt: Placeholder composition — a pale ring and olive disc on near-black\naspect: \"1/1\"\nplaceholder: true\n---\n"
+  "gallery/adrift.md": "---\ntitle: Adrift\ncategory: canvas\nyear: \"\"\nmedia: /art/adrift.jpg\nalt: A weathered barrel tumbles through churning turquoise water under a pale, foaming sky.\naspect: \"2000/1475\"\n---\n",
+  "gallery/falling-light.md": "---\ntitle: Falling light\ncategory: canvas\nyear: \"\"\nmedia: /art/falling-light.jpg\nalt: A luminous white-gold waterfall of light pours down through dark storm clouds lit orange and red from within.\naspect: \"1453/2000\"\n---\n",
+  "gallery/the-lighthouse.md": "---\ntitle: The lighthouse\ncategory: canvas\nyear: \"\"\nmedia: /art/the-lighthouse.jpg\nalt: A red-and-white lighthouse braces against towering white surf while lightning forks through a brown-black sky.\naspect: \"2000/1992\"\n---\n"
  }
 }
