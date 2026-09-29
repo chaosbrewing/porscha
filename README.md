@@ -1,6 +1,7 @@
 # porscha.today
 
-Porscha's place on the internet: an introduction, not a biography.
+iPorscha is Porscha's place on the internet: an introduction, not a
+biography.
 Visitors gradually meet her through selected work, art, a living
 snapshot and small fragments — without being handed her private life.
 Behind sign-in, the same app is her private operational console.

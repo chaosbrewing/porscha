@@ -56,6 +56,9 @@
 - The signature is now the wax seal (`public/brand/seal.png`), used in
   the header, footer, margins, browser icons and the social preview.
   New opening portrait.
+- The website is called iPorscha: the wordmark, browser tabs, footer
+  and social preview say so. Porscha remains the person the site
+  speaks about.
 - The interface follows the boards: photographic doors on the opening
   screen, wide photographic windows on Work, a full-width project
   picture with numbered sections on Building, a picture beside the

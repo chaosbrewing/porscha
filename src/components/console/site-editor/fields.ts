@@ -53,7 +53,7 @@ const IMAGE_HELP = "Uploaded images have their metadata (including location) rem
 
 export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
   global: [
-    { kind: "text", path: "name", label: "Name", help: "Shown in the opening screen, the footer and browser tabs.", maxLength: 60 },
+    { kind: "text", path: "name", label: "Your name", help: "Used wherever the site speaks about you, such as the snapshot’s description. The site’s own name, iPorscha, is fixed.", maxLength: 60 },
     { kind: "textarea", path: "description", label: "Site description", help: "What search engines and link previews show.", rows: 3 },
     {
       kind: "list",

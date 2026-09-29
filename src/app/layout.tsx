@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: site.domain,
     type: "website",
     locale: "en_AU",
-    images: [{ url: "/og/porscha.png", width: 1200, height: 630, alt: "Porscha" }],
+    images: [{ url: "/og/porscha.png", width: 1200, height: 630, alt: site.title }],
   },
   twitter: {
     card: "summary_large_image",

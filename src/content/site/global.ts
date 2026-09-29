@@ -23,10 +23,13 @@ export const globalDefaults = {
   contact: { label: "Get in touch", href: "https://github.com/chaosbrewing" },
 } satisfies GlobalContent;
 
-/** Fixed identity used for metadata and the social preview. */
+/**
+ * Fixed identity of the website itself: the wordmark, browser tabs,
+ * the footer and the social preview. The person is `globalDefaults.name`.
+ */
 export const site = {
-  name: "Porscha",
+  name: "iPorscha",
   domain: "porscha.today",
-  title: "Porscha",
+  title: "iPorscha",
   fallbackUrl: "https://porscha.today",
 } as const;

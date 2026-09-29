@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const { global } = await getSiteContent();
   return {
-    title: { absolute: `${global.name} — ${site.domain}` },
+    title: { absolute: `${site.name} — ${site.domain}` },
     description: global.description,
     alternates: { canonical: "/" },
   };
@@ -44,10 +44,10 @@ export default async function HomePage() {
       <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:items-end">
         <div className="max-w-[40rem]">
           <h1
-            className="reveal type-display uppercase text-[clamp(3.25rem,11vw,8rem)] tracking-[0.02em]"
+            className="reveal type-display text-[clamp(3.25rem,11vw,8rem)] tracking-[-0.01em]"
             style={{ ["--reveal-step" as string]: 0 }}
           >
-            {global.name}
+            {site.name}
           </h1>
           <p
             className="reveal type-heading mt-6 text-[clamp(1.25rem,2.6vw,1.75rem)] text-ink-soft"
