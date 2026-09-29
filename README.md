@@ -10,7 +10,7 @@ Behind sign-in, the same app is her private operational console.
 **Public site.** Controlled discovery through four windows into the
 same person:
 
-- `/` — the opening screen: a name, two lines, a question, four doors
+- `/` — the opening screen: a name, two lines, a handwritten question, four photographic doors
 - `/work` — My work: Sulit Co., Obra, Experiments (+ `/work/experiments`)
 - `/building` — Sulit Co., as an editorial project page
 - `/now` — Currently: a living snapshot table
@@ -89,7 +89,7 @@ stored document and the page returns to the typed defaults:
 | Page | Defaults | Fields |
 | --- | --- | --- |
 | Site-wide | `src/content/site/global.ts` | name, description, navigation, social links, contact |
-| Home | `src/content/site/home.ts` | opening lines, the question, the doors, the one image, note |
+| Home | `src/content/site/home.ts` | opening lines, the question, the doors (each with a picture), note |
 | My work | `src/content/site/work.ts` | heading, intro, the three windows |
 | What I’m building | `src/content/site/work.ts` | eyebrow, header, sub-header, projects (logo, name, description, media, linked text) |
 | Experiments | `src/content/site/work.ts` | heading, intro, empty note, items |
@@ -108,8 +108,9 @@ phone number, email address or street address is published.
 
 ## Images
 
-The approved portrait lives at `public/portrait/porscha.jpg` and is the
-one visual on the opening screen. The wax-seal mark in the header,
+The approved portrait lives at `public/portrait/porscha.jpg`; it is the
+“Who I am” door on the opening screen and the picture beside “A little
+about” on `/me`. The wax-seal mark in the header,
 footer and social preview lives at `public/brand/seal.png`; the browser
 icons are `src/app/icon.png` and `src/app/apple-icon.png`. Obra's original images live in
 `public/art/` until replaced from the console. The remaining images on

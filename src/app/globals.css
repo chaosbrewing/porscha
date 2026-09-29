@@ -319,6 +319,114 @@ body {
   }
 
   /* ------------------------------------------------------------------ */
+  /* Buttons, chips, tiles                                               */
+  /* ------------------------------------------------------------------ */
+
+  /* A quiet button: words, an arrow, a hairline. Four surfaces. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    min-height: 2.75rem;
+    padding: 0.55rem 1.05rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    transition:
+      background-color var(--duration-micro) var(--ease-out-soft),
+      border-color var(--duration-micro) var(--ease-out-soft),
+      color var(--duration-micro) var(--ease-out-soft);
+  }
+  .btn > .arrow {
+    display: inline-block;
+    transition: transform var(--duration-normal) var(--ease-out-soft);
+  }
+  .btn:hover > .arrow,
+  .btn:focus-visible > .arrow {
+    transform: translateX(0.25em);
+  }
+  .btn-outline {
+    color: var(--color-ink);
+    border-color: var(--color-line-strong);
+    background: transparent;
+  }
+  .btn-outline:hover,
+  .btn-outline:focus-visible {
+    border-color: var(--color-ink);
+  }
+  .btn-solid {
+    color: var(--color-ink-inverse);
+    background: var(--color-ink-well);
+    border-color: var(--color-ink-well);
+  }
+  .btn-solid:hover,
+  .btn-solid:focus-visible {
+    background: var(--color-accent-deep);
+    border-color: var(--color-accent-deep);
+  }
+  .btn-inverse {
+    color: var(--color-ink-inverse);
+    border-color: rgb(243 238 227 / 0.45);
+    background: rgb(28 26 22 / 0.25);
+  }
+  .btn-inverse:hover,
+  .btn-inverse:focus-visible {
+    border-color: var(--color-ink-inverse);
+    background: rgb(28 26 22 / 0.45);
+  }
+  .btn-inverse-solid {
+    color: var(--color-ink);
+    background: var(--color-paper);
+    border-color: var(--color-paper);
+  }
+  .btn-inverse-solid:hover,
+  .btn-inverse-solid:focus-visible {
+    background: var(--color-paper-raised);
+  }
+
+  /* Filter chips: the same hairline, pressed state filled */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-line-strong);
+    background: transparent;
+    color: var(--color-ink-soft);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition:
+      background-color var(--duration-micro) var(--ease-out-soft),
+      border-color var(--duration-micro) var(--ease-out-soft),
+      color var(--duration-micro) var(--ease-out-soft);
+  }
+  .chip:hover {
+    color: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+  .chip-on,
+  .chip-on:hover {
+    background: var(--color-ink-well);
+    border-color: var(--color-ink-well);
+    color: var(--color-ink-inverse);
+  }
+
+  /* The arrow on a photographic tile slides on hover */
+  .tile-arrow {
+    display: inline-block;
+    transition: transform var(--duration-normal) var(--ease-out-soft);
+  }
+  .group:hover .tile-arrow,
+  .group:focus-visible .tile-arrow {
+    transform: translateX(0.3em);
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Motion — subtle, once, and off when asked                           */
   /* ------------------------------------------------------------------ */
 

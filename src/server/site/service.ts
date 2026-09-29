@@ -23,7 +23,15 @@ export function resolvePage<K extends PageKey>(
   override: unknown,
 ): SiteContent[K] {
   if (override === undefined) return SITE_DEFAULTS[key];
-  const parsed = PAGE_SCHEMAS[key].safeParse(override);
+  // Sections added to a page since its row was saved come from the
+  // defaults, so the schema can grow without invalidating what the
+  // console stored. Only whole top-level sections are filled in; a
+  // stored section is taken as it is.
+  const merged =
+    override && typeof override === "object" && !Array.isArray(override)
+      ? { ...SITE_DEFAULTS[key], ...(override as Record<string, unknown>) }
+      : override;
+  const parsed = PAGE_SCHEMAS[key].safeParse(merged);
   if (!parsed.success) {
     console.error(`[site] stored content for "${key}" is invalid; using defaults`);
     return SITE_DEFAULTS[key];

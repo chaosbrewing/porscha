@@ -98,29 +98,35 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
       label: "The doors",
       itemLabel: "door",
       titleField: "label",
-      fields: link("Door"),
-      blank: { label: "", href: "/" },
+      help: "Each door is a photograph with a label. Portrait pictures (4:5) read best; dark ones carry the label.",
+      fields: [
+        ...link("Door"),
+        { kind: "image", path: "image", label: "Picture", help: IMAGE_HELP, optional: true },
+      ],
+      blank: { label: "", href: "/", image: null },
     },
-    { kind: "image", path: "visual", label: "The one image", help: `Portrait orientation reads best. ${IMAGE_HELP}` },
-    { kind: "textarea", path: "annotation", label: "Handwritten note", help: "Beneath the image. Leave blank for none.", rows: 2 },
+    { kind: "textarea", path: "annotation", label: "Handwritten note", help: "Beneath the doors. Leave blank for none.", rows: 2 },
   ],
 
   work: [
     { kind: "text", path: "heading", label: "Heading", maxLength: 120 },
     { kind: "textarea", path: "intro", label: "Introduction", rows: 2 },
+    { kind: "textarea", path: "annotation", label: "Handwritten note", help: "Top right, beside the heading. Leave blank for none.", rows: 2 },
     {
       kind: "list",
       path: "categories",
       label: "The windows",
       itemLabel: "window",
       titleField: "name",
+      help: "Wide photographic bands. The whole band is the link.",
       fields: [
         { kind: "text", path: "name", label: "Name", maxLength: 80 },
         { kind: "textarea", path: "description", label: "One line", rows: 2 },
-        { kind: "text", path: "cta", label: "Link text", maxLength: 60 },
+        { kind: "text", path: "cta", label: "Link text", help: "Read out to screen readers; the band itself shows an arrow.", maxLength: 60 },
         { kind: "text", path: "href", label: "Goes to", maxLength: 500 },
+        { kind: "image", path: "image", label: "Picture", help: `Dark reads best under white text. ${IMAGE_HELP}`, optional: true },
       ],
-      blank: { name: "", description: "", cta: "Have a look", href: "/" },
+      blank: { name: "", description: "", cta: "Have a look", href: "/", image: null },
     },
   ],
 
@@ -148,6 +154,7 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
     { kind: "text", path: "eyebrow", label: "Eyebrow", help: "The small word above the header.", maxLength: 40 },
     { kind: "text", path: "heading", label: "Header", maxLength: 120 },
     { kind: "textarea", path: "subheading", label: "Sub-header", rows: 2 },
+    { kind: "textarea", path: "annotation", label: "Handwritten note", help: "Sits in the corner of the project picture. Leave blank for none.", rows: 2 },
     { kind: "text", path: "projectsLabel", label: "Projects label", help: "The small heading above the list.", maxLength: 40 },
     {
       kind: "list",
@@ -162,13 +169,27 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
         { kind: "image", path: "media", label: "Media", help: `A screenshot, a photograph, a still. ${IMAGE_HELP}`, optional: true },
         { kind: "text", path: "link.label", label: "Linked text", maxLength: 80 },
         { kind: "text", path: "link.href", label: "Link goes to", help: "Leave blank for no link.", maxLength: 500 },
+        {
+          kind: "list",
+          path: "sections",
+          label: "Numbered sections",
+          itemLabel: "section",
+          titleField: "title",
+          help: "01, 02, 03… The titles list over the picture; the full text follows beneath it.",
+          fields: [
+            { kind: "text", path: "title", label: "Title", maxLength: 80 },
+            { kind: "lines", path: "paragraphs", label: "Paragraphs", help: "One paragraph per row.", rows: 4 },
+          ],
+          blank: { title: "", paragraphs: [""] },
+        },
       ],
-      blank: { name: "", logo: null, description: "", media: null, link: { label: "", href: "" } },
+      blank: { name: "", logo: null, description: "", media: null, link: { label: "", href: "" }, sections: [] },
     },
   ],
 
   now: [
     { kind: "text", path: "heading", label: "Heading", maxLength: 120 },
+    { kind: "image", path: "visual", label: "The picture", help: `Portrait (4:5) reads best. Remove it and the snapshot takes the full width. ${IMAGE_HELP}`, optional: true },
     {
       kind: "list",
       path: "entries",
@@ -183,10 +204,22 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
       blank: { label: "", value: "", href: "" },
     },
     { kind: "text", path: "updated", label: "Updated", help: "e.g. October 2026. Bump it when you change a row.", maxLength: 40 },
-    { kind: "text", path: "annotation", label: "Handwritten note", maxLength: 200 },
+    { kind: "textarea", path: "annotation", label: "Handwritten note", rows: 2 },
   ],
 
   me: [
+    {
+      kind: "section",
+      label: "A little about",
+      help: "The opening: two lines, a tagline, a paragraph or two, and the portrait.",
+      fields: [
+        { kind: "lines", path: "about.heading", label: "Heading", help: "The first row is small; the second is the big one.", rows: 2 },
+        { kind: "text", path: "about.tagline", label: "Tagline", help: "e.g. Founder. Artist. Builder.", maxLength: 120 },
+        { kind: "lines", path: "about.paragraphs", label: "Paragraphs", help: "One paragraph per row.", rows: 5 },
+        { kind: "image", path: "about.image", label: "Portrait", help: `Portrait orientation. ${IMAGE_HELP}` },
+        { kind: "textarea", path: "about.annotation", label: "Handwritten note", help: "Beneath the portrait.", rows: 2 },
+      ],
+    },
     {
       kind: "section",
       label: "Fragments",
@@ -222,7 +255,8 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
               showIf: { path: "kind", equals: "text" },
             },
             { kind: "image", path: "image", label: "Picture", help: IMAGE_HELP, showIf: { path: "kind", equals: "image" } },
-            { kind: "text", path: "caption", label: "Caption (optional)", maxLength: 120, showIf: { path: "kind", equals: "image" } },
+            { kind: "text", path: "caption", label: "Caption (optional)", help: "Sits over the picture, lower left.", maxLength: 120, showIf: { path: "kind", equals: "image" } },
+            { kind: "text", path: "tag", label: "Filter word (optional)", help: "e.g. Thoughts, Creative, Daily. Cards with the same word group behind one filter.", maxLength: 24 },
             {
               kind: "select",
               path: "size",
@@ -234,7 +268,7 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
               ],
             },
           ],
-          blank: { kind: "text", text: "", size: "small", tone: "plain" },
+          blank: { kind: "text", text: "", size: "small", tone: "plain", tag: "" },
         },
       ],
     },
@@ -256,6 +290,7 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
       fields: [
         { kind: "text", path: "chapters.heading", label: "Heading", maxLength: 120 },
         { kind: "textarea", path: "chapters.intro", label: "Introduction", rows: 2 },
+        { kind: "textarea", path: "chapters.annotation", label: "Handwritten note", help: "Bottom right of the timeline. Leave blank for none.", rows: 2 },
         {
           kind: "list",
           path: "chapters.items",
@@ -265,8 +300,9 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
           fields: [
             { kind: "text", path: "title", label: "Title", maxLength: 40 },
             { kind: "text", path: "description", label: "One line", maxLength: 200 },
+            { kind: "image", path: "image", label: "Picture (optional)", help: `Landscape (3:2). ${IMAGE_HELP}`, optional: true },
           ],
-          blank: { title: "", description: "" },
+          blank: { title: "", description: "", image: null },
         },
       ],
     },
@@ -284,8 +320,9 @@ export const PAGE_FIELDS: Record<PageKey, FieldSpec[]> = {
       kind: "section",
       label: "The ending",
       fields: [
-        { kind: "image", path: "ending.image", label: "Landscape image", help: `Wide and restrained. ${IMAGE_HELP}` },
+        { kind: "image", path: "ending.image", label: "Landscape image", help: `Wide and restrained; the words sit over it. ${IMAGE_HELP}` },
         { kind: "lines", path: "ending.heading", label: "Big text", rows: 2 },
+        { kind: "textarea", path: "ending.annotation", label: "Handwritten note", help: "Bottom right. Leave blank for none.", rows: 2 },
         {
           kind: "list",
           path: "ending.links",

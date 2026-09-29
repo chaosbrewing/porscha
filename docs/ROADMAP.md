@@ -56,6 +56,14 @@
 - The signature is now the wax seal (`public/brand/seal.png`), used in
   the header, footer, margins, browser icons and the social preview.
   New opening portrait.
+- The interface follows the boards: photographic doors on the opening
+  screen, wide photographic windows on Work, a full-width project
+  picture with numbered sections on Building, a picture beside the
+  snapshot on Today, and on Me a “little about” opening, filter chips
+  over the fragments, chapters on a timeline and a full-bleed ending
+  with buttons. Every new picture, note and section is editable from
+  Settings → Pages; rows saved before a section existed are filled
+  from the defaults rather than discarded.
 
 
 ### v0.2.0 — the introduction

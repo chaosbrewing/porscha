@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { ArrowLink } from "@/components/public/ArrowLink";
+import { ButtonLink } from "@/components/public/ButtonLink";
 import { Container } from "@/components/public/Container";
 import { Eyebrow } from "@/components/public/Eyebrow";
-import { PMark } from "@/components/public/PMark";
+import { ArrowLink } from "@/components/public/ArrowLink";
 import { getSiteContent } from "@/server/site/service";
 
 export const dynamic = "force-dynamic";
@@ -17,113 +17,164 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+const number = (i: number) => String(i + 1).padStart(2, "0");
+
 /**
- * Eyebrow, header, sub-header, then the projects — each a logo, a
- * name, a description, one piece of media and a linked line.
+ * Eyebrow, header, sub-header, then the projects. Each project opens
+ * as a full-width picture with its name, description, link and the
+ * titles of its numbered sections over it; the sections follow in
+ * full beneath.
  */
 export default async function BuildingPage() {
   const { building } = await getSiteContent();
 
   return (
-    <article className="pb-20 pt-10 sm:pt-16 lg:pb-32">
+    <article className="pb-20 pt-8 sm:pt-12 lg:pb-32">
       <Container>
         <header className="reveal max-w-[44rem]">
-          {building.eyebrow ? <Eyebrow className="mb-5">{building.eyebrow}</Eyebrow> : null}
-          <h1 className="type-display text-[clamp(2.75rem,8vw,5.5rem)]">
-            {building.heading}
-          </h1>
+          {building.eyebrow ? <Eyebrow className="mb-4">{building.eyebrow}</Eyebrow> : null}
+          <h1 className="type-display text-[clamp(2.5rem,6.5vw,4.5rem)]">{building.heading}</h1>
           {building.subheading ? (
-            <p className="type-heading mt-6 text-[clamp(1.375rem,3vw,1.875rem)] text-ink-soft">
+            <p className="mt-5 max-w-[34rem] text-[1.0625rem] leading-relaxed text-ink-soft">
               {building.subheading}
             </p>
           ) : null}
         </header>
       </Container>
 
-      <Container className="mt-16 lg:mt-24">
-        <Eyebrow as="h2" className="border-t border-line pt-6">
+      <Container className="mt-10 lg:mt-14">
+        <Eyebrow as="h2" className="border-t border-line pt-5">
           {building.projectsLabel}
         </Eyebrow>
 
         {building.projects.length > 0 ? (
-          <ol className="mt-4">
+          <ol className="mt-6 space-y-16 lg:space-y-24">
             {building.projects.map((project, i) => (
-              <li
-                key={i}
-                className="reveal-view grid gap-y-8 border-b border-line py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-16"
-              >
-                <div>
-                  <h3 className="flex items-center gap-4">
-                    {project.logo ? (
-                      <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[6px] border border-line bg-paper-raised sm:h-14 sm:w-14">
-                        <Image
-                          src={project.logo.src}
-                          alt={project.logo.alt}
-                          fill
-                          sizes="56px"
-                          className="object-cover"
-                        />
-                      </span>
+              <li key={i} className="reveal-view">
+                <section aria-labelledby={`project-${i}`}>
+                  {/* The picture, with the project's opening over it */}
+                  <div className="relative overflow-hidden rounded-[3px] bg-ink-well text-ink-inverse">
+                    {project.media ? (
+                      <Image
+                        src={project.media.src}
+                        alt={project.media.alt}
+                        fill
+                        priority={i === 0}
+                        sizes="(max-width: 1280px) 100vw, 1200px"
+                        className="object-cover"
+                      />
                     ) : (
                       <span
                         aria-hidden="true"
-                        className="type-heading flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border border-line bg-paper-raised text-xl text-ink-faint sm:h-14 sm:w-14"
-                      >
-                        {project.name.trim().charAt(0)}
-                      </span>
+                        className="absolute inset-0 bg-[radial-gradient(120%_80%_at_20%_0%,#3a352c_0%,#1f1d18_60%)]"
+                      />
                     )}
-                    <span className="type-display text-[clamp(1.75rem,4.5vw,2.75rem)]">
-                      {project.name}
-                    </span>
-                  </h3>
-
-                  {project.description ? (
-                    <div className="mt-6 max-w-[34rem] space-y-4 text-[1.0625rem] leading-relaxed text-ink-soft">
-                      {project.description
-                        .split(/\n\s*\n/)
-                        .map((paragraph, j) => (
-                          <p key={j}>{paragraph}</p>
-                        ))}
-                    </div>
-                  ) : null}
-
-                  {project.link.href && project.link.label ? (
-                    <p className="mt-8">
-                      <ArrowLink href={project.link.href} className="min-h-11 text-lg">
-                        {project.link.label}
-                      </ArrowLink>
-                    </p>
-                  ) : null}
-                </div>
-
-                {project.media ? (
-                  <figure
-                    className="relative w-full overflow-hidden rounded-[3px] bg-paper-sunken"
-                    style={{ aspectRatio: `${project.media.width} / ${project.media.height}` }}
-                  >
-                    <Image
-                      src={project.media.src}
-                      alt={project.media.alt}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover"
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-r from-ink-well/85 via-ink-well/55 to-ink-well/20"
                     />
-                  </figure>
-                ) : null}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-t from-ink-well/70 to-transparent"
+                    />
+
+                    <div className="relative flex min-h-[30rem] flex-col justify-end p-6 sm:min-h-[34rem] sm:p-10 lg:min-h-[38rem] lg:p-14">
+                      <div className="max-w-[36rem]">
+                        {building.eyebrow ? (
+                          <p className="type-meta text-ink-inverse-soft">{building.eyebrow}</p>
+                        ) : null}
+                        <h3 id={`project-${i}`} className="mt-3 flex items-center gap-4">
+                          {project.logo ? (
+                            <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[6px] bg-paper-raised sm:h-12 sm:w-12">
+                              <Image
+                                src={project.logo.src}
+                                alt={project.logo.alt}
+                                fill
+                                sizes="48px"
+                                className="object-cover"
+                              />
+                            </span>
+                          ) : null}
+                          <span className="type-display text-[clamp(2.25rem,6vw,4rem)] text-ink-inverse">
+                            {project.name}
+                          </span>
+                        </h3>
+
+                        {project.description ? (
+                          <div className="mt-5 space-y-3 text-[0.9375rem] leading-relaxed text-ink-inverse-soft sm:text-base">
+                            {project.description.split(/\n\s*\n/).map((paragraph, j) => (
+                              <p key={j} className={j === 0 ? "type-heading text-[1.25rem] text-ink-inverse sm:text-[1.5rem]" : ""}>
+                                {paragraph}
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        {project.link.href && project.link.label ? (
+                          <p className="mt-7">
+                            <ButtonLink href={project.link.href} variant="inverse">
+                              {project.link.label}
+                            </ButtonLink>
+                          </p>
+                        ) : null}
+
+                        {project.sections.length > 0 ? (
+                          <ol className="mt-8 space-y-1.5">
+                            {project.sections.map((section, j) => (
+                              <li key={j} className="flex items-baseline gap-4 text-sm">
+                                <span className="type-meta text-ink-inverse-soft">{number(j)}</span>
+                                <a
+                                  href={`#project-${i}-section-${j}`}
+                                  className="inline-flex min-h-7 items-center text-ink-inverse underline decoration-transparent underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:decoration-ink-inverse-soft"
+                                >
+                                  {section.title}
+                                </a>
+                              </li>
+                            ))}
+                          </ol>
+                        ) : null}
+                      </div>
+
+                      {building.annotation ? (
+                        <p className="type-annotation mt-8 self-end text-right text-[1.125rem] text-ink-inverse-soft sm:text-[1.25rem] lg:absolute lg:bottom-14 lg:right-14 lg:mt-0">
+                          <span className="inline-block -rotate-2">{building.annotation}</span>
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {/* The sections in full */}
+                  {project.sections.length > 0 ? (
+                    <ol className="mt-4 border-t border-line">
+                      {project.sections.map((section, j) => (
+                        <li
+                          key={j}
+                          id={`project-${i}-section-${j}`}
+                          className="grid scroll-mt-24 gap-y-3 border-b border-line py-8 sm:grid-cols-[4rem_minmax(0,1fr)] sm:py-10 lg:grid-cols-[6rem_minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-10"
+                        >
+                          <span className="type-meta text-ink-faint">{number(j)}</span>
+                          <h4 className="type-heading text-[1.5rem] sm:text-[1.75rem]">{section.title}</h4>
+                          <div className="space-y-4 text-[1.0625rem] leading-relaxed text-ink-soft sm:col-start-2 lg:col-start-3">
+                            {section.paragraphs.map((paragraph, k) => (
+                              <p key={k}>{paragraph}</p>
+                            ))}
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : null}
+                </section>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="mt-6 max-w-[34rem] leading-relaxed text-ink-soft">
-            Nothing to show yet.
-          </p>
+          <p className="mt-6 max-w-[34rem] leading-relaxed text-ink-soft">Nothing to show yet.</p>
         )}
 
         <footer className="mt-12 flex flex-wrap items-center gap-x-10 gap-y-4 lg:mt-16">
           <ArrowLink href="/now" className="min-h-11 text-lg">
             What’s current
           </ArrowLink>
-          <PMark className="ml-auto text-2xl text-ink-faint" />
         </footer>
       </Container>
     </article>

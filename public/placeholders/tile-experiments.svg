@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2000" width="1600" height="2000" role="img" aria-label="">
+  <defs>
+    <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#57524a"/>
+      <stop offset="0.55" stop-color="#2c2922"/>
+      <stop offset="1" stop-color="#1c1a16"/>
+    </linearGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.09"/></feComponentTransfer></filter>
+  </defs>
+  <rect width="1600" height="2000" fill="url(#fog)"/>
+  <path d="M0 1240 C 300 1120, 520 1180, 800 1090 S 1300 980, 1600 1060 L1600 2000 L0 2000 Z" fill="#3a4429" opacity="0.75"/>
+  <path d="M0 1420 C 400 1340, 700 1400, 1000 1330 S 1400 1260, 1600 1300 L1600 2000 L0 2000 Z" fill="#232a1b" opacity="0.9"/>
+  <circle cx="1180" cy="520" r="120" fill="#e9e2d3" opacity="0.18"/>
+  <rect width="1600" height="2000" filter="url(#grain)"/>
+</svg>

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArtworkFrame } from "@/components/public/ArtworkFrame";
+import { ButtonLink } from "@/components/public/ButtonLink";
 import { Container } from "@/components/public/Container";
-import { PageIntro } from "@/components/public/PageIntro";
+import { Doodle } from "@/components/public/Doodle";
 import { PMark } from "@/components/public/PMark";
 import { Eyebrow } from "@/components/public/Eyebrow";
 import {
@@ -17,7 +18,46 @@ export const dynamic = "force-dynamic";
 
 const INTRO = "My artwork and visual practice.";
 const NOTE =
-  "A space for exploration and expression, across whatever medium the idea needs — paint, pixels, paper, a camera.";
+  "A space for exploration, expression and everything in between — paint, pixels, paper, a camera.";
+const ASIDE = "Different mediums.\nSame thread.";
+
+/**
+ * The opening collage: five pieces in a loose arrangement beside the
+ * introduction. Each frame crops to a fixed shape so the composition
+ * holds whatever hangs there; the full wall below shows every piece
+ * at its own proportions.
+ */
+const COLLAGE: Array<{ cell: string; aspect: string; sizes: string }> = [
+  { cell: "col-span-3 row-span-2", aspect: "4/5", sizes: "(max-width: 1024px) 50vw, 360px" },
+  { cell: "col-span-3", aspect: "3/2", sizes: "(max-width: 1024px) 50vw, 360px" },
+  { cell: "col-span-3", aspect: "3/2", sizes: "(max-width: 1024px) 50vw, 360px" },
+  { cell: "col-span-3", aspect: "1/1", sizes: "(max-width: 1024px) 50vw, 360px" },
+  { cell: "col-span-3", aspect: "1/1", sizes: "(max-width: 1024px) 50vw, 360px" },
+];
+
+function Collage({ pieces }: { pieces: ResolvedPiece[] }) {
+  return (
+    <ul className="grid grid-cols-6 gap-3 sm:gap-4">
+      {pieces.map((piece, i) => {
+        const slot = COLLAGE[i];
+        return (
+          <li key={piece.slug} className={slot.cell}>
+            <Link href={`/art/${piece.slug}`} className="group block h-full" aria-label={piece.title}>
+              <ArtworkFrame
+                src={piece.media}
+                alt={piece.alt}
+                aspect={slot.aspect}
+                sizes={slot.sizes}
+                priority={i < 2}
+                className="h-full transition-transform duration-[var(--duration-normal)] ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5 motion-reduce:transform-none"
+              />
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 export const metadata: Metadata = {
   title: "Obra",
@@ -135,21 +175,39 @@ export default async function ArtPage() {
   const settings = withUsedCategories(stored, pieces);
   const groups = groupByCategory(pieces, settings);
 
+  const collage = pieces.slice(0, COLLAGE.length);
+
   return (
-    <Container className="pb-20 pt-10 sm:pt-16 lg:pb-32">
-      <PageIntro heading="Obra" intro={INTRO}>
-        <p className="mt-4 max-w-[34rem] leading-relaxed text-ink-faint">
-          {NOTE}
-        </p>
-      </PageIntro>
+    <Container className="pb-20 pt-8 sm:pt-12 lg:pb-32">
+      <header className="grid gap-y-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-16">
+        <div className="reveal">
+          <h1 className="type-display text-[clamp(2.5rem,6.5vw,4.5rem)]">Obra</h1>
+          <p className="type-heading mt-5 max-w-[24rem] text-[1.25rem] sm:text-[1.5rem]">{INTRO}</p>
+          <p className="mt-5 max-w-[26rem] text-[1.0625rem] leading-relaxed text-ink-soft">{NOTE}</p>
+          {pieces.length > 0 ? (
+            <p className="mt-8">
+              <ButtonLink href="#wall">View gallery</ButtonLink>
+            </p>
+          ) : null}
+          <p className="type-annotation mt-10 flex items-end gap-2 text-[1.125rem] sm:text-[1.25rem]">
+            <span className="-rotate-3">{ASIDE}</span>
+            <Doodle direction="down-right" className="-mb-1 shrink-0" />
+          </p>
+        </div>
+        {collage.length > 0 ? (
+          <div className="reveal" style={{ ["--reveal-step" as string]: 1 }}>
+            <Collage pieces={collage} />
+          </div>
+        ) : null}
+      </header>
 
       {groups.length === 1 ? (
-        <div className="mt-16 lg:mt-28">
-          <Wall pieces={groups[0].pieces} priorityFirst />
+        <div id="wall" className="mt-20 scroll-mt-8 lg:mt-28">
+          <Wall pieces={groups[0].pieces} priorityFirst={false} />
         </div>
       ) : groups.length > 1 ? (
-        <div className="mt-16 space-y-24 lg:mt-24 lg:space-y-36">
-          {groups.map((group, groupIndex) => (
+        <div id="wall" className="mt-20 scroll-mt-8 space-y-24 lg:mt-28 lg:space-y-36">
+          {groups.map((group) => (
             <section key={group.key} aria-labelledby={`wall-${group.key}`}>
               <div className="mb-10 flex items-baseline gap-4 border-t border-line pt-6 lg:mb-14">
                 <h2 id={`wall-${group.key}`} className="type-heading text-2xl sm:text-3xl">
@@ -157,7 +215,7 @@ export default async function ArtPage() {
                 </h2>
                 <Eyebrow as="span">{group.pieces.length}</Eyebrow>
               </div>
-              <Wall pieces={group.pieces} priorityFirst={groupIndex === 0} />
+              <Wall pieces={group.pieces} priorityFirst={false} />
             </section>
           ))}
         </div>

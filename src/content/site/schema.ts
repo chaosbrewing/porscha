@@ -8,6 +8,10 @@ import { z } from "zod";
  * `site_settings`, validated against these schemas on the way in and
  * on the way out, so a bad row can never reach a page. Shared by the
  * server and the console editor, so no server-only imports here.
+ *
+ * Fields added after a page was first saved carry a `.default()` (or
+ * are filled from the defaults by `resolvePage`), so a stored row
+ * written against an older shape keeps validating.
  */
 
 /** Internal route, absolute https URL, or mailto. */
@@ -50,11 +54,15 @@ export const imageSchema = z.object({
   height: z.number().int().positive(),
 });
 
+/** An image that may be left out; the layout closes up around it. */
+const optionalImage = imageSchema.nullable().default(null);
+
 const line = z.string().trim().max(200);
 const lines = z.array(line).min(1).max(6);
 const paragraph = z.string().trim().max(1200);
 const heading = z.string().trim().min(1, "Needs a heading").max(120);
 const intro = z.string().trim().max(400);
+const note = z.string().trim().max(200);
 
 /* ------------------------------ Global ---------------------------- */
 
@@ -68,12 +76,15 @@ export const globalSchema = z.object({
 
 /* ------------------------------- Home ----------------------------- */
 
+/**
+ * The opening screen: the name, two lines, a handwritten question,
+ * and a row of doors — each a photograph with a label.
+ */
 export const homeSchema = z.object({
   intro: lines,
   question: z.string().trim().min(1).max(120),
-  paths: z.array(linkSchema).min(1).max(6),
-  visual: imageSchema,
-  annotation: z.string().trim().max(200),
+  paths: z.array(linkSchema.extend({ image: optionalImage })).min(1).max(6),
+  annotation: note,
 });
 
 /* ------------------------------- Work ----------------------------- */
@@ -81,6 +92,7 @@ export const homeSchema = z.object({
 export const workSchema = z.object({
   heading,
   intro,
+  annotation: note.default(""),
   categories: z
     .array(
       z.object({
@@ -88,6 +100,7 @@ export const workSchema = z.object({
         description: z.string().trim().max(300),
         cta: z.string().trim().min(1).max(60),
         href: hrefSchema,
+        image: optionalImage,
       }),
     )
     .min(1)
@@ -114,25 +127,35 @@ export const experimentsSchema = z.object({
 /**
  * What I'm building: an eyebrow, a header, a sub-header, then the
  * projects. Each project is a logo, a name, a description, one piece
- * of media and a linked line. Logo and media are optional; a blank
- * link address shows no link.
+ * of media, a linked line and a few numbered sections. Logo and media
+ * are optional; a blank link address shows no link.
  */
 export const buildingSchema = z.object({
   eyebrow: z.string().trim().max(40),
   heading,
   subheading: z.string().trim().max(300),
+  annotation: note.default(""),
   projectsLabel: z.string().trim().min(1).max(40),
   projects: z
     .array(
       z.object({
         name: z.string().trim().min(1, "A project needs a name").max(80),
-        logo: imageSchema.nullable(),
+        logo: optionalImage,
         description: z.string().trim().max(2000),
-        media: imageSchema.nullable(),
+        media: optionalImage,
         link: z.object({
           label: z.string().trim().max(80),
           href: z.union([hrefSchema, z.literal("")]),
         }),
+        sections: z
+          .array(
+            z.object({
+              title: z.string().trim().min(1, "A section needs a title").max(80),
+              paragraphs: z.array(paragraph).min(1).max(4),
+            }),
+          )
+          .max(6)
+          .default([]),
       }),
     )
     .max(12),
@@ -142,8 +165,9 @@ export const buildingSchema = z.object({
 
 export const nowSchema = z.object({
   heading,
-  annotation: z.string().trim().max(200),
+  annotation: note,
   updated: z.string().trim().min(1).max(40),
+  visual: optionalImage,
   entries: z
     .array(
       z.object({
@@ -159,22 +183,34 @@ export const nowSchema = z.object({
 
 const sizeSchema = z.enum(["small", "wide", "tall"]);
 
+/** A short word that groups fragments behind a filter; blank for none. */
+const tag = z.string().trim().max(24).default("");
+
 export const fragmentSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("text"),
     text: z.string().trim().min(1, "A fragment needs its line").max(200),
     size: z.enum(["small", "wide"]),
     tone: z.enum(["plain", "annotation"]),
+    tag,
   }),
   z.object({
     kind: z.literal("image"),
     image: imageSchema,
     caption: z.string().trim().max(120),
     size: sizeSchema,
+    tag,
   }),
 ]);
 
 export const meSchema = z.object({
+  about: z.object({
+    heading: lines,
+    tagline: z.string().trim().max(120),
+    paragraphs: z.array(paragraph).min(1).max(4),
+    image: imageSchema,
+    annotation: note,
+  }),
   fragments: z.object({
     heading,
     intro,
@@ -183,17 +219,19 @@ export const meSchema = z.object({
   making: z.object({
     image: imageSchema,
     overlay: lines,
-    annotation: z.string().trim().max(200),
+    annotation: note,
     cta: linkSchema,
   }),
   chapters: z.object({
     heading,
     intro,
+    annotation: note.default(""),
     items: z
       .array(
         z.object({
           title: z.string().trim().min(1).max(40),
           description: z.string().trim().max(200),
+          image: optionalImage,
         }),
       )
       .max(8),
@@ -201,13 +239,14 @@ export const meSchema = z.object({
   littleThings: z.object({
     heading,
     intro,
-    annotation: z.string().trim().max(200),
+    annotation: note,
     items: z.array(line).max(20),
   }),
   ending: z.object({
     heading: lines,
     links: z.array(linkSchema).max(6),
     image: imageSchema,
+    annotation: note.default(""),
   }),
 });
 
@@ -249,10 +288,10 @@ export type SiteContent = {
 /** Where each page lives, for the editor's preview and "open" link. */
 export const PAGE_META: Record<PageKey, { label: string; path: string; blurb: string }> = {
   home: { label: "Home", path: "/", blurb: "The opening screen: a name, two lines, a question, four doors." },
-  work: { label: "My work", path: "/work", blurb: "The three windows: Sulit, Obra, Experiments." },
-  building: { label: "What I’m building", path: "/building", blurb: "Eyebrow, header, sub-header, then the projects: logo, name, description, media, a linked line." },
+  work: { label: "My work", path: "/work", blurb: "Things I’ve made: Sulit, Obra, Experiments, each a window." },
+  building: { label: "What I’m building", path: "/building", blurb: "Eyebrow, header, sub-header, then the projects: logo, name, description, media, a linked line, numbered sections." },
   experiments: { label: "Experiments", path: "/work/experiments", blurb: "Selected products, ideas and things explored." },
   now: { label: "Today", path: "/now", blurb: "The living snapshot. Bump the date when you change it." },
-  me: { label: "Who I am", path: "/me", blurb: "Fragments, Making, Selected chapters, The little things, the ending." },
+  me: { label: "Who I am", path: "/me", blurb: "A little about, Fragments, Making, Selected chapters, The little things, the ending." },
   global: { label: "Site-wide", path: "/", blurb: "Name, description, navigation, social links, how to get in touch." },
 };
