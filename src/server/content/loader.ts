@@ -10,10 +10,10 @@ import contentBundle from "./content-bundle.json";
 /**
  * File-backed content system.
  *
- * Notes, lab experiments, gallery items, project stories, and the
- * biography live as Markdown files under `src/content/`. Frontmatter is
- * validated with zod so a malformed file fails loudly at build/dev time
- * instead of rendering garbage.
+ * Gallery pieces live as Markdown files under `src/content/gallery/`.
+ * Frontmatter is validated with zod so a malformed file fails loudly at
+ * build/dev time instead of rendering garbage. (Everything else a
+ * visitor reads lives as typed data in `src/content/site/`.)
  *
  * In the Node runtime the files are read from disk. The Cloudflare
  * Workers runtime has no filesystem, so it reads the identical raw file
@@ -52,14 +52,6 @@ function readRawDir(dir: string): Record<string, string> {
   return out;
 }
 
-/** Raw file text for a single top-level content file, if present. */
-function readRawFile(rel: string): string | undefined {
-  if (isCloudflareWorkers) return bundledFiles[rel];
-  const file = path.join(CONTENT_ROOT, rel);
-  if (!fs.existsSync(file)) return undefined;
-  return fs.readFileSync(file, "utf8");
-}
-
 function readCollection(dir: string): Array<{
   slug: string;
   data: Record<string, unknown>;
@@ -71,76 +63,6 @@ function readCollection(dir: string): Array<{
       const { data, content } = matter(raw);
       return { slug: file.replace(/\.mdx?$/, ""), data, content };
     });
-}
-
-/* ----------------------------- Notes ----------------------------- */
-
-const noteFrontmatter = z.object({
-  title: z.string(),
-  date: z.coerce.date(),
-  kind: z
-    .enum(["observation", "devlog", "discovery", "design", "essay", "reflection"])
-    .default("observation"),
-  project: z.string().optional(),
-  draft: z.boolean().default(false),
-});
-
-export type Note = z.infer<typeof noteFrontmatter> & {
-  slug: string;
-  html: string;
-  excerpt: string;
-};
-
-export function getNotes(): Note[] {
-  return readCollection("notes")
-    .map(({ slug, data, content }) => {
-      const fm = noteFrontmatter.parse(data);
-      const text = content.trim();
-      return {
-        ...fm,
-        slug,
-        html: renderMarkdown(text),
-        excerpt: text.split(/\n\s*\n/)[0]?.replace(/[#*_`>]/g, "").trim() ?? "",
-      };
-    })
-    .filter((n) => !n.draft)
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-}
-
-export function getNote(slug: string): Note | undefined {
-  return getNotes().find((n) => n.slug === slug);
-}
-
-/* ------------------------- Lab experiments ------------------------ */
-
-const labFrontmatter = z.object({
-  number: z.number().int(),
-  name: z.string(),
-  hypothesis: z.string(),
-  result: z.string().optional(),
-  status: z.enum(["running", "concluded", "abandoned", "resting"]).default("running"),
-  project: z.string().optional(),
-  link: z.string().url().optional(),
-  date: z.coerce.date(),
-});
-
-export type LabExperiment = z.infer<typeof labFrontmatter> & {
-  slug: string;
-  html: string;
-};
-
-export function getLabExperiments(): LabExperiment[] {
-  return readCollection("lab")
-    .map(({ slug, data, content }) => ({
-      ...labFrontmatter.parse(data),
-      slug,
-      html: renderMarkdown(content.trim()),
-    }))
-    .sort((a, b) => b.number - a.number);
-}
-
-export function getLabExperiment(slug: string): LabExperiment | undefined {
-  return getLabExperiments().find((e) => e.slug === slug);
 }
 
 /* --------------------------- Gallery ------------------------------ */
@@ -161,6 +83,12 @@ const galleryFrontmatter = z.object({
   project: z.string().optional(),
   /** Aspect ratio hint for layout, e.g. "4/5", "3/2". */
   aspect: z.string().default("4/5"),
+  /**
+   * A stand-in that holds the wall until real work is hung. Placeholder
+   * pieces are shown only while no real piece is visible; see
+   * `src/server/gallery/service.ts`.
+   */
+  placeholder: z.boolean().default(false),
 });
 
 export type GalleryPiece = z.infer<typeof galleryFrontmatter> & {
@@ -180,39 +108,4 @@ export function getGalleryPieces(): GalleryPiece[] {
 
 export function getGalleryPiece(slug: string): GalleryPiece | undefined {
   return getGalleryPieces().find((p) => p.slug === slug);
-}
-
-/* ------------------------ Project stories ------------------------- */
-
-const projectStoryFrontmatter = z.object({
-  project: z.string(),
-  why: z.string().optional(),
-  lessons: z.array(z.string()).default([]),
-  screenshots: z
-    .array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() }))
-    .default([]),
-});
-
-export type ProjectStory = z.infer<typeof projectStoryFrontmatter> & {
-  slug: string;
-  html: string;
-};
-
-export function getProjectStory(slug: string): ProjectStory | undefined {
-  const entry = readCollection("projects").find((e) => e.slug === slug);
-  if (!entry) return undefined;
-  return {
-    ...projectStoryFrontmatter.parse(entry.data),
-    slug: entry.slug,
-    html: renderMarkdown(entry.content.trim()),
-  };
-}
-
-/* --------------------------- Biography ---------------------------- */
-
-export function getBiography(): { html: string } | undefined {
-  const raw = readRawFile("porscha.md");
-  if (raw === undefined) return undefined;
-  const { content } = matter(raw);
-  return { html: renderMarkdown(content.trim()) };
 }

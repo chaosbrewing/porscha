@@ -52,8 +52,8 @@ export function GalleryRemovedList({ pieces }: { pieces: RemovedPiece[] }) {
     <div>
       <h2 className="type-heading text-xl">Removed</h2>
       <p className="mt-2 text-sm text-ink-soft">
-        Off the site, but still in the repo as Markdown. Delete the file in{" "}
-        <code>src/content/gallery</code> to be rid of a piece for good.
+        Off the site, but kept here in case it was a slip. Restore a piece to
+        hang it again.
       </p>
 
       {error ? (

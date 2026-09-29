@@ -24,6 +24,10 @@ export type AdminPiece = {
   origin: "file" | "console";
   hidden: boolean;
   featured: boolean;
+  forSale: boolean;
+  sold: boolean;
+  /** A price is set, so the sale toggle can be switched on. */
+  hasPrice: boolean;
 };
 
 export function GalleryPieceList({
@@ -52,6 +56,7 @@ export function GalleryPieceList({
             hidden: next.hidden ?? piece.hidden,
             featured: next.featured ?? piece.featured,
             position: null,
+            ...(next.forSale === undefined ? {} : { forSale: next.forSale }),
           }),
         },
       );
@@ -195,6 +200,11 @@ export function GalleryPieceList({
                 {piece.hidden ? (
                   <span className="type-meta text-ink-faint">Hidden</span>
                 ) : null}
+                {piece.sold ? (
+                  <span className="type-meta text-ink-faint">Sold</span>
+                ) : piece.forSale ? (
+                  <span className="type-meta text-accent-deep">For sale</span>
+                ) : null}
               </span>
               <span className="mt-0.5 block text-xs text-ink-faint">
                 {piece.categoryLabel} · {piece.year} ·{" "}
@@ -248,6 +258,26 @@ export function GalleryPieceList({
                 />
                 Feature
               </label>
+              <label
+                className="flex items-center gap-2"
+                title={
+                  piece.sold
+                    ? "Already sold"
+                    : piece.hasPrice
+                      ? "Offer this original for sale"
+                      : "Set a price in Edit first"
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={piece.forSale}
+                  disabled={busy === piece.slug || piece.sold || !piece.hasPrice}
+                  onChange={(e) =>
+                    patchOverlay(piece, { forSale: e.target.checked })
+                  }
+                />
+                For sale
+              </label>
 
               {piece.origin === "console" ? (
                 <Link
@@ -279,9 +309,7 @@ export function GalleryPieceList({
 
       {order.length === 0 ? (
         <p className="py-8 text-sm text-ink-soft">
-          No pieces yet. Add one, or drop a Markdown file in
-          {" "}
-          <code>src/content/gallery</code>.
+          No pieces yet. Add one above.
         </p>
       ) : null}
 

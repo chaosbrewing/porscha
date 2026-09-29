@@ -41,14 +41,14 @@ export default async function ConsoleLayout({
           <p className="mt-4 text-ink-soft leading-relaxed">
             You&rsquo;re signed in as{" "}
             <strong>{access.user.githubLogin}</strong>, but this console
-            belongs to Porscha. The rest of the workshop is open, though.
+            belongs to Porscha. The rest of the site is open, though.
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <Link
               href="/"
               className="bg-ink-well text-ink-inverse px-5 py-3 text-sm rounded-[3px] hover:bg-ink-well-soft transition-colors duration-[var(--duration-micro)]"
             >
-              Back to the workshop
+              Back to the site
             </Link>
             <form action="/api/auth/logout" method="post">
               <button
@@ -66,17 +66,21 @@ export default async function ConsoleLayout({
 
   return (
     <ConsoleLive>
-      <a href="#console-main" className="skip-link">
-        Skip to content
-      </a>
-      <ConsoleNav
-        userName={access.user.displayName ?? access.user.githubLogin}
-      />
-      <main id="console-main" className="md:pl-56 flex-1">
-        <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 md:py-12">
-          {children}
-        </div>
-      </main>
+      {/* data-console scopes the after-dark tokens (globals.css) to the
+          console; the public site stays single-theme. */}
+      <div data-console className="flex flex-1 flex-col bg-paper text-ink">
+        <a href="#console-main" className="skip-link">
+          Skip to content
+        </a>
+        <ConsoleNav
+          userName={access.user.displayName ?? access.user.githubLogin}
+        />
+        <main id="console-main" className="md:pl-56 flex-1">
+          <div className="mx-auto max-w-5xl px-4 sm:px-8 py-8 md:py-12">
+            {children}
+          </div>
+        </main>
+      </div>
     </ConsoleLive>
   );
 }

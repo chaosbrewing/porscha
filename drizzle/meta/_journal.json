@@ -50,6 +50,13 @@
       "when": 1787025853222,
       "tag": "0006_drop_edition_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790626002552,
+      "tag": "0007_adopt_file_pieces",
+      "breakpoints": true
     }
   ]
 }

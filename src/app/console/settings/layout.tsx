@@ -11,7 +11,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     <div>
       <h1 className="type-display text-4xl sm:text-5xl">Settings</h1>
       <p className="mt-3 text-ink-soft">
-        How the public rooms of the workshop present themselves.
+        Every word, list and picture on the public site, and the wall of work.
       </p>
       <SettingsNav />
       <div className="mt-8">{children}</div>

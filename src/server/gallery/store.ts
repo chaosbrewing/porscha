@@ -109,6 +109,7 @@ export async function upsertOverlay(
       hidden: overlay.hidden,
       featured: overlay.featured,
       position: overlay.position,
+      ...(overlay.forSale === undefined ? {} : { forSale: overlay.forSale }),
     })
     .onConflictDoUpdate({
       target: schema.galleryItems.slug,
@@ -116,6 +117,7 @@ export async function upsertOverlay(
         hidden: overlay.hidden,
         featured: overlay.featured,
         position: overlay.position,
+        ...(overlay.forSale === undefined ? {} : { forSale: overlay.forSale }),
         updatedAt: new Date(),
       },
     });
@@ -129,11 +131,11 @@ export async function insertPiece(input: GalleryPieceInput): Promise<boolean> {
       slug: input.slug,
       title: input.title,
       category: input.category,
-      year: input.year,
+      year: input.year || null,
       mediaPath: input.media,
-      // Alt text is no longer asked for; the title is the honest
-      // description of the piece, and an empty alt would be worse.
-      alt: input.title,
+      // A blank description falls back to the title; an empty alt
+      // would be worse than either.
+      alt: input.alt || input.title,
       aspect: input.aspect || null,
       note: input.note || null,
       relatedProject: null,
@@ -157,11 +159,11 @@ export async function updatePiece(
     .set({
       title: input.title,
       category: input.category,
-      year: input.year,
+      year: input.year || null,
       mediaPath: input.media,
-      // Alt text is no longer asked for; the title is the honest
-      // description of the piece, and an empty alt would be worse.
-      alt: input.title,
+      // A blank description falls back to the title; an empty alt
+      // would be worse than either.
+      alt: input.alt || input.title,
       aspect: input.aspect || null,
       note: input.note || null,
       relatedProject: null,

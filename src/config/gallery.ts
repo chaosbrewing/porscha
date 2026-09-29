@@ -11,7 +11,7 @@
  * import of it from a client component drags the whole content
  * pipeline into the client bundle.
  */
-export const SUGGESTED_CATEGORIES = ["digital", "canvas"] as const;
+export const SUGGESTED_CATEGORIES = ["canvas", "modelling", "textile"] as const;
 
 /** Categories still referenced by file-backed Markdown pieces. */
 export const LEGACY_CATEGORIES = [

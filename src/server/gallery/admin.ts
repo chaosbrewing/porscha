@@ -91,6 +91,16 @@ export async function savePieceOverlay(
   if (!filePiece && !existing) {
     return { ok: false, status: 404, error: `No piece named “${slug}”.` };
   }
+  if (overlay.forSale && !((existing?.priceCents ?? 0) > 0)) {
+    return {
+      ok: false,
+      status: 400,
+      error: "Set a price on the piece (Edit) before offering it for sale.",
+    };
+  }
+  if (overlay.forSale && existing?.soldAt) {
+    return { ok: false, status: 409, error: "This piece has already sold." };
+  }
 
   await upsertOverlay(
     slug,
@@ -103,6 +113,7 @@ export async function savePieceOverlay(
   await record(actorId, "piece_overlay_saved", slug, {
     hidden: overlay.hidden,
     featured: overlay.featured,
+    ...(overlay.forSale === undefined ? {} : { forSale: overlay.forSale }),
   });
   return { ok: true };
 }

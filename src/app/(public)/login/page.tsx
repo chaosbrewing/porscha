@@ -37,10 +37,10 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto max-w-md px-5 sm:px-8 py-24">
-      <h1 className="type-display text-4xl">The workshop door</h1>
+      <h1 className="type-display text-4xl">The side door</h1>
       <p className="mt-4 text-ink-soft leading-relaxed">
-        This entrance is for Porscha. Visitors are warmly invited to everything
-        else — the workshop, lab, gallery, and notes are all open.
+        This entrance is for Porscha. Everything else on the site is open —
+        the work, the art, and what&rsquo;s current.
       </p>
 
       {errorMessage ? (

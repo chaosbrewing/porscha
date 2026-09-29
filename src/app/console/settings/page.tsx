@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Settings has one section so far; go straight to it. */
+/** Pages first: it is where most editing happens. */
 export default function SettingsIndexPage() {
-  redirect("/console/settings/gallery");
+  redirect("/console/settings/pages");
 }

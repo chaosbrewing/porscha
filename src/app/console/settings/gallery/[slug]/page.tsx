@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { readItem } from "@/server/gallery/store";
+import { getGalleryAdminView, withUsedCategories } from "@/server/gallery/service";
 import { GalleryPieceForm } from "@/components/console/GalleryPieceForm";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +14,12 @@ export default async function EditGalleryPiecePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const row = await readItem(slug);
+  const [row, view] = await Promise.all([readItem(slug), getGalleryAdminView()]);
 
   // Only console-authored pieces are editable here; a file-backed
   // piece's content belongs to its Markdown file.
   if (!row || row.origin !== "console") notFound();
+  const settings = withUsedCategories(view.settings, [...view.pieces, ...view.removed]);
 
   return (
     <div>
@@ -30,6 +32,7 @@ export default async function EditGalleryPiecePage({
             title: row.title,
             category: row.category,
             year: row.year ?? "",
+            alt: row.alt === row.title ? "" : (row.alt ?? ""),
             media: row.mediaPath ?? "",
             aspect: row.aspect ?? "4/5",
             note: row.note ?? "",
@@ -39,6 +42,7 @@ export default async function EditGalleryPiecePage({
             price: row.priceCents === null ? "" : (row.priceCents / 100).toFixed(2),
             currency: row.currency ?? "",
           }}
+          categories={settings.categories.map((c) => ({ key: c.key, label: c.label }))}
         />
       </div>
     </div>

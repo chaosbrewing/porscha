@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { PublicProjectView } from "@/types/core";
-import { ProjectEntry } from "@/components/public/ProjectEntry";
+import { PublicProjectPreview } from "@/components/console/PublicProjectPreview";
 
 /**
  * Project administration form, used by both create and edit. Submits
@@ -872,13 +872,13 @@ export function ProjectForm({
             ) : preview.state === "error" ? (
               <p className="py-6 text-sm text-alert">{preview.message}</p>
             ) : (
-              <ProjectEntry project={preview.view} />
+              <PublicProjectPreview project={preview.view} />
             )}
           </div>
           <p className="mt-3 text-xs text-ink-faint leading-relaxed">
-            Rendered by the same serializer and component as the public
-            workshop. GitHub-derived signals appear once a synced snapshot
-            exists.
+            Rendered by the real public serializer, so this is exactly
+            what the public API would let out. GitHub-derived signals
+            appear once a synced snapshot exists.
           </p>
         </div>
       </aside>

@@ -2,11 +2,12 @@
 
 ## Product summary
 
-porscha.today is a living digital workshop with two personalities:
+porscha.today has two personalities:
 
-1. **Public workshop** — an editorial site where visitors learn who
-   Porscha is, what she makes, and what's currently moving, with
-   curated near-realtime progress derived from GitHub.
+1. **Public site** — a calm editorial introduction: selected work,
+   Obra (art), what Porscha is building, a Currently snapshot, and
+   fragments of who she is. Controlled discovery, not a biography.
+   Nothing GitHub-derived is rendered publicly any more.
 2. **Private console** — after authentication, the same application is
    Porscha's operational headquarters: what moved today, what needs
    attention, CI health, PRs, issues, milestones, releases.
@@ -16,8 +17,8 @@ plus explicitly allowlisted collaborators (console).
 
 ## Core journeys
 
-**Public:** land on `/` → immediately understand who/what/current →
-explore Workshop, Apps, Lab, Gallery, Notes, Porscha.
+**Public:** land on `/` → "What brings you here?" → My work / My art /
+What I'm building / Who I am. Each is a window into the same person.
 
 **Owner:** land on `/console` (redirects to `/console/overview`) →
 within seconds answer: what moved, what needs me, are builds healthy,
@@ -53,14 +54,19 @@ Key modules (all under `src/`):
 | Path | Responsibility |
 | --- | --- |
 | `config/registry.ts` | The explicit project registry + visibility flags |
-| `config/site.ts` | Site settings, workshop state, nav |
+| `config/site.ts` | Owner name shared with the console |
+| `content/site/*.ts` | Schemas and typed defaults for every public page |
+| `server/site/` | Page content store (`site_settings`), read model, admin |
+| `components/console/site-editor/` | Settings → Pages: field specs, generic editor, preview |
+| `server/media/strip.ts` | EXIF/XMP/IPTC removal on every console upload |
 | `server/env.ts` | zod-validated environment, parsed once |
 | `server/db/` | Drizzle schema + pooled client |
 | `server/github/` | verify, normalize, ingest, REST client, sync |
 | `server/projects/` | store (SQL), progress, attention, transformers, service |
 | `server/auth/` | session (jose), GitHub OAuth, guards |
 | `server/realtime/bus.ts` | runtime-aware event bus feeding SSE (EventEmitter on Node, Durable Object on Workers) |
-| `server/content/loader.ts` | Markdown collections (notes/lab/gallery/bio) |
+| `server/content/loader.ts` | Markdown gallery pieces (file-backed) |
+| `server/gallery/service.ts` | Gallery read model: files + console rows, hidden/placeholder rules |
 | `app/(public)/` | public routes |
 | `app/console/` | console routes (guarded in layout AND per-API) |
 | `app/api/` | auth, webhook, public API, console API, SSE |

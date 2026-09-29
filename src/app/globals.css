@@ -3,9 +3,13 @@
 /*
  * porscha.today design tokens
  *
- * Visual thesis: editorial studio + inventor's workbench + calm
- * operational headquarters. Warm paper surfaces, dark ink, a single
- * oxide accent, hairline rules, generous whitespace.
+ * Digital editorial journal × small art exhibition × personal notebook
+ * × quiet personal operating system. Warm ivory paper, near-black ink,
+ * one deep olive accent, hairline rules, generous whitespace.
+ *
+ * The public site is single-theme on purpose: photography and artwork
+ * sit on ivory. The private console keeps its after-dark variant,
+ * scoped to `[data-console]` further down.
  */
 
 @theme {
@@ -16,30 +20,30 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo,
     monospace;
 
-  /* Surfaces — warm paper, mostly flat */
-  --color-paper: #f5f0e6;
-  --color-paper-raised: #fbf8f1;
-  --color-paper-sunken: #ede6d7;
-  --color-ink-well: #211d19;
-  --color-ink-well-soft: #2e2924;
+  /* Surfaces — warm ivory, flat */
+  --color-paper: #f3eee3;
+  --color-paper-raised: #faf7f0;
+  --color-paper-sunken: #e9e2d3;
+  --color-ink-well: #1f1d18;
+  --color-ink-well-soft: #2c2922;
 
   /* Text */
-  --color-ink: #232019;
-  --color-ink-soft: #5b544a;
-  --color-ink-faint: #8b8375;
-  --color-ink-inverse: #f3efe6;
-  --color-ink-inverse-soft: #b5ac9d;
+  --color-ink: #1c1a16;
+  --color-ink-soft: #57524a;
+  --color-ink-faint: #66615a;
+  --color-ink-inverse: #f3eee3;
+  --color-ink-inverse-soft: #b8b1a3;
 
   /* Lines */
-  --color-line: #e2dccd;
-  --color-line-strong: #c5bca9;
+  --color-line: #ddd6c6;
+  --color-line-strong: #bfb6a2;
 
-  /* Accent — one restrained oxide rust */
-  --color-accent: #bc5222;
-  --color-accent-deep: #96401a;
-  --color-accent-wash: #f3e4da;
+  /* Accent — deep olive */
+  --color-accent: #4a5638;
+  --color-accent-deep: #3a4429;
+  --color-accent-wash: #e4e7d8;
 
-  /* Semantic states */
+  /* Semantic states (console) */
   --color-ok: #3f7a4d;
   --color-ok-wash: #e4ecdd;
   --color-warn: #9c6414;
@@ -50,101 +54,75 @@
   /* Motion */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-micro: 140ms;
-  --duration-normal: 240ms;
-  --duration-reveal: 600ms;
-
-  /* Breakpoints (Tailwind defaults kept; documented for the team) */
+  --duration-normal: 260ms;
+  --duration-reveal: 700ms;
 }
 
 /*
- * Dark mode — the same workbench after dark, not a different room.
- * Warm browns rather than neutral greys; the oxide accent brightens
- * just enough to hold contrast against a dark ground.
- *
- * Tailwind v4 compiles `bg-paper` to `var(--color-paper)`, so
- * redefining the tokens in a more specific scope re-themes every
- * utility without a single `dark:` variant.
- *
- * Three states, deliberately: an explicit choice stamps
- * data-theme on <html> and always wins; with nothing stamped, the
- * system preference decides.
+ * Console after dark. Tokens are custom properties, so redefining them
+ * on the console wrapper re-themes every utility inside it without a
+ * `dark:` variant. The public site never enters this block.
  */
 @layer theme {
-  :root[data-theme="dark"],
-  :root:not([data-theme="light"]) {
+  [data-console][data-theme="dark"],
+  :root[data-theme="dark"] [data-console],
+  :root:not([data-theme="light"]) [data-console] {
     @media (prefers-color-scheme: dark) {
       --color-paper: #191612;
       --color-paper-raised: #211d18;
       --color-paper-sunken: #121010;
       --color-ink-well: #0d0b09;
       --color-ink-well-soft: #191612;
-
       --color-ink: #ece5d9;
       --color-ink-soft: #aea593;
-      --color-ink-faint: #7c7465;
+      --color-ink-faint: #8a8274;
       --color-ink-inverse: #f6f2e9;
       --color-ink-inverse-soft: #b5ac9d;
-
       --color-line: #322c25;
       --color-line-strong: #4a4238;
-
-      --color-accent: #d2622c;
-      --color-accent-deep: #e58048;
-      --color-accent-wash: #34211a;
-
+      --color-accent: #9fae7f;
+      --color-accent-deep: #b7c497;
+      --color-accent-wash: #232a1b;
       --color-ok: #6aa878;
       --color-ok-wash: #1c2a20;
       --color-warn: #c8913a;
       --color-warn-wash: #2d2415;
       --color-alert: #d16a6a;
       --color-alert-wash: #33201f;
+      color-scheme: dark;
     }
   }
 
-  /* The explicit choice, unconditional on the system preference. */
-  :root[data-theme="dark"] {
+  :root[data-theme="dark"] [data-console] {
     --color-paper: #191612;
     --color-paper-raised: #211d18;
     --color-paper-sunken: #121010;
     --color-ink-well: #0d0b09;
     --color-ink-well-soft: #191612;
-
     --color-ink: #ece5d9;
     --color-ink-soft: #aea593;
-    --color-ink-faint: #7c7465;
+    --color-ink-faint: #8a8274;
     --color-ink-inverse: #f6f2e9;
     --color-ink-inverse-soft: #b5ac9d;
-
     --color-line: #322c25;
     --color-line-strong: #4a4238;
-
-    --color-accent: #d2622c;
-    --color-accent-deep: #e58048;
-    --color-accent-wash: #34211a;
-
+    --color-accent: #9fae7f;
+    --color-accent-deep: #b7c497;
+    --color-accent-wash: #232a1b;
     --color-ok: #6aa878;
     --color-ok-wash: #1c2a20;
     --color-warn: #c8913a;
     --color-warn-wash: #2d2415;
     --color-alert: #d16a6a;
     --color-alert-wash: #33201f;
+    color-scheme: dark;
   }
 }
 
 /* Base */
 html {
-  scroll-behavior: smooth;
   color-scheme: light;
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-  }
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -154,6 +132,7 @@ body {
   font-feature-settings: "ss01" on, "cv05" on;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 ::selection {
@@ -164,153 +143,217 @@ body {
 /* Visible, consistent focus treatment */
 :focus-visible {
   outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-radius: 2px;
 }
 
-/* Editorial display type */
-.type-display {
-  font-family: var(--font-display);
-  font-variation-settings: "opsz" 72, "SOFT" 0, "WONK" 1;
-  font-weight: 560;
-  letter-spacing: -0.015em;
-  line-height: 0.98;
-  text-wrap: balance;
-}
+/*
+ * Site component classes live in the components layer so a utility on
+ * the same element (e.g. text-ink-inverse on a link over a photograph)
+ * wins, as Tailwind intends.
+ */
+@layer components {
+  /* ------------------------------------------------------------------ */
+  /* Typography                                                          */
+  /* ------------------------------------------------------------------ */
 
-.type-display-italic {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-variation-settings: "opsz" 40, "SOFT" 30, "WONK" 1;
-  font-weight: 480;
-  letter-spacing: -0.01em;
-}
-
-.type-heading {
-  font-family: var(--font-display);
-  font-variation-settings: "opsz" 32, "SOFT" 0, "WONK" 0;
-  font-weight: 580;
-  letter-spacing: -0.012em;
-  line-height: 1.12;
-  text-wrap: balance;
-}
-
-/* Small mono meta labels — workshop labels, not fake terminals */
-.type-meta {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-/* Long-form prose rendered from markdown */
-.prose-workshop {
-  font-size: 1.0625rem;
-  line-height: 1.7;
-  color: var(--color-ink);
-  max-width: 42rem;
-}
-.prose-workshop p {
-  margin-block: 1.1em;
-}
-.prose-workshop h2 {
-  font-family: var(--font-display);
-  font-weight: 580;
-  font-size: 1.5rem;
-  line-height: 1.2;
-  margin-block: 1.8em 0.6em;
-  letter-spacing: -0.01em;
-}
-.prose-workshop h3 {
-  font-family: var(--font-display);
-  font-weight: 560;
-  font-size: 1.2rem;
-  margin-block: 1.6em 0.5em;
-}
-.prose-workshop a {
-  color: var(--color-accent-deep);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--color-line-strong);
-  transition: text-decoration-color var(--duration-micro) var(--ease-out-soft);
-}
-.prose-workshop a:hover {
-  text-decoration-color: var(--color-accent);
-}
-.prose-workshop ul,
-.prose-workshop ol {
-  padding-inline-start: 1.4em;
-  margin-block: 1em;
-}
-.prose-workshop ul {
-  list-style: disc;
-}
-.prose-workshop ol {
-  list-style: decimal;
-}
-.prose-workshop li {
-  margin-block: 0.35em;
-}
-.prose-workshop blockquote {
-  border-inline-start: 2px solid var(--color-accent);
-  padding-inline-start: 1.1em;
-  margin-block: 1.4em;
-  color: var(--color-ink-soft);
-  font-style: italic;
-}
-.prose-workshop code {
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-  background: var(--color-paper-sunken);
-  padding: 0.1em 0.35em;
-  border-radius: 3px;
-}
-.prose-workshop pre {
-  background: var(--color-ink-well);
-  color: var(--color-ink-inverse);
-  padding: 1.1em 1.3em;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin-block: 1.4em;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.prose-workshop pre code {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-}
-.prose-workshop hr {
-  border: 0;
-  border-top: 1px solid var(--color-line);
-  margin-block: 2.2em;
-}
-.prose-workshop img {
-  max-width: 100%;
-  border-radius: 4px;
-}
-
-/* Restrained motion. Entrances are subtle and run once. */
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.6rem);
+  /* Oversized editorial display — the name, section openers */
+  .type-display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+    font-weight: 420;
+    letter-spacing: -0.02em;
+    line-height: 0.96;
+    text-wrap: balance;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  /* Headings and titles */
+  .type-heading {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 48, "SOFT" 20, "WONK" 0;
+    font-weight: 480;
+    letter-spacing: -0.012em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  /* Handwritten-feeling annotation: the soft, wonky italic in olive */
+  .type-annotation {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-variation-settings: "opsz" 24, "SOFT" 100, "WONK" 1;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    line-height: 1.3;
+    color: var(--color-accent);
+    white-space: pre-line;
+  }
+
+  /* Small mono labels — eyebrows, table labels, meta */
+  .type-meta {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* Long-form prose rendered from markdown (gallery notes, console) */
+  .prose-workshop {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-ink);
+    max-width: 42rem;
+  }
+  .prose-workshop p {
+    margin-block: 1.1em;
+  }
+  .prose-workshop h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-block: 1.8em 0.6em;
+    letter-spacing: -0.01em;
+  }
+  .prose-workshop h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.2rem;
+    margin-block: 1.6em 0.5em;
+  }
+  .prose-workshop a {
+    color: var(--color-accent-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--color-line-strong);
+    transition: text-decoration-color var(--duration-micro) var(--ease-out-soft);
+  }
+  .prose-workshop a:hover {
+    text-decoration-color: var(--color-accent);
+  }
+  .prose-workshop ul,
+  .prose-workshop ol {
+    padding-inline-start: 1.4em;
+    margin-block: 1em;
+  }
+  .prose-workshop ul {
+    list-style: disc;
+  }
+  .prose-workshop ol {
+    list-style: decimal;
+  }
+  .prose-workshop li {
+    margin-block: 0.35em;
+  }
+  .prose-workshop blockquote {
+    border-inline-start: 2px solid var(--color-accent);
+    padding-inline-start: 1.1em;
+    margin-block: 1.4em;
+    color: var(--color-ink-soft);
+    font-style: italic;
+  }
+  .prose-workshop code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--color-paper-sunken);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+  .prose-workshop pre {
+    background: var(--color-ink-well);
+    color: var(--color-ink-inverse);
+    padding: 1.1em 1.3em;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-block: 1.4em;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .prose-workshop pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+  .prose-workshop hr {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    margin-block: 2.2em;
+  }
+  .prose-workshop img {
+    max-width: 100%;
+    border-radius: 4px;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Links                                                               */
+  /* ------------------------------------------------------------------ */
+
+  /* The site's one link style: text, an arrow, an underline that fills in */
+  .link-arrow {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45em;
+    text-decoration: none;
+    color: var(--color-ink);
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    transition:
+      background-size var(--duration-normal) var(--ease-out-soft),
+      color var(--duration-micro) var(--ease-out-soft);
+  }
+  .link-arrow:hover,
+  .link-arrow:focus-visible {
+    background-size: 100% 1px;
+    color: var(--color-accent-deep);
+  }
+  .link-arrow > .arrow {
+    display: inline-block;
+    transition: transform var(--duration-normal) var(--ease-out-soft);
+  }
+  .link-arrow:hover > .arrow,
+  .link-arrow:focus-visible > .arrow {
+    transform: translateX(0.25em);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Motion — subtle, once, and off when asked                           */
+  /* ------------------------------------------------------------------ */
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Entrance on load, staggered by data-delay steps of 90ms */
+  .reveal {
+    animation: rise-in var(--duration-reveal) var(--ease-out-soft) both;
+    animation-delay: calc(var(--reveal-step, 0) * 90ms);
+  }
+
+  /*
+   * Gentle reveal as an element scrolls into view. Native scroll-driven
+   * animation — no JavaScript. Browsers without `animation-timeline`
+   * simply show the element; nothing is hidden behind the effect.
+   */
+  @supports (animation-timeline: view()) {
+    .reveal-view {
+      animation: rise-in 1ms var(--ease-out-soft) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 28%;
+    }
   }
 }
 
-.reveal {
-  animation: rise-in var(--duration-reveal) var(--ease-out-soft) both;
-}
-.reveal-late {
-  animation: rise-in var(--duration-reveal) var(--ease-out-soft) 120ms both;
-}
-
-/* Live activity pulse — one small dot, nothing else animates continuously */
+/* Live activity pulse — console only */
 @keyframes pulse-soft {
   0%,
   100% {
@@ -325,11 +368,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   .reveal,
-  .reveal-late,
+  .reveal-view,
   .pulse-live {
     animation: none;
   }
@@ -339,6 +379,7 @@ body {
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
 }
 

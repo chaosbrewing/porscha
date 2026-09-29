@@ -87,13 +87,15 @@ are private-by-default.
 
 ## Gallery — OBRA
 
-The public gallery is branded **OBRA by Porscha** and still lives at
-`/gallery`; the route is unchanged so existing links and the piece
-URLs Stripe checkouts return to keep working. Brand art is in
-`public/brand/` — `obra-mark.jpg` heads the gallery, `porscha-logo.png`
-is the site header. Both are photographed on their own ground rather
-than knocked out, so each is shown on a matching plate; a
-transparent PNG or SVG could sit directly on the page instead.
+The public gallery is **Obra** and lives at `/art` (+ `/art/[piece]`).
+`/gallery` and `/gallery/[piece]` redirect there permanently, and
+Stripe checkouts return to the `/art` piece URL.
+
+File-backed pieces live in `src/content/gallery/*.md` with their images
+under `public/art/` (exported without EXIF, longest side 2000 px). A
+piece marked `placeholder: true` shows only while no real piece is
+visible, so a stand-in can hold the wall without ever outliving real
+work.
 
 **Categories are free text.** `digital` and `canvas` are only the
 suggestions offered in the console — anything typed becomes a

@@ -35,7 +35,21 @@ export type ResolvedPiece = GalleryPiece & {
   featured: boolean;
   position: number | null;
   removedAt: Date | null;
+  /** Offered for sale: flagged, priced, and not yet sold. */
+  forSale: boolean;
+  sold: boolean;
+  priceCents: number | null;
 };
+
+function saleFlags(row?: GalleryItemRow) {
+  const priced = (row?.priceCents ?? 0) > 0;
+  const sold = Boolean(row?.soldAt);
+  return {
+    forSale: Boolean(row?.forSale) && priced && !sold,
+    sold,
+    priceCents: row?.priceCents ?? null,
+  };
+}
 
 export type GalleryView = {
   settings: GalleryDisplaySettings;
@@ -60,11 +74,13 @@ function pieceFromRow(row: GalleryItemRow): ResolvedPiece {
     note: row.note ?? undefined,
     project: row.relatedProject ?? undefined,
     html: row.body ? renderMarkdown(row.body.trim()) : "",
+    placeholder: false,
     origin: "console",
     hidden: row.hidden,
     featured: row.featured,
     position: row.position,
     removedAt: row.deletedAt,
+    ...saleFlags(row),
   };
 }
 
@@ -76,6 +92,7 @@ function applyOverlay(piece: GalleryPiece, row?: GalleryItemRow): ResolvedPiece 
     featured: row?.featured ?? false,
     position: row?.position ?? null,
     removedAt: row?.deletedAt ?? null,
+    ...saleFlags(row),
   };
 }
 
@@ -132,15 +149,30 @@ export async function getGalleryAdminView(): Promise<GalleryView> {
   };
 }
 
+/**
+ * Placeholder pieces hold the wall only while nothing real is hung.
+ * The moment one real piece is visible, every placeholder steps aside.
+ */
+export function withoutPlaceholdersWhenRealWorkExists<
+  T extends { placeholder: boolean },
+>(pieces: T[]): T[] {
+  return pieces.some((p) => !p.placeholder)
+    ? pieces.filter((p) => !p.placeholder)
+    : pieces;
+}
+
 /** Visible pieces in visible categories. For the public gallery. */
 export async function getPublicGalleryView(): Promise<GalleryView> {
   const { settings, pieces } = await getGalleryAdminView();
   const hiddenCategories = new Set(
     settings.categories.filter((c) => !c.visible).map((c) => c.key),
   );
+  const visible = pieces.filter(
+    (p) => !p.hidden && !hiddenCategories.has(p.category),
+  );
   return {
     settings,
-    pieces: pieces.filter((p) => !p.hidden && !hiddenCategories.has(p.category)),
+    pieces: withoutPlaceholdersWhenRealWorkExists(visible),
     removed: [],
   };
 }

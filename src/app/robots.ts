@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { site } from "@/content/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/console", "/console/", "/api/", "/login"],
       },
     ],
-    sitemap: `${process.env.SITE_URL ?? "https://porscha.today"}/sitemap.xml`,
+    sitemap: `${process.env.SITE_URL ?? site.fallbackUrl}/sitemap.xml`,
   };
 }
