@@ -53,6 +53,9 @@
 - Every console upload passes through metadata stripping (EXIF, XMP,
   IPTC, including GPS) before it is stored.
 - "I write songs." joins the fragments.
+- The signature is now the wax seal (`public/brand/seal.png`), used in
+  the header, footer, margins, browser icons and the social preview.
+  New opening portrait.
 
 
 ### v0.2.0 — the introduction

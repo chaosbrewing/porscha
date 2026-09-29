@@ -45,8 +45,8 @@ describe("stripImageMetadata", () => {
     expect(stripped[0]).toBe(0xff);
     expect(stripped[1]).toBe(0xd8);
     expect(readDimensions("image/jpeg", toBuffer(stripped))).toEqual({
-      width: 1043,
-      height: 1508,
+      width: 941,
+      height: 1672,
     });
   });
 

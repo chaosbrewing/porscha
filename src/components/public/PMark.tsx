@@ -1,5 +1,10 @@
+import Image from "next/image";
+import seal from "../../../public/brand/seal.png";
+
 /**
- * The "P." device — a quiet signature.
+ * The seal — a quiet signature. A wax-seal "P." that scales with the
+ * surrounding text size (one em square), so callers size it with the
+ * same text-* classes they always did.
  *
  * Decorative by default (hidden from assistive tech); pass `label` to
  * make it a meaningful mark, e.g. as a link's only content.
@@ -12,14 +17,14 @@ export function PMark({
   label?: string;
 }) {
   return (
-    <span
+    <Image
+      src={seal}
+      alt={label ?? ""}
       aria-hidden={label ? undefined : "true"}
-      aria-label={label}
-      role={label ? "img" : undefined}
-      className={`type-heading inline-block select-none leading-none ${className}`}
-      style={{ fontVariationSettings: '"opsz" 48, "SOFT" 40, "WONK" 1' }}
-    >
-      P.
-    </span>
+      width={64}
+      height={64}
+      sizes="64px"
+      className={`inline-block h-[1.5em] w-[1.5em] select-none align-[-0.4em] ${className}`}
+    />
   );
 }

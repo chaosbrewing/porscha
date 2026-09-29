@@ -7,7 +7,7 @@ import type { GlobalContent } from "@/content/site/schema";
 import { PMark } from "./PMark";
 
 /**
- * Header: the P. mark, five words, a hairline. On small screens the
+ * Header: the seal, five words, a hairline. On small screens the
  * words fold behind a plain "Menu" button.
  */
 export function SiteHeader({

@@ -5,7 +5,7 @@ import { PMark } from "./PMark";
 /**
  * Footer: the mark, the same five words, outward links, a year. The
  * copyright line doubles as the quiet door to the owner's console;
- * the P. is just the signature.
+ * the seal is just the signature.
  */
 export function SiteFooter({
   name,

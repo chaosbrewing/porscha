@@ -2,7 +2,7 @@ import { PMark } from "./PMark";
 
 /**
  * A handwritten-feeling aside. Kept for the handful of places where a
- * note in the margin earns its place; the P. is optional and small.
+ * note in the margin earns its place; the seal is optional and small.
  */
 export function Annotation({
   children,

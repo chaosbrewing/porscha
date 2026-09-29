@@ -109,7 +109,9 @@ phone number, email address or street address is published.
 ## Images
 
 The approved portrait lives at `public/portrait/porscha.jpg` and is the
-one visual on the opening screen. Obra's original images live in
+one visual on the opening screen. The wax-seal mark in the header,
+footer and social preview lives at `public/brand/seal.png`; the browser
+icons are `src/app/icon.png` and `src/app/apple-icon.png`. Obra's original images live in
 `public/art/` until replaced from the console. The remaining images on
 `/me` are documented placeholders (see `public/placeholders/README.md`);
 replace them from Settings → Pages → Who I am. Uploads through the

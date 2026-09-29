@@ -12,9 +12,9 @@ export const homeDefaults = {
   ],
   visual: {
     src: "/portrait/porscha.jpg",
-    alt: "Porscha, photographed against a warm plain backdrop.",
-    width: 1043,
-    height: 1508,
+    alt: "Porscha in a white tee and black jacket, against a pale wall with slanting light.",
+    width: 941,
+    height: 1672,
   },
   annotation: "Different problems.\nSame curiosity.",
 } satisfies HomeContent;

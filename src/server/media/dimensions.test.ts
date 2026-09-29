@@ -26,7 +26,7 @@ describe("readDimensions", () => {
   it("reads a real JPEG SOF frame", () => {
     // Progressive JPEG (SOF2), portrait orientation.
     const d = readDimensions("image/jpeg", bytesOf("public/portrait/porscha.jpg"));
-    expect(d).toEqual({ width: 1043, height: 1508 });
+    expect(d).toEqual({ width: 941, height: 1672 });
   });
 
   it("reads an SVG viewBox", () => {
