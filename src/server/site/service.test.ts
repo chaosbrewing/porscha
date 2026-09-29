@@ -40,6 +40,32 @@ describe("resolvePage", () => {
     expect(resolved.chapters.annotation).toBe("");
   });
 
+  it("gives a door saved without a picture the default picture for its destination", () => {
+    // A home row saved when doors were label + link only, with the old
+    // standalone image still on it.
+    const older = {
+      intro: ["a", "b"],
+      question: "?",
+      paths: [
+        { label: "My art", href: "/art" },
+        { label: "Who I am", href: "/me" },
+        { label: "Notes", href: "/work/experiments" },
+      ],
+      visual: { src: "/media/site/chosen.jpg", alt: "", width: 10, height: 20 },
+      annotation: "",
+    };
+    const resolved = resolvePage("home", older);
+    expect(resolved.paths[0].image).toEqual(SITE_DEFAULTS.home.paths[1].image);
+    expect(resolved.paths[1].image?.src).toBe("/media/site/chosen.jpg");
+    expect(resolved.paths[2].image).toBeNull();
+  });
+
+  it("never replaces a picture the console chose", () => {
+    const chosen = { src: "/media/site/mine.jpg", alt: "", width: 4, height: 5 };
+    const row = { ...SITE_DEFAULTS.home, paths: [{ label: "My art", href: "/art", image: chosen }] };
+    expect(resolvePage("home", row).paths[0].image).toEqual(chosen);
+  });
+
   it("refuses links that could leave the site by a non-https scheme", () => {
     const sneaky = {
       ...SITE_DEFAULTS.home,

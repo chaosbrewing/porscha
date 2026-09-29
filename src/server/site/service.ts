@@ -18,6 +18,45 @@ import { readPageOverrides } from "./store";
  * and ignored rather than allowed to take the page down.
  */
 
+type Row = Record<string, unknown>;
+
+function isRow(value: unknown): value is Row {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * A door or window saved before it could carry a picture borrows the
+ * default picture for the same destination. One the console added
+ * itself stays bare until a picture is chosen. On the home page the
+ * door to /me prefers the row's own "one image", which is what that
+ * field used to mean.
+ */
+function borrowPictures(
+  items: unknown,
+  defaults: ReadonlyArray<{ href: string; image: unknown }>,
+  fallbackForMe?: unknown,
+): unknown {
+  if (!Array.isArray(items)) return items;
+  return items.map((item) => {
+    if (!isRow(item) || item.image) return item;
+    const own = item.href === "/me" && isRow(fallbackForMe) ? fallbackForMe : null;
+    const byHref = defaults.find((d) => d.href === item.href)?.image ?? null;
+    return { ...item, image: own ?? byHref };
+  });
+}
+
+/** Per-page repairs for rows saved under an earlier shape. */
+const UPGRADES: { [K in PageKey]?: (row: Row) => Row } = {
+  home: (row) => ({
+    ...row,
+    paths: borrowPictures(row.paths, SITE_DEFAULTS.home.paths, row.visual),
+  }),
+  work: (row) => ({
+    ...row,
+    categories: borrowPictures(row.categories, SITE_DEFAULTS.work.categories),
+  }),
+};
+
 export function resolvePage<K extends PageKey>(
   key: K,
   override: unknown,
@@ -25,12 +64,15 @@ export function resolvePage<K extends PageKey>(
   if (override === undefined) return SITE_DEFAULTS[key];
   // Sections added to a page since its row was saved come from the
   // defaults, so the schema can grow without invalidating what the
-  // console stored. Only whole top-level sections are filled in; a
-  // stored section is taken as it is.
-  const merged =
-    override && typeof override === "object" && !Array.isArray(override)
-      ? { ...SITE_DEFAULTS[key], ...(override as Record<string, unknown>) }
-      : override;
+  // console stored. Whole top-level sections are filled in; inside a
+  // list, only the repairs above apply, and a stored value is never
+  // overwritten.
+  let merged: unknown = override;
+  if (isRow(override)) {
+    merged = { ...SITE_DEFAULTS[key], ...override };
+    const upgrade = UPGRADES[key];
+    if (upgrade) merged = upgrade(merged as Row);
+  }
   const parsed = PAGE_SCHEMAS[key].safeParse(merged);
   if (!parsed.success) {
     console.error(`[site] stored content for "${key}" is invalid; using defaults`);
