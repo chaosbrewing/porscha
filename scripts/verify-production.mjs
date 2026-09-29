@@ -81,7 +81,6 @@ try {
     ["I make things, start things,", "opening line present"],
     ["and occasionally finish them.", "opening line complete"],
     ["What brings you here?", "the question is asked"],
-    ["/portrait/porscha", "portrait asset referenced"],
     ['href="/work"', "path to work present"],
     ['href="/art"', "path to art present"],
     ['href="/building"', "path to building present"],
@@ -91,6 +90,10 @@ try {
     if (html.includes(needle)) ok(label);
     else fail(label, `"${needle}" not found`);
   }
+  // next/image writes the path URL-encoded inside /_next/image?url=…
+  if (html.includes("/portrait/porscha") || html.includes("%2Fportrait%2Fporscha"))
+    ok("portrait asset referenced");
+  else fail("portrait asset referenced", '"/portrait/porscha" not found, plain or encoded');
   // Portrait asset actually loads
   const m = html.match(/src="([^"]*portrait[^"]*)"/);
   const portraitPath = m
