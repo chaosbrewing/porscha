@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { PAGE_KEYS, PAGE_SCHEMAS, SITE_DEFAULTS } from "./index";
+import { CONTACT_EMAIL } from "./global";
 
 /**
  * The defaults are data Porscha edits by hand, and the console's
@@ -51,10 +52,11 @@ describe("site content defaults", () => {
     }
   });
 
-  it("publishes no phone numbers, email addresses or street addresses", () => {
+  it("publishes no phone numbers, street addresses, or any email but the public one", () => {
     const text = collectStrings(SITE_DEFAULTS).join("\n");
     expect(text).not.toMatch(/\+?\d[\d\s().-]{7,}\d/);
-    expect(text).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+    const emails = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/g) ?? [];
+    expect(new Set(emails)).toEqual(new Set([CONTACT_EMAIL]));
     expect(text).not.toMatch(/\b\d{1,5}\s+\w+\s+(street|st|road|rd|avenue|ave|lane|ln)\b/i);
   });
 

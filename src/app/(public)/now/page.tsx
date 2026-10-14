@@ -38,16 +38,15 @@ export default async function NowPage() {
       >
         {currently.visual ? (
           <figure className="reveal relative mx-auto w-full max-w-[24rem] overflow-hidden rounded-[3px] bg-paper-sunken lg:sticky lg:top-8 lg:mx-0 lg:max-w-none lg:self-start">
-            <div className="relative aspect-[4/5]">
-              <Image
-                src={currently.visual.src}
-                alt={currently.visual.alt}
-                fill
-                priority
-                sizes="(max-width: 1024px) 384px, 40vw"
-                className="object-cover"
-              />
-            </div>
+            <Image
+              src={currently.visual.src}
+              alt={currently.visual.alt}
+              width={currently.visual.width}
+              height={currently.visual.height}
+              priority
+              sizes="(max-width: 1024px) 384px, 40vw"
+              className="h-auto w-full"
+            />
           </figure>
         ) : null}
 

@@ -1,15 +1,19 @@
 import type { NowContent } from "./schema";
 
 /**
- * Currently — a living snapshot beside one quiet picture. Bump
- * `updated` when something changes. The picture is a documented
- * placeholder until a real one is chosen from the console.
+ * Currently — a living snapshot beside one picture: the "Becoming is
+ * an art" poster. Bump `updated` when something changes.
  */
 export const nowDefaults = {
   heading: "Currently.",
   annotation: "Always a work\nin progress.",
   updated: "September 2026",
-  visual: { src: "/placeholders/now-still.svg", alt: "", width: 1600, height: 2000 },
+  visual: {
+    src: "/portrait/becoming.jpg",
+    alt: "A poster of Porscha over brushstrokes and sketches, lettered “Becoming is an art”.",
+    width: 1024,
+    height: 1536,
+  },
   entries: [
     { label: "Building", value: "Sulit", href: "/building" },
     { label: "Exploring", value: "Human-centred software", href: "" },

@@ -4,8 +4,8 @@ import { PMark } from "./PMark";
 
 /**
  * Footer: the mark, the same five words, outward links, a year. The
- * copyright line doubles as the quiet door to the owner's console;
- * the seal is just the signature.
+ * © sign alone is the quiet door to the owner's console; the year and
+ * the name lead home. The seal is just the signature.
  */
 export function SiteFooter({
   name,
@@ -54,13 +54,20 @@ export function SiteFooter({
               </li>
             ))}
           </ul>
-          <p className="text-ink-faint">
+          <p className="flex items-center gap-1.5 text-ink-faint">
             <Link
               href="/login"
               title="Owner sign-in"
+              aria-label="Owner sign-in"
+              className="inline-flex min-h-11 min-w-6 items-center justify-center transition-colors duration-[var(--duration-micro)] hover:text-ink"
+            >
+              ©
+            </Link>
+            <Link
+              href="/"
               className="inline-flex min-h-11 items-center transition-colors duration-[var(--duration-micro)] hover:text-ink"
             >
-              © {new Date().getFullYear()} {name}
+              {new Date().getFullYear()} {name}
             </Link>
           </p>
         </div>

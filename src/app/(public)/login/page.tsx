@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { env } from "@/server/env";
 import { checkConsoleAccess } from "@/server/auth/guard";
@@ -36,8 +37,19 @@ export default async function LoginPage({
   const errorMessage = error ? ERROR_COPY[error] ?? "Sign-in failed." : null;
 
   return (
-    <div className="mx-auto max-w-md px-5 sm:px-8 py-24">
-      <h1 className="type-display text-4xl">The side door</h1>
+    <div className="mx-auto max-w-md px-5 sm:px-8 py-16 sm:py-24">
+      <div className="overflow-hidden rounded-[3px] bg-[#070707]">
+        <Image
+          src="/brand/iporscha.jpg"
+          alt="iPorscha, lettered in gold with a green crown."
+          width={1200}
+          height={675}
+          priority
+          sizes="(max-width: 640px) 100vw, 448px"
+          className="h-auto w-full"
+        />
+      </div>
+      <h1 className="type-display mt-10 text-4xl">The side door</h1>
       <p className="mt-4 text-ink-soft leading-relaxed">
         This entrance is for Porscha. Everything else on the site is open —
         the work, the art, and what&rsquo;s current.

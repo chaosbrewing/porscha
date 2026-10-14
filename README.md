@@ -111,7 +111,10 @@ phone number, email address or street address is published.
 
 The approved portrait lives at `public/portrait/porscha.jpg`; it is the
 “Who I am” door on the opening screen and the picture beside “A little
-about” on `/me`. The wax-seal mark in the header,
+about” on `/me`. The “Becoming is an art” poster at
+`public/portrait/becoming.jpg` sits beside the snapshot on `/now`. The
+gold wordmark at `public/brand/iporscha.jpg` is the social preview and
+the picture on the sign-in door. The wax-seal mark in the header,
 footer and social preview lives at `public/brand/seal.png`; the browser
 icons are `src/app/icon.png` and `src/app/apple-icon.png`. Obra's original images live in
 `public/art/` until replaced from the console. The remaining images on

@@ -56,6 +56,11 @@
 - The signature is now the wax seal (`public/brand/seal.png`), used in
   the header, footer, margins, browser icons and the social preview.
   New opening portrait.
+- Get in touch opens mail to hello@porscha.today, the site’s one public
+  address. Instagram, Facebook and Snapchat join GitHub in the footer.
+  The © sign alone is the owner’s door; the year and name lead home.
+  The “Becoming is an art” poster sits beside the snapshot, and the gold
+  wordmark is the social preview and the sign-in door’s picture.
 - The website is called iPorscha: the wordmark, browser tabs, footer
   and social preview say so. Porscha remains the person the site
   speaks about.

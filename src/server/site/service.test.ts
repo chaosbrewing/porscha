@@ -66,6 +66,28 @@ describe("resolvePage", () => {
     expect(resolvePage("home", row).paths[0].image).toEqual(chosen);
   });
 
+  it("sends a stored 'Get in touch' that still points at the old placeholder to the public address", () => {
+    const placeholder = "https://github.com/chaosbrewing";
+    const me = resolvePage("me", {
+      ...SITE_DEFAULTS.me,
+      ending: { ...SITE_DEFAULTS.me.ending, links: [{ label: "Get in touch", href: placeholder }] },
+    });
+    expect(me.ending.links[0].href).toBe("mailto:hello@porscha.today");
+
+    const global = resolvePage("global", {
+      ...SITE_DEFAULTS.global,
+      contact: { label: "Say hi", href: placeholder },
+      social: [{ label: "GitHub", url: placeholder }],
+    });
+    expect(global.contact).toEqual({ label: "Say hi", href: "mailto:hello@porscha.today" });
+    expect(global.social.map((s) => s.label)).toEqual(["GitHub", "Instagram", "Facebook", "Snapchat"]);
+  });
+
+  it("leaves a contact the console pointed somewhere else alone", () => {
+    const chosen = { label: "Get in touch", href: "https://example.com/contact" };
+    expect(resolvePage("global", { ...SITE_DEFAULTS.global, contact: chosen }).contact).toEqual(chosen);
+  });
+
   it("refuses links that could leave the site by a non-https scheme", () => {
     const sneaky = {
       ...SITE_DEFAULTS.home,

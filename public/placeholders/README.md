@@ -16,7 +16,6 @@ file in and updating that one path.
 | `tile-work.svg` | `src/content/site/home.ts` — the "My work" door | A portrait (4:5) photograph of work in progress: a desk, a notebook, a screen at an angle. Dark, moody; the label sits over the lower-left. |
 | `tile-building.svg` | `src/content/site/home.ts` (the "What I’m building" door), `src/content/site/work.ts` (the Sulit window and the project hero) | A portrait (4:5) photograph that stands for Sulit: a workspace, a shopfront, a laptop in low light. Dark, so white text reads over it. |
 | `tile-experiments.svg` | `src/content/site/work.ts` — the Experiments window | A portrait (4:5) landscape or environmental photograph, dark and quiet. |
-| `now-still.svg` | `src/content/site/now.ts` — the picture beside the snapshot | A portrait (4:5) still life: a chair, a window, light on a wall. Nothing that identifies where it was taken. |
 
 Guidance for the real images:
 

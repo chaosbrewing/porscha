@@ -120,7 +120,7 @@ export const meDefaults = {
     links: [
       { label: "See what I’m building", href: "/building" },
       { label: "See what I’m making", href: "/art" },
-      { label: "Get in touch", href: "https://github.com/chaosbrewing" },
+      { label: "Get in touch", href: "mailto:hello@porscha.today" },
     ],
     image: { src: "/placeholders/ending-landscape.svg", alt: "", width: 2400, height: 1200 },
     annotation: "On to\nwhat’s next.",

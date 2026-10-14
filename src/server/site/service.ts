@@ -45,8 +45,35 @@ function borrowPictures(
   });
 }
 
+/** Where "Get in touch" pointed before a public address existed. */
+const CONTACT_PLACEHOLDER = "https://github.com/chaosbrewing";
+
+/** A link to the old placeholder now goes where the default says. */
+function retargetContact(link: unknown, fallback: { label: string; href: string }): unknown {
+  if (!isRow(link) || link.href !== CONTACT_PLACEHOLDER) return link;
+  return { ...link, href: fallback.href };
+}
+
+/** Default accounts a stored social list does not carry yet are added. */
+function withDefaultAccounts(social: unknown): unknown {
+  if (!Array.isArray(social)) return social;
+  const have = new Set(social.map((s) => (isRow(s) ? String(s.url ?? "").toLowerCase() : "")));
+  const missing = SITE_DEFAULTS.global.social.filter((s) => !have.has(s.url.toLowerCase()));
+  return [...social, ...missing];
+}
+
 /** Per-page repairs for rows saved under an earlier shape. */
 const UPGRADES: { [K in PageKey]?: (row: Row) => Row } = {
+  global: (row) => ({
+    ...row,
+    contact: retargetContact(row.contact, SITE_DEFAULTS.global.contact),
+    social: withDefaultAccounts(row.social),
+  }),
+  me: (row) => {
+    if (!isRow(row.ending) || !Array.isArray(row.ending.links)) return row;
+    const links = row.ending.links.map((l) => retargetContact(l, SITE_DEFAULTS.global.contact));
+    return { ...row, ending: { ...row.ending, links } };
+  },
   home: (row) => ({
     ...row,
     paths: borrowPictures(row.paths, SITE_DEFAULTS.home.paths, row.visual),
